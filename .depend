@@ -1,0 +1,7 @@
+
+obj/windows_gcc/MM_MultithreadingLibrary_main.o: src/MM_MultithreadingLibrary_main.cpp \
+ ../MM_CommonUtils/src/WindowsUtils/WindowsUtils.h \
+ ../MM_CommonUtils/src/Timer/Timer.h \
+ ../MM_UnitTestFramework/src/MM_UnitTestFramework/MM_UnitTestFramework.h
+
+obj/windows_gcc/Multithreading/Multithreading_basics.o: src/Multithreading/Multithreading_basics.cpp
