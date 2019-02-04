@@ -1,0 +1,197 @@
+C:\Users\Prashant\Google Drive\Everything_git\src
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Algorithms_DivideAndConquer\AlgoTypes_DivideAndConquer.h"
+"Relative Path: ..\src\Algorithms_DivideAndConquer\AlgoTypes_DivideAndConquer.h"
+symbolic link created for ..\headers\AlgoTypes_DivideAndConquer.h <<===>> ..\src\Algorithms_DivideAndConquer\AlgoTypes_DivideAndConquer.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Algorithms_DynamicProgramming\AlgoTypes_DynamicProgramming.h"
+"Relative Path: ..\src\Algorithms_DynamicProgramming\AlgoTypes_DynamicProgramming.h"
+symbolic link created for ..\headers\AlgoTypes_DynamicProgramming.h <<===>> ..\src\Algorithms_DynamicProgramming\AlgoTypes_DynamicProgramming.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Algorithms_generic\Algorithms_generic.h"
+"Relative Path: ..\src\Algorithms_generic\Algorithms_generic.h"
+symbolic link created for ..\headers\Algorithms_generic.h <<===>> ..\src\Algorithms_generic\Algorithms_generic.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Algorithms_Greedy\AlgoTypes_GreedyAlgorithm.h"
+"Relative Path: ..\src\Algorithms_Greedy\AlgoTypes_GreedyAlgorithm.h"
+symbolic link created for ..\headers\AlgoTypes_GreedyAlgorithm.h <<===>> ..\src\Algorithms_Greedy\AlgoTypes_GreedyAlgorithm.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Algorithms_Sorting\Algorithms_Sorting.h"
+"Relative Path: ..\src\Algorithms_Sorting\Algorithms_Sorting.h"
+symbolic link created for ..\headers\Algorithms_Sorting.h <<===>> ..\src\Algorithms_Sorting\Algorithms_Sorting.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Algorithms_STL\STLAlgorithms.h"
+"Relative Path: ..\src\Algorithms_STL\STLAlgorithms.h"
+symbolic link created for ..\headers\STLAlgorithms.h <<===>> ..\src\Algorithms_STL\STLAlgorithms.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Algorithms_STL\STL_Algorithms.h"
+"Relative Path: ..\src\Algorithms_STL\STL_Algorithms.h"
+symbolic link created for ..\headers\STL_Algorithms.h <<===>> ..\src\Algorithms_STL\STL_Algorithms.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Assert\MyAssert.h"
+"Relative Path: ..\src\Assert\MyAssert.h"
+symbolic link created for ..\headers\MyAssert.h <<===>> ..\src\Assert\MyAssert.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\BigInteger\BigInteger.h"
+"Relative Path: ..\src\BigInteger\BigInteger.h"
+symbolic link created for ..\headers\BigInteger.h <<===>> ..\src\BigInteger\BigInteger.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\BigInteger\BigInteger_Template.h"
+"Relative Path: ..\src\BigInteger\BigInteger_Template.h"
+symbolic link created for ..\headers\BigInteger_Template.h <<===>> ..\src\BigInteger\BigInteger_Template.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\boost\Boost.h"
+"Relative Path: ..\src\boost\Boost.h"
+symbolic link created for ..\headers\Boost.h <<===>> ..\src\boost\Boost.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\C++11_features\C++11_MoveSemantics.h"
+"Relative Path: ..\src\C++11_features\C++11_MoveSemantics.h"
+symbolic link created for ..\headers\C++11_MoveSemantics.h <<===>> ..\src\C++11_features\C++11_MoveSemantics.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\C++11_features\RvalueReferenceAndMove.h"
+"Relative Path: ..\src\C++11_features\RvalueReferenceAndMove.h"
+symbolic link created for ..\headers\RvalueReferenceAndMove.h <<===>> ..\src\C++11_features\RvalueReferenceAndMove.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Cryptography\PasswordEncryption.h"
+"Relative Path: ..\src\Cryptography\PasswordEncryption.h"
+symbolic link created for ..\headers\PasswordEncryption.h <<===>> ..\src\Cryptography\PasswordEncryption.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Database\Database.h"
+"Relative Path: ..\src\Database\Database.h"
+symbolic link created for ..\headers\Database.h <<===>> ..\src\Database\Database.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Design_Patterns\DesignPatterns.h"
+"Relative Path: ..\src\Design_Patterns\DesignPatterns.h"
+symbolic link created for ..\headers\DesignPatterns.h <<===>> ..\src\Design_Patterns\DesignPatterns.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\DS_BST\DS_BST.h"
+"Relative Path: ..\src\DS_BST\DS_BST.h"
+symbolic link created for ..\headers\DS_BST.h <<===>> ..\src\DS_BST\DS_BST.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\DS_BST\DS_BST_AVL.h"
+"Relative Path: ..\src\DS_BST\DS_BST_AVL.h"
+symbolic link created for ..\headers\DS_BST_AVL.h <<===>> ..\src\DS_BST\DS_BST_AVL.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\DS_BST\DS_BST_RedBlackTree.h"
+"Relative Path: ..\src\DS_BST\DS_BST_RedBlackTree.h"
+symbolic link created for ..\headers\DS_BST_RedBlackTree.h <<===>> ..\src\DS_BST\DS_BST_RedBlackTree.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\DS_BST\DS_BST_splay.h"
+"Relative Path: ..\src\DS_BST\DS_BST_splay.h"
+symbolic link created for ..\headers\DS_BST_splay.h <<===>> ..\src\DS_BST\DS_BST_splay.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\DS_BST\DS_BST_treap.h"
+"Relative Path: ..\src\DS_BST\DS_BST_treap.h"
+symbolic link created for ..\headers\DS_BST_treap.h <<===>> ..\src\DS_BST\DS_BST_treap.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\DS_LinkList\DS_LinkList.h"
+"Relative Path: ..\src\DS_LinkList\DS_LinkList.h"
+symbolic link created for ..\headers\DS_LinkList.h <<===>> ..\src\DS_LinkList\DS_LinkList.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\DS_Others\DS_StackQueue.h"
+"Relative Path: ..\src\DS_Others\DS_StackQueue.h"
+symbolic link created for ..\headers\DS_StackQueue.h <<===>> ..\src\DS_Others\DS_StackQueue.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\DS_queue\DS_my_deque.h"
+"Relative Path: ..\src\DS_queue\DS_my_deque.h"
+symbolic link created for ..\headers\DS_my_deque.h <<===>> ..\src\DS_queue\DS_my_deque.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\DS_vector\DS_my_vector.h"
+"Relative Path: ..\src\DS_vector\DS_my_vector.h"
+symbolic link created for ..\headers\DS_my_vector.h <<===>> ..\src\DS_vector\DS_my_vector.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\DS_vector\HowIteratorsAreImplemented.h"
+"Relative Path: ..\src\DS_vector\HowIteratorsAreImplemented.h"
+symbolic link created for ..\headers\HowIteratorsAreImplemented.h <<===>> ..\src\DS_vector\HowIteratorsAreImplemented.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Floating_Point\FloatingPoint.h"
+"Relative Path: ..\src\Floating_Point\FloatingPoint.h"
+symbolic link created for ..\headers\FloatingPoint.h <<===>> ..\src\Floating_Point\FloatingPoint.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Linear_Programming\LinearProgramming.h"
+"Relative Path: ..\src\Linear_Programming\LinearProgramming.h"
+symbolic link created for ..\headers\LinearProgramming.h <<===>> ..\src\Linear_Programming\LinearProgramming.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Linear_Programming\LinearRecurrenceRelation.h"
+"Relative Path: ..\src\Linear_Programming\LinearRecurrenceRelation.h"
+symbolic link created for ..\headers\LinearRecurrenceRelation.h <<===>> ..\src\Linear_Programming\LinearRecurrenceRelation.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Logger\Logger.h"
+"Relative Path: ..\src\Logger\Logger.h"
+symbolic link created for ..\headers\Logger.h <<===>> ..\src\Logger\Logger.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\my_math_lib\ArithmeticOperations.h"
+"Relative Path: ..\src\my_math_lib\ArithmeticOperations.h"
+symbolic link created for ..\headers\ArithmeticOperations.h <<===>> ..\src\my_math_lib\ArithmeticOperations.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\my_math_lib\Maths.h"
+"Relative Path: ..\src\my_math_lib\Maths.h"
+symbolic link created for ..\headers\Maths.h <<===>> ..\src\my_math_lib\Maths.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\my_math_lib\NumberSystems.h"
+"Relative Path: ..\src\my_math_lib\NumberSystems.h"
+symbolic link created for ..\headers\NumberSystems.h <<===>> ..\src\my_math_lib\NumberSystems.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\my_math_lib\Permutations.h"
+"Relative Path: ..\src\my_math_lib\Permutations.h"
+symbolic link created for ..\headers\Permutations.h <<===>> ..\src\my_math_lib\Permutations.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\my_math_lib\PrimeNumber.h"
+"Relative Path: ..\src\my_math_lib\PrimeNumber.h"
+symbolic link created for ..\headers\PrimeNumber.h <<===>> ..\src\my_math_lib\PrimeNumber.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\my_math_lib\RandomNumber.h"
+"Relative Path: ..\src\my_math_lib\RandomNumber.h"
+symbolic link created for ..\headers\RandomNumber.h <<===>> ..\src\my_math_lib\RandomNumber.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\CastDerivedPtrToPtr.h"
+"Relative Path: ..\src\Others\CastDerivedPtrToPtr.h"
+symbolic link created for ..\headers\CastDerivedPtrToPtr.h <<===>> ..\src\Others\CastDerivedPtrToPtr.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\DataTypes.h"
+"Relative Path: ..\src\Others\DataTypes.h"
+symbolic link created for ..\headers\DataTypes.h <<===>> ..\src\Others\DataTypes.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\Excel.h"
+"Relative Path: ..\src\Others\Excel.h"
+symbolic link created for ..\headers\Excel.h <<===>> ..\src\Others\Excel.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\Exceptions.h"
+"Relative Path: ..\src\Others\Exceptions.h"
+symbolic link created for ..\headers\Exceptions.h <<===>> ..\src\Others\Exceptions.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\MemoryLayoutOfObjects.h"
+"Relative Path: ..\src\Others\MemoryLayoutOfObjects.h"
+symbolic link created for ..\headers\MemoryLayoutOfObjects.h <<===>> ..\src\Others\MemoryLayoutOfObjects.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\Miscellaneous.h"
+"Relative Path: ..\src\Others\Miscellaneous.h"
+symbolic link created for ..\headers\Miscellaneous.h <<===>> ..\src\Others\Miscellaneous.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\OperatorOverloadingAllinOne.h"
+"Relative Path: ..\src\Others\OperatorOverloadingAllinOne.h"
+symbolic link created for ..\headers\OperatorOverloadingAllinOne.h <<===>> ..\src\Others\OperatorOverloadingAllinOne.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\test_1.h"
+"Relative Path: ..\src\Others\test_1.h"
+symbolic link created for ..\headers\test_1.h <<===>> ..\src\Others\test_1.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\test_2.h"
+"Relative Path: ..\src\Others\test_2.h"
+symbolic link created for ..\headers\test_2.h <<===>> ..\src\Others\test_2.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\test_3.h"
+"Relative Path: ..\src\Others\test_3.h"
+symbolic link created for ..\headers\test_3.h <<===>> ..\src\Others\test_3.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Others\test_4.h"
+"Relative Path: ..\src\Others\test_4.h"
+symbolic link created for ..\headers\test_4.h <<===>> ..\src\Others\test_4.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Puzzles_Others\Puzzles.h"
+"Relative Path: ..\src\Puzzles_Others\Puzzles.h"
+symbolic link created for ..\headers\Puzzles.h <<===>> ..\src\Puzzles_Others\Puzzles.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Puzzles_Others\TADM2E_exercise.h"
+"Relative Path: ..\src\Puzzles_Others\TADM2E_exercise.h"
+symbolic link created for ..\headers\TADM2E_exercise.h <<===>> ..\src\Puzzles_Others\TADM2E_exercise.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\RSA_end_to_end\RSA.h"
+"Relative Path: ..\src\RSA_end_to_end\RSA.h"
+symbolic link created for ..\headers\RSA.h <<===>> ..\src\RSA_end_to_end\RSA.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\RSA_end_to_end\RSA_Template.h"
+"Relative Path: ..\src\RSA_end_to_end\RSA_Template.h"
+symbolic link created for ..\headers\RSA_Template.h <<===>> ..\src\RSA_end_to_end\RSA_Template.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\STL\STLAllocators.h"
+"Relative Path: ..\src\STL\STLAllocators.h"
+symbolic link created for ..\headers\STLAllocators.h <<===>> ..\src\STL\STLAllocators.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\STL\STL_Allocators.h"
+"Relative Path: ..\src\STL\STL_Allocators.h"
+symbolic link created for ..\headers\STL_Allocators.h <<===>> ..\src\STL\STL_Allocators.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\STL\STL_Concurrency.h"
+"Relative Path: ..\src\STL\STL_Concurrency.h"
+symbolic link created for ..\headers\STL_Concurrency.h <<===>> ..\src\STL\STL_Concurrency.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\STL\STL_Containers.h"
+"Relative Path: ..\src\STL\STL_Containers.h"
+symbolic link created for ..\headers\STL_Containers.h <<===>> ..\src\STL\STL_Containers.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\STL\STL_Lambda.h"
+"Relative Path: ..\src\STL\STL_Lambda.h"
+symbolic link created for ..\headers\STL_Lambda.h <<===>> ..\src\STL\STL_Lambda.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\STL\STL_Ratio.h"
+"Relative Path: ..\src\STL\STL_Ratio.h"
+symbolic link created for ..\headers\STL_Ratio.h <<===>> ..\src\STL\STL_Ratio.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\STL\STL_SmartPointers.h"
+"Relative Path: ..\src\STL\STL_SmartPointers.h"
+symbolic link created for ..\headers\STL_SmartPointers.h <<===>> ..\src\STL\STL_SmartPointers.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\STL\STL_TypeTraits.h"
+"Relative Path: ..\src\STL\STL_TypeTraits.h"
+symbolic link created for ..\headers\STL_TypeTraits.h <<===>> ..\src\STL\STL_TypeTraits.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\String_Utils\StringUtils.h"
+"Relative Path: ..\src\String_Utils\StringUtils.h"
+symbolic link created for ..\headers\StringUtils.h <<===>> ..\src\String_Utils\StringUtils.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Templates\TemplateMetaProgramming.h"
+"Relative Path: ..\src\Templates\TemplateMetaProgramming.h"
+symbolic link created for ..\headers\TemplateMetaProgramming.h <<===>> ..\src\Templates\TemplateMetaProgramming.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Templates\Templates.h"
+"Relative Path: ..\src\Templates\Templates.h"
+symbolic link created for ..\headers\Templates.h <<===>> ..\src\Templates\Templates.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Timer\MSDNTimeExample.h"
+"Relative Path: ..\src\Timer\MSDNTimeExample.h"
+symbolic link created for ..\headers\MSDNTimeExample.h <<===>> ..\src\Timer\MSDNTimeExample.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Timer\Timer.h"
+"Relative Path: ..\src\Timer\Timer.h"
+symbolic link created for ..\headers\Timer.h <<===>> ..\src\Timer\Timer.h
+"Full Path: C:\Users\Prashant\Google Drive\Everything_git\src\Timer\Timer2.h"
+"Relative Path: ..\src\Timer\Timer2.h"
+symbolic link created for ..\headers\Timer2.h <<===>> ..\src\Timer\Timer2.h
+Press any key to continue . . . 

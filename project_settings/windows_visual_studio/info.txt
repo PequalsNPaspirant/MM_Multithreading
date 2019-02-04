@@ -1,0 +1,1 @@
+$(ProjectDir) points to the directory of your .vcproj file, $(SolutionDir) is the directory of the .sln file.
