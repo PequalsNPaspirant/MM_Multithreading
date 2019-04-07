@@ -15,41 +15,46 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\MM_MultithreadingLibrary_main.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\Basics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_Basics.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\CigaretteSmokers_v1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_ReplaceMutexByAtomic.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\Deadlock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_ThreadSafeQueue_v1.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\DiningPhilosophers_v1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_CigaretteSmokersProblem_v1.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\LockFreeQueue_v1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_Deadlock.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\ReadersWriters_v1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_DiningPhilosophersProblem_v1.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\ReentrantLock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_LockFreeQueue_v1.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\ReplaceMutexByAtomic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_ProducerConsumers_v1.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\SleepingBarber_v1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_ReadersWritersProblem_v1.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\ThreadSafeQueue_v1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_ReentrantLock.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\SingleProducerMultiConsumers_v1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\Multithreading_SleepingBarberProblem_v1.cpp">
+    <ClCompile Include="..\..\..\..\src\_MM_Multithreading_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\src\MM_UnitTestFramework\MM_UnitTestFramework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

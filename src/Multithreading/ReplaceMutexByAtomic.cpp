@@ -4,11 +4,11 @@
 #include <mutex>
 #include <chrono>
 #include <atomic>
+#include <cassert>
 using namespace std;
 using namespace std::chrono_literals;
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
-#include "Assert/MyAssert.h"
 
 namespace mm {
 
@@ -123,7 +123,7 @@ namespace mm {
 			}
 			else
 			{
-				MyAssert::myRunTimeAssert(expected == true);
+				assert(expected == true);
 				expected = false;
 			}
 		}
