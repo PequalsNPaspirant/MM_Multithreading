@@ -19,6 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\Multithreading\Atomic_vs_Nonatomic.cpp" />
+    <ClCompile Include="..\..\..\..\src\Multithreading\Deque_Atomic.cpp" />
+    <ClCompile Include="..\..\..\..\src\Multithreading\Deque_Mutex.cpp" />
+    <ClCompile Include="..\..\..\..\src\Multithreading\MemoryOrder.cpp" />
+    <ClCompile Include="..\..\..\..\src\Multithreading\Queue_Atomic.cpp" />
+    <ClCompile Include="..\..\..\..\src\Multithreading\SingleLinkList_Atomic.cpp" />
+    <ClCompile Include="..\..\..\..\src\Multithreading\Spinlock.cpp" />
+    <ClCompile Include="..\..\..\..\src\Multithreading\Vector_Atomic.cpp" />
+    <ClCompile Include="..\..\..\..\src\Multithreading\Vector_Mutex.cpp" />
+    <ClCompile Include="..\..\..\..\src\Multithreading\SingleLinkList_Mutex.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\CigaretteSmokers_v1.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\Deadlock.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\DiningPhilosophers_v1.cpp" />

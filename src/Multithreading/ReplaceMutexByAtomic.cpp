@@ -31,28 +31,18 @@ namespace mm {
 
 	//global variable to modify
 	unsigned long long globalVal = 0;
-	std::mutex m;
-	
-	/*
-	std::atomic_flag is an atomic boolean type. Unlike all specializations of std::atomic, it is guaranteed to be lock-free. Unlike std::atomic<bool>, 
-	std::atomic_flag does not provide load or store operations.
-	*/
-	std::atomic<bool> my_mutex_replacement(false);
-	std::atomic_flag lock1 = ATOMIC_FLAG_INIT;
-	std::atomic_flag lock2 = ATOMIC_FLAG_INIT;
-	std::atomic<bool> lock3(false); // holds true when locked and false when unlocked
-	std::atomic<bool> lock4(false);
-	std::atomic<bool> lock5(false);
 	int numThreads = 1000;
 	int numIterations = 100;
 	std::chrono::milliseconds sleepTime(2);
 
+	std::mutex m;
 	void syncronizeUsingMutex(int increment)
 	{
 		std::unique_lock<std::mutex> lock(m);
 		globalVal += increment;
 	}
 
+	std::atomic<bool> my_mutex_replacement(false);
 	void syncronizeUsingAtomicVariable_unsafe(int increment)
 	{
 		while (true)
@@ -74,6 +64,11 @@ namespace mm {
 		}
 	}
 
+	/*
+	std::atomic_flag is an atomic boolean type. Unlike all specializations of std::atomic, it is guaranteed to be lock-free. Unlike std::atomic<bool>,
+	std::atomic_flag does not provide load or store operations.
+	*/
+	std::atomic_flag lock1 = ATOMIC_FLAG_INIT;
 	void syncronizeUsingAtomicVariable_safe_v1(int increment)
 	{
 		while (lock1.test_and_set(std::memory_order_acquire))  // acquire lock
@@ -82,6 +77,11 @@ namespace mm {
 		lock1.clear(std::memory_order_release);               // release lock
 	}
 
+	/*
+	std::atomic_flag is an atomic boolean type. Unlike all specializations of std::atomic, it is guaranteed to be lock-free. Unlike std::atomic<bool>,
+	std::atomic_flag does not provide load or store operations.
+	*/
+	std::atomic_flag lock2 = ATOMIC_FLAG_INIT;
 	void syncronizeUsingAtomicVariable_safe_v2(int increment)
 	{
 		while(std::atomic_flag_test_and_set_explicit(&lock2, std::memory_order_acquire))
@@ -90,6 +90,7 @@ namespace mm {
 		std::atomic_flag_clear_explicit(&lock2, std::memory_order_release);
 	}
 
+	std::atomic<bool> lock3(false); // holds true when locked and false when unlocked
 	void syncronizeUsingAtomicVariable_safe_v3(int increment)
 	{
 		while(std::atomic_exchange_explicit(&lock3, true, std::memory_order_acquire))
@@ -98,6 +99,7 @@ namespace mm {
 		std::atomic_store_explicit(&lock3, false, std::memory_order_release);
 	}
 
+	std::atomic<bool> lock4(false);
 	void syncronizeUsingAtomicVariable_safe_v4(int increment)
 	{
 		//bool expected = false;
@@ -129,6 +131,7 @@ namespace mm {
 		}
 	}
 
+	std::atomic<bool> lock5(false);
 	void syncronizeUsingAtomicVariable_safe_v5(int increment)
 	{
 		while (true)
@@ -149,6 +152,26 @@ namespace mm {
 			}
 		}
 	}
+
+	std::atomic<bool> lock6(false);
+	void syncronizeUsingAtomicVariable_safe_v6(int increment)
+	{
+		//can not simply use the store as another thread might have just set it to true from false.
+		//We have to set it to true only if it is false
+		//lock6.store(true, std::memory_order_acquire); 
+		//Use exchange instead
+		//T exchange( T desired_new_value, std::memory_order order = std::memory_order_seq_cst )
+		//returns the old value
+		while (lock6.exchange(true, std::memory_order_acquire)) //swaps atomic and passed-in non-atomic variables atomically
+			; //spin
+
+		//Nobody acquired lock yet
+		globalVal += increment;
+		//cout << "\nthread: " << increment << " globalVal: " << globalVal;
+
+		lock6.store(false, std::memory_order_release);
+	}
+
 
 	void threadFunction(int increment, int version)
 	{
@@ -176,6 +199,9 @@ namespace mm {
 				break;
 			case 7:
 				syncronizeUsingAtomicVariable_safe_v5(increment);
+				break;
+			case 8:
+				syncronizeUsingAtomicVariable_safe_v6(increment);
 				break;
 			}
 				
@@ -213,6 +239,7 @@ namespace mm {
 		test(5);
 		test(6);
 		test(7);
+		test(8);
 	}
 
 /*
