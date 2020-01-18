@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeQueue_v1.cpp" />
+    <ClCompile Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnlimitedQueue_v1.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\Atomic_vs_Nonatomic.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\Deque_Atomic.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\Deque_Mutex.cpp" />
@@ -43,6 +45,8 @@
     <ClCompile Include="..\..\..\..\src\_MM_Multithreading_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeQueue_v1.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnlimitedQueue_v1.h" />
     <ClInclude Include="..\..\..\..\src\MM_UnitTestFramework\MM_UnitTestFramework.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
