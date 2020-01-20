@@ -33,7 +33,7 @@ namespace mm {
 			vec_[head_] = std::move(obj);
 			head_ = ++head_ % maxSize_;
 			++size_;
-			cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << size_;
+			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << size_;
 			mlock.unlock(); //release the lock on mutex, so that the notified thread can acquire that mutex immediately when awakened,
 							//Otherwise waiting thread may try to acquire mutex before this thread releases it.
 			cvConsumers_.notify_one();
@@ -52,7 +52,7 @@ namespace mm {
 			auto obj = vec_[tail_];
 			tail_ = ++tail_ % maxSize_;
 			--size_;
-			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
+			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
 
 			mlock.unlock();
 			cvProducers_.notify_one();
@@ -76,7 +76,7 @@ namespace mm {
 			auto obj = vec_[tail_];
 			tail_ = ++tail_ % maxSize_;
 			--size_;
-			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
+			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
 
 			mlock.unlock();
 			cvProducers_.notify_one();

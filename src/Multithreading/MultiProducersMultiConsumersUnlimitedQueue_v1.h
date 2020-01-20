@@ -22,7 +22,7 @@ namespace mm {
 		{
 			std::unique_lock<std::mutex> mlock(mutex_);
 			queue_.push(std::move(obj));
-			cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << queue_.size();
+			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << queue_.size();
 			mlock.unlock(); //release the lock on mutex, so that the notified thread can acquire that mutex immediately when awakened,
 							//Otherwise waiting thread may try to acquire mutex before this thread releases it.
 			cond_.notify_one();
@@ -40,7 +40,7 @@ namespace mm {
 			//cond_.wait(mlock, [this](){ return !this->queue_.empty(); });
 			auto obj = queue_.front();
 			queue_.pop();
-			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
+			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
 			return obj; //this object can be returned by copy/move and it will be lost if the copy/move constructor throws exception.
 		}
 
@@ -54,7 +54,7 @@ namespace mm {
 			}
 			outVal = queue_.front();
 			queue_.pop();
-			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
+			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
 		}
 
 		//pop() with timeout. Returns false if timeout occurs.
@@ -70,7 +70,7 @@ namespace mm {
 			//cond_.wait_for(mlock, timeout, [this](){ return !this->queue_.empty(); });
 			outVal = queue_.front();
 			queue_.pop();
-			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
+			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
 			return true;
 		}
 

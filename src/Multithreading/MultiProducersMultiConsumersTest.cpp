@@ -1,5 +1,8 @@
 #include <iostream>
 #include <random>
+#include <chrono>
+#include <locale>
+#include <memory>
 using namespace std;
 
 #include "MultiProducersMultiConsumersUnsafeQueue_v1.h"
@@ -41,10 +44,17 @@ namespace mm {
 		}
 	}
 
+	struct separate_thousands : std::numpunct<char> {
+		char_type do_thousands_sep() const override { return ','; }  // separate with commas
+		string_type do_grouping() const override { return "\3"; } // groups of 3 digit
+	};
+
 	template<typename Tqueue>
 	void test_mpmcu_queue(Tqueue& queue, int numProducerThreads, int numConsumerThreads, int numOperationsPerThread)
 	{
 		cout << "\n\nTest starts:";
+
+		std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
 		//Tqueue queue = createQueue_sfinae<Tqueue>(queueSize);
 		const int threadsCount = numProducerThreads > numConsumerThreads ? numProducerThreads : numConsumerThreads;
@@ -64,7 +74,15 @@ namespace mm {
 		for (int i = 0; i < numConsumerThreads; ++i)
 			consumerThreads[i].join();
 
-		cout << "\nfinished waiting for all threads. queue.size() = " << queue.size();
+		std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+		unsigned long long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+
+		//int number = 123'456'789;
+		//std::cout << "\ndefault locale: " << number;
+		auto thousands = std::make_unique<separate_thousands>();
+		std::cout.imbue(std::locale(std::cout.getloc(), thousands.release()));
+		//std::cout << "\nlocale with modified thousands: " << number;
+		cout << "\nfinished waiting for all threads. Duration: " << duration << " nanoseconds. Queue.size() = " << queue.size();
 	}
 
 	template<typename Tqueue>

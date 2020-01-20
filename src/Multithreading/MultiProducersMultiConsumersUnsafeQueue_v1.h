@@ -22,7 +22,7 @@ namespace mm {
 		void push(T&& obj)
 		{
 			queue_.push(std::move(obj));
-			cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << queue_.size();
+			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << queue_.size();
 		}
 
 		//exception UNSAFE pop() version
@@ -30,7 +30,7 @@ namespace mm {
 		{
 			auto obj = queue_.front();
 			queue_.pop();
-			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
+			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
 			return obj; //this object can be returned by copy/move and it will be lost if the copy/move constructor throws exception.
 		}
 
@@ -39,7 +39,7 @@ namespace mm {
 		{
 			outVal = queue_.front();
 			queue_.pop();
-			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
+			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
 		}
 
 		size_t size()
