@@ -14,7 +14,7 @@ using namespace std;
 namespace mm {
 
 	template <typename T>
-	class MultiProducerMultiConsumersUnlimitedQueue_v1
+	class MultiProducersMultiConsumersUnlimitedQueue_v1
 	{
 	public:
 

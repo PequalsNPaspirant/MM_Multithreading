@@ -81,10 +81,7 @@
     <ClCompile Include="..\..\..\..\src\Multithreading\Deque_Mutex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeQueue_v1.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnlimitedQueue_v1.cpp">
+    <ClCompile Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -96,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeQueue_v1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnsafeQueue_v1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -15,10 +15,10 @@ using namespace std;
 namespace mm {
 
 	template <typename T>
-	class MultiProducerMultiConsumersFixedSizeQueue_v1
+	class MultiProducersMultiConsumersFixedSizeQueue_v1
 	{
 	public:
-		MultiProducerMultiConsumersFixedSizeQueue_v1(size_t maxSize)
+		MultiProducersMultiConsumersFixedSizeQueue_v1(size_t maxSize)
 			: maxSize_(maxSize), vec_(maxSize), size_(0), head_(0), tail_(0)
 		{
 		}
