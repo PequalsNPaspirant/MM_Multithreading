@@ -51,7 +51,7 @@ namespace mm {
 		for (int i = 0; i < threadsCount; ++i)
 		{
 			producerThreads.push_back(std::thread(producerThreadFunction<T>, std::ref(queue)));
-			consumerThreads.push_back(std::thread(consumerThreadFunction<T>, std::ref(queue)));
+			consumerThreads.push_back(std::thread(consumerThreadFunction<T>, std::ref(queue)));swe3w
 		}
 
 		for (int i = 0; i < threadsCount; ++i)
@@ -106,6 +106,6 @@ namespace mm {
 		MM_SET_PAUSE_ON_ERROR(true);
 
 		test_mpmcu_queue<MultiProducerMultiConsumersUnlimitedQueue_v1<int>>();
-		//test_mpmcu_queue<Queue_v1<int>>(); //This crashed the program due to lack of synchronization
+		//test_mpmcu_queue<Queue_v1<int>>(); //This crashes the program due to lack of synchronization
 	}
 }

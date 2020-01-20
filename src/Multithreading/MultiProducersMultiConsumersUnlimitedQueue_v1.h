@@ -37,7 +37,7 @@ namespace mm {
 				cond_.wait(mlock);
 			}
 			//OR we can use below
-			//cond_.wait(mlock, [this](){ return !queue_.empty(); });
+			//cond_.wait(mlock, [this](){ return !this->queue_.empty(); });
 			auto obj = queue_.front();
 			queue_.pop();
 			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
@@ -67,7 +67,7 @@ namespace mm {
 					return false;
 			}
 			//OR we can use below
-			//cond_.wait_for(mlock, timeout, [this](){ return !queue_.empty(); });
+			//cond_.wait_for(mlock, timeout, [this](){ return !this->queue_.empty(); });
 			outVal = queue_.front();
 			queue_.pop();
 			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
