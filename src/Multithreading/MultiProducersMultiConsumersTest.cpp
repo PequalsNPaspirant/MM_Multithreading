@@ -8,6 +8,7 @@ using namespace std;
 #include "MultiProducersMultiConsumersUnsafeQueue_v1.h"
 #include "MultiProducersMultiConsumersUnlimitedQueue_v1.h"
 #include "MultiProducersMultiConsumersFixedSizeQueue_v1.h"
+#include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1.h"
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
 namespace mm {
@@ -16,31 +17,57 @@ namespace mm {
 	std::mt19937 mt32(rd()); //for 32 bit system
 	std::mt19937_64 mt64(rd()); //for 64 bit system
 	std::uniform_int_distribution<int> dist(111, 999);
+	vector<int> sleepTimesVec;
 
 	template<typename T>
-	void producerThreadFunction(T& queue, int numOperationsPerThread)
+	void producerThreadFunction(T& queue, int numOperationsPerThread, int threadId)
 	{
 		for (int i = 0; i < numOperationsPerThread; ++i)
 		{
-			int sleepTime = dist(mt64) % 100;
+			//int sleepTime = dist(mt64) % 100;
+			int sleepTime = sleepTimesVec[threadId * numOperationsPerThread + i];
 			this_thread::sleep_for(chrono::milliseconds(sleepTime));
 
-			int n = dist(mt64);
+			//int n = dist(mt64);
 			//cout << "\nThread " << this_thread::get_id() << " pushing " << n << " into queue";
+			int n = i;
 			queue.push(std::move(n));
 		}
 	}
 
+	template<>
+	void producerThreadFunction<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>(MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>& queue, int numOperationsPerThread, int threadId)
+	{
+		for (int i = 0; i < numOperationsPerThread; ++i)
+		{
+			int sleepTime = sleepTimesVec[threadId * numOperationsPerThread + i];
+			this_thread::sleep_for(chrono::milliseconds(sleepTime));
+			int n = i;
+			queue.push(std::move(n), threadId);
+		}
+	}
+
 	template<typename T>
-	void consumerThreadFunction(T& queue, int numOperationsPerThread)
+	void consumerThreadFunction(T& queue, int numOperationsPerThread, int threadId)
 	{
 		for(int i = 0; i < numOperationsPerThread; ++i)
 		{
-			int sleepTime = rand() % 100;
+			//int sleepTime = dist(mt64) % 100;
+			int sleepTime = sleepTimesVec[threadId * numOperationsPerThread + i];
 			this_thread::sleep_for(chrono::milliseconds(sleepTime));
 
 			int n = queue.pop();
 			//cout << "\nThread " << this_thread::get_id() << " popped " << n << " from queue";
+		}
+	}
+	template<>
+	void consumerThreadFunction<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>(MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>& queue, int numOperationsPerThread, int threadId)
+	{
+		for (int i = 0; i < numOperationsPerThread; ++i)
+		{
+			int sleepTime = sleepTimesVec[threadId * numOperationsPerThread + i];
+			this_thread::sleep_for(chrono::milliseconds(sleepTime));
+			int n = queue.pop(threadId);
 		}
 	}
 
@@ -50,28 +77,29 @@ namespace mm {
 	};
 
 	template<typename Tqueue>
-	void test_mpmcu_queue(Tqueue& queue, int numProducerThreads, int numConsumerThreads, int numOperationsPerThread)
+	void test_mpmcu_queue(Tqueue& queue, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperationsPerThread)
 	{
 		cout << "\n\nTest starts:";
 
 		std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
 		//Tqueue queue = createQueue_sfinae<Tqueue>(queueSize);
-		const int threadsCount = numProducerThreads > numConsumerThreads ? numProducerThreads : numConsumerThreads;
+		const size_t threadsCount = numProducerThreads > numConsumerThreads ? numProducerThreads : numConsumerThreads;
 		vector<std::thread> producerThreads;
 		vector<std::thread> consumerThreads;
-		for (int i = 0; i < threadsCount; ++i)
+		int threadId = -1;
+		for (size_t i = 0; i < threadsCount; ++i)
 		{
 			if(i < numProducerThreads)
-				producerThreads.push_back(std::thread(producerThreadFunction<Tqueue>, std::ref(queue), numOperationsPerThread));
+				producerThreads.push_back(std::thread(producerThreadFunction<Tqueue>, std::ref(queue), numOperationsPerThread, ++threadId));
 			if (i < numConsumerThreads)
-				consumerThreads.push_back(std::thread(consumerThreadFunction<Tqueue>, std::ref(queue), numOperationsPerThread));
+				consumerThreads.push_back(std::thread(consumerThreadFunction<Tqueue>, std::ref(queue), numOperationsPerThread, ++threadId));
 		}
 
-		for (int i = 0; i < numProducerThreads; ++i)
+		for (size_t i = 0; i < numProducerThreads; ++i)
 			producerThreads[i].join();
 
-		for (int i = 0; i < numConsumerThreads; ++i)
+		for (size_t i = 0; i < numConsumerThreads; ++i)
 			consumerThreads[i].join();
 
 		std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
@@ -86,15 +114,21 @@ namespace mm {
 	}
 
 	template<typename Tqueue>
-	void test_mpmcu_queue_sfinae(int numProducerThreads, int numConsumerThreads, int numOperationsPerThread, size_t queueSize)
+	void test_mpmcu_queue_sfinae(size_t numProducerThreads, size_t numConsumerThreads, size_t numOperationsPerThread, size_t queueSize)
 	{
 		Tqueue queue{};
 		test_mpmcu_queue(queue, numProducerThreads, numConsumerThreads, numOperationsPerThread);
 	}
 	template<>
-	void test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(int numProducerThreads, int numConsumerThreads, int numOperationsPerThread, size_t queueSize)
+	void test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(size_t numProducerThreads, size_t numConsumerThreads, size_t numOperationsPerThread, size_t queueSize)
 	{
 		MultiProducersMultiConsumersFixedSizeQueue_v1<int> queue{ queueSize };
+		test_mpmcu_queue(queue, numProducerThreads, numConsumerThreads, numOperationsPerThread);
+	}
+	template<>
+	void test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>(size_t numProducerThreads, size_t numConsumerThreads, size_t numOperationsPerThread, size_t queueSize)
+	{
+		MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int> queue{ queueSize, numProducerThreads, numConsumerThreads };
 		test_mpmcu_queue(queue, numProducerThreads, numConsumerThreads, numOperationsPerThread);
 	}
 
@@ -103,16 +137,26 @@ namespace mm {
 	{
 		MM_SET_PAUSE_ON_ERROR(true);
 
-		int numProducerThreads = 25;
-		int numConsumerThreads = 25;
-		int numOperationsPerThread = 50;
-		size_t queueSize = 5; // numProducerThreads * numOperationsPerThread / 10;
+		size_t numProducerThreads = 25;
+		size_t numConsumerThreads = 25;
+		size_t numOperationsPerThread = 50;
+		size_t queueSize = 8; // numProducerThreads * numOperationsPerThread / 10;
 
-		cout << "\n\n============================ Testing Unsafe Queue...";
+		size_t total = (numProducerThreads + numConsumerThreads) * numOperationsPerThread;
+		sleepTimesVec.reserve(total);
+		for (size_t i = 0; i < total; ++i)
+		{
+			int sleepTime = dist(mt64) % 100;
+			sleepTimesVec.push_back(sleepTime);
+		}
+
+		//cout << "\n\n============================ Testing Unsafe Queue (v1)...";
 		//test_mpmcu_queue_sfinae<UnsafeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0); //This crashes the program due to lack of synchronization
-		cout << "\n\n============================ Testing Multi Producers Multi Consumers Unlimited Queue...";
+		cout << "\n\n============================ Testing Multi Producers Multi Consumers Unlimited Queue (v1)...";
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0);
-		cout << "\n\n============================ Testing Multi Producers Multi Consumers Fixed Size Queue...";
+		cout << "\n\n============================ Testing Multi Producers Multi Consumers Fixed Size Queue (v1)...";
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, queueSize);
+		//cout << "\n\n============================ Testing Multi Producers Multi Consumers Fixed Size Lock Free Queue (v1)...";
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, queueSize);
 	}
 }
