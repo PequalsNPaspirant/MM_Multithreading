@@ -49,7 +49,7 @@ namespace mm {
 
 		void push(T&& obj, int threadId)
 		{
-			ThreadPosition tp = threadPos_[threadId];
+			ThreadPosition& tp = threadPos_[threadId];
 
 			tp.head = head_;
 			tp.head = atomic_inc(&head_);
@@ -75,9 +75,11 @@ namespace mm {
 				_mm_pause();
 			}
 
-			vec_[tp.head % maxSize_] = obj;
+			size_t pos = tp.head % maxSize_;
+			vec_[pos] = obj;
+			++size_;
 
-			cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << size_;
+			cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " at index " << pos << " into queue. Queue size: " << size_;
 
 			// Allow consumers eat the item.
 			tp.head = ULONG_MAX;
@@ -86,7 +88,7 @@ namespace mm {
 		//exception UNSAFE pop() version
 		T pop(int threadId)
 		{
-			ThreadPosition tp = threadPos_[threadId];
+			ThreadPosition& tp = threadPos_[threadId];
 
 			tp.tail = tail_;
 			tp.tail = atomic_inc(&tail_);
@@ -112,10 +114,12 @@ namespace mm {
 				_mm_pause();
 			}
 
-			T obj = vec_[tp.tail % maxSize_];
+			size_t pos = tp.tail % maxSize_;
+			T obj = vec_[pos];
+			--size_;
 			// Allow producers rewrite the slot.
-			tp.tail = ULONG_MAX;
-			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
+			tp.tail = std::numeric_limits<unsigned long>::max();
+			cout << "\nThread " << this_thread::get_id() << " popped " << obj << " at index " << pos << " from queue. Queue size: " << size_;
 			return obj;
 		}
 
