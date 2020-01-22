@@ -47,6 +47,11 @@ namespace mm {
 			return queue_.size();
 		}
 
+		bool empty()
+		{
+			return queue_.empty();
+		}
+
 	private:
 		std::queue<T> queue_;
 	};

@@ -88,6 +88,12 @@ namespace mm {
 			return size_;
 		}
 
+		bool empty()
+		{
+			//return vec_.empty(); //vector is never empty. The elements will be overwritten by push if the queue is already full.
+			return size_ == 0;
+		}
+
 	private:
 		size_t maxSize_;
 		std::vector<T> vec_; //This will be used as ring buffer / circular queue

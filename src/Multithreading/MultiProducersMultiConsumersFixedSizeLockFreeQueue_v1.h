@@ -21,13 +21,31 @@ using namespace std;
 #undef max
 #undef min
 #define atomic_inc(ptr) InterlockedIncrement ((ptr))
-#define __builtin_expect(condition) (condition)
+#define __builtin_expect(condition, x) (condition)
 #define compiler_level_memory_fence (_ReadWriteBarrier())
 #else
 #error "Need some more porting work here"
 #endif
 
+#if !defined(DCACHE1_LINESIZE) || !DCACHE1_LINESIZE
+#ifdef DCACHE1_LINESIZE
+#undef DCACHE1_LINESIZE
+#endif
+#define DCACHE1_LINESIZE 64
+#endif
+#ifdef WIN32
+#define ____cacheline_aligned __declspec(align(DCACHE1_LINESIZE))
+#else
+#define ____cacheline_aligned	__attribute__((aligned(DCACHE1_LINESIZE)))
+#endif
+
 namespace mm {
+
+	/*
+	Reference: http://natsys-lab.blogspot.com/2013/05/lock-free-multi-producer-multi-consumer.html
+	https://github.com/tempesta-tech/blog/blob/master/lockfree_rb_q.cc
+	Note: This queue does NOT work.
+	*/
 
 	template <typename T>
 	class MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1
@@ -128,9 +146,14 @@ namespace mm {
 			return size_;
 		}
 
+		bool empty()
+		{
+			return vec_.empty();
+		}
+
 	private:
 		struct ThreadPosition {
-			unsigned long head, tail;
+			size_t head, tail;
 		};
 
 		size_t maxSize_;
@@ -138,8 +161,13 @@ namespace mm {
 		size_t size_;
 		size_t numProducers_;
 		size_t numConsumers_;
-		size_t head_; //stores the index where next element will be pushed
-		size_t tail_; //stores the index of object which will be popped
+#ifdef WIN32
+		____cacheline_aligned size_t head_; //stores the index where next element will be pushed
+		____cacheline_aligned size_t tail_; //stores the index of object which will be popped
+#else
+		size_t head_ ____cacheline_aligned; //stores the index where next element will be pushed
+		size_t tail_ ____cacheline_aligned; //stores the index of object which will be popped
+#endif
 		size_t lastHead_;
 		size_t lastTail_;
 		std::vector<ThreadPosition> threadPos_;
