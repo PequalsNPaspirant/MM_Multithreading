@@ -211,12 +211,16 @@ namespace mm {
 		{ 1, 1, 1, 1, {} },
 		{ 1, 1, 100, 10, {} },
 		{ 2, 2, 100, 10, {} },
-		{ 3, 3, 100, 10,{} },
-		{ 4, 4, 100, 10,{} },
-		{ 5, 5, 100, 10,{} },
-		{ 6, 6, 100, 10,{} },
-		{ 7, 7, 100, 10,{} },
-		{ 8, 8, 100, 10,{} },
+		{ 3, 3, 100, 10, {} },
+		{ 4, 4, 100, 10, {} },
+		{ 4, 4, 500, 10, {} },
+		{ 5, 5, 100, 10, {} },
+		{ 6, 6, 100, 10, {} },
+		{ 7, 7, 100, 10, {} },
+		{ 8, 8, 100, 10, {} },
+		{ 9, 9, 100, 10, {} },
+		{ 10, 10, 100, 10, {} },
+		{ 10, 10, 500, 10, {} },
 		};
 
 		for (int i = 0; i < results.size(); ++i)
@@ -226,22 +230,27 @@ namespace mm {
 		}
 
 		//Print results
+		int firstColWidth = 19;
+		int colWidth = 20;
 		cout
-			<< "\n"
-			<< std::setw(10) << "Test Case"
-			<< std::setw(10) << "MPMC-Uv1-vec"
-			<< std::setw(10) << "MPMC-Uv1-list"
-			<< std::setw(10) << "MPMC-Uv1-fwlist"
-			<< std::setw(10) << "MPMC-U-LF-v1"
-			<< std::setw(10) << "MPMC-FS-v1"
-			<< std::setw(10) << "MPMC-FS-LF-v1"
+			<< "\n\n"
+			<< std::setw(firstColWidth) << "Test Case"
+			<< std::setw(colWidth) << "MPMC-U-v1-deque"
+			<< std::setw(colWidth) << "MPMC-U-v1-list"
+			<< std::setw(colWidth) << "MPMC-U-v1-fwlist"
+			<< std::setw(colWidth) << "MPMC-U-LF-v1"
+			<< std::setw(colWidth) << "MPMC-FS-v1"
+			<< std::setw(colWidth) << "MPMC-FS-LF-v1"
 			<< "\n";
 		for (int i = 0; i < results.size(); ++i)
 		{
 			cout << "\n"
-				<< results[i].numProducers_ << "," << results[i].numConsumers_ << "," << results[i].numOperations_ << "," << results[i].queueSize_;
+				<< std::setw(4) << results[i].numProducers_ << ","
+				<< std::setw(4) << results[i].numConsumers_ << ","
+				<< std::setw(4) << results[i].numOperations_ << ","
+				<< std::setw(4) << results[i].queueSize_;
 			for (int k = 0; k < results[i].nanosPerQueueType_.size(); ++k)
-				cout << std::setw(10) << results[i].nanosPerQueueType_[k];
+				cout << std::setw(colWidth) << results[i].nanosPerQueueType_[k];
 		}
 	}
 }
