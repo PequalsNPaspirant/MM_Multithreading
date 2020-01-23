@@ -72,10 +72,11 @@ namespace mm {
 			if (theNext != nullptr)      // if queue is nonempty
 			{
 				T* val = theNext->value;    // take it out
+				T result = *val;    // now copy it back. If exception is thrown here, the queue state will be unchanged. The function is exception neutral.
 				theNext->value = nullptr;  // of the Node
 				first = theNext;          // swing first forward
 				consumerLock = false;             // release exclusivity
-				T result = *val;    // now copy it back
+				//T result = *val;    // now copy it back
 				delete val;       // clean up the value
 				delete theFirst;      // and the old dummy
 				return result;      // and report success
@@ -96,7 +97,7 @@ namespace mm {
 			if (theNext != nullptr)      // if queue is nonempty
 			{   
 				T* val = theNext->value;    // take it out
-				outVal = *val;    // now copy it back. If the exception is thrown at this statement, the state of the entire queue is not changed.
+				outVal = *val;    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged.
 				theNext->value = nullptr;  // of the Node
 				first = theNext;          // swing first forward
 				consumerLock = false;             // release exclusivity
