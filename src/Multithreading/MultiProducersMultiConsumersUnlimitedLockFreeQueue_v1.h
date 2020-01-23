@@ -72,11 +72,11 @@ namespace mm {
 			if (theNext != nullptr)      // if queue is nonempty
 			{
 				T* val = theNext->value;    // take it out
-				T result = *val;    // now copy it back. If exception is thrown here, the queue state will be unchanged. The function is exception neutral.
+				//T result = *val;    // now copy it back. If exception is thrown here, the queue state will be unchanged. The function is exception neutral. but this retains lock for more time.
 				theNext->value = nullptr;  // of the Node
 				first = theNext;          // swing first forward
 				consumerLock = false;             // release exclusivity
-				//T result = *val;    // now copy it back
+				T result = *val;    // now copy it back. availability of queue i.e. locking it for least possible time is more important than exceptional neutrality.
 				delete val;       // clean up the value
 				delete theFirst;      // and the old dummy
 				return result;      // and report success
@@ -97,11 +97,11 @@ namespace mm {
 			if (theNext != nullptr)      // if queue is nonempty
 			{   
 				T* val = theNext->value;    // take it out
-				outVal = *val;    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged.
+				//outVal = *val;    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
 				theNext->value = nullptr;  // of the Node
 				first = theNext;          // swing first forward
 				consumerLock = false;             // release exclusivity
-				//outVal = *val;    // now copy it back. Do this copying above to make this function exception neutral.
+				outVal = *val;    // now copy it back. availability of queue i.e. locking it for least possible time is more important than exceptional neutrality. 
 				delete val;       // clean up the value
 				delete theFirst;      // and the old dummy
 				return true;      // and report success
