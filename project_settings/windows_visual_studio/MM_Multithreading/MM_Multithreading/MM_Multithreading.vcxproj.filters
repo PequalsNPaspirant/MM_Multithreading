@@ -107,5 +107,8 @@
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnlimitedQueue_v2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

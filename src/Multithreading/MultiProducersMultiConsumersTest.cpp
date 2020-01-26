@@ -18,15 +18,15 @@ using namespace std;
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
-//#define USE_SLEEP
+#define USE_SLEEP
 
 namespace mm {
 
 	std::random_device rd;
 	std::mt19937 mt32(rd()); //for 32 bit system
 	std::mt19937_64 mt64(rd()); //for 64 bit system
-	std::uniform_int_distribution<int> dist(111, 999);
-	vector<int> sleepTimesMilliVec;
+	std::uniform_int_distribution<size_t> dist(0, 99);
+	vector<size_t> sleepTimesNanosVec;
 	size_t totalSleepTimeNanos;
 	/*
 	Results in the tabular format like below: (where (a,b,c) = a producers b consumers and c operations by each thread)
@@ -54,8 +54,8 @@ namespace mm {
 		{
 #ifdef USE_SLEEP
 			//int sleepTime = dist(mt64) % 100;
-			int sleepTime = sleepTimesMilliVec[threadId * numOperationsPerThread + i];
-			this_thread::sleep_for(chrono::milliseconds(sleepTime));
+			size_t sleepTime = sleepTimesNanosVec[threadId * numOperationsPerThread + i];
+			this_thread::sleep_for(chrono::nanoseconds(sleepTime));
 #endif
 			//int n = dist(mt64);
 			//cout << "\nThread " << this_thread::get_id() << " pushing " << n << " into queue";
@@ -70,8 +70,8 @@ namespace mm {
 		for (int i = 0; i < numOperationsPerThread; ++i)
 		{
 #ifdef USE_SLEEP
-			int sleepTime = sleepTimesMilliVec[threadId * numOperationsPerThread + i];
-			this_thread::sleep_for(chrono::milliseconds(sleepTime));
+			size_t sleepTime = sleepTimesNanosVec[threadId * numOperationsPerThread + i];
+			this_thread::sleep_for(chrono::nanoseconds(sleepTime));
 #endif
 			int n = i;
 			queue.push(std::move(n), threadId);
@@ -85,8 +85,8 @@ namespace mm {
 		{
 #ifdef USE_SLEEP
 			//int sleepTime = dist(mt64) % 100;
-			int sleepTime = sleepTimesMilliVec[threadId * numOperationsPerThread + i];
-			this_thread::sleep_for(chrono::milliseconds(sleepTime));
+			size_t sleepTime = sleepTimesNanosVec[threadId * numOperationsPerThread + i];
+			this_thread::sleep_for(chrono::nanoseconds(sleepTime));
 #endif
 			int n = queue.pop();
 			//cout << "\nThread " << this_thread::get_id() << " popped " << n << " from queue";
@@ -98,8 +98,8 @@ namespace mm {
 		for (int i = 0; i < numOperationsPerThread; ++i)
 		{
 #ifdef USE_SLEEP
-			int sleepTime = sleepTimesMilliVec[threadId * numOperationsPerThread + i];
-			this_thread::sleep_for(chrono::milliseconds(sleepTime));
+			int sleepTime = sleepTimesNanosVec[threadId * numOperationsPerThread + i];
+			this_thread::sleep_for(chrono::nanoseconds(sleepTime));
 #endif
 			int n = queue.pop(threadId);
 		}
@@ -142,7 +142,11 @@ namespace mm {
 		auto thousands = std::make_unique<separate_thousands>();
 		std::cout.imbue(std::locale(std::cout.getloc(), thousands.release()));
 		//std::cout << "\nlocale with modified thousands: " << number;
-		cout << "\nfinished waiting for all threads. Total Duration: " << duration << " nanoseconds. Queue is empty? : " << (queue.empty() ? "Yes" : "No") << " Queue Size: " << queue.size();
+		cout << "      Queue is empty ? : " << (queue.empty() ? "Yes" : "No") << " Queue Size : " << queue.size();
+		cout << "\n    Total Duration: " << duration << " nanos."
+			<< " Effective Duration: " << duration - (totalSleepTimeNanos / (numProducerThreads + numConsumerThreads)) << " nanos."
+			<< " Total sleep time: " << totalSleepTimeNanos << " nanos." 
+			<< " Average sleep time per thread: " << totalSleepTimeNanos / (numProducerThreads + numConsumerThreads) << " nanos.";
 		results[resultIndex].nanosPerQueueType_.push_back(duration);
 	}
 
@@ -174,15 +178,15 @@ namespace mm {
 
 #ifdef USE_SLEEP
 		size_t total = (numProducerThreads + numConsumerThreads) * numOperationsPerThread;
-		sleepTimesMilliVec.reserve(total);
+		sleepTimesNanosVec.reserve(total);
 		totalSleepTimeNanos = 0;
 		for (size_t i = 0; i < total; ++i)
 		{
-			int sleepTime = dist(mt64) % 100;
+			size_t sleepTime = dist(mt64); // % 10000;
 			totalSleepTimeNanos += sleepTime;
-			sleepTimesMilliVec.push_back(sleepTime);
+			sleepTimesNanosVec.push_back(sleepTime);
 		}
-		totalSleepTimeNanos *= 1000000ULL;
+		//totalSleepTimeNanos *= 1000ULL;
 #endif
 
 		/***** Unlimited Queues ****/
@@ -190,13 +194,13 @@ namespace mm {
 		//test_mpmcu_queue_sfinae<UnsafeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex); 
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector<int>>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex);
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::list>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::forward_list>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex);
+		cout << "\nMPMC-U-v1-deque"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex);
+		cout << "\nMPMC-U-v1-list"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::list>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex);
+		cout << "\nMPMC-U-v1-fwlist"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::forward_list>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex);
+		cout << "\nMPMC-U-LF-v1"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, 0, resultIndex);
 
 		/***** Fixed Size Queues ****/
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, queueSize, resultIndex);
+		cout << "\nMPMC-FS-v1"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, queueSize, resultIndex);
 		//The below queue does not work
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperationsPerThread, queueSize, resultIndex);
 	}
@@ -227,7 +231,11 @@ namespace mm {
 
 		for (int i = 0; i < results.size(); ++i)
 		{
-			cout << "\nTest case no.: " << i;
+			cout << "\n===========Test case no.: " << i 
+				<< "   Producers: " << results[i].numProducers_ 
+				<< "   Consumers: " << results[i].numConsumers_ 
+				<< "   numOperationsPerThread: " << results[i].numOperations_
+				<< "   Queue size: " << results[i].queueSize_;
 			runTestCase(results[i].numProducers_, results[i].numConsumers_, results[i].numOperations_, results[i].queueSize_, i);
 		}
 
@@ -269,6 +277,7 @@ namespace mm {
 
 /*
 Results:
+without sleep time:
 
               Test Case     MPMC-U-v1-deque      MPMC-U-v1-list    MPMC-U-v1-fwlist        MPMC-U-LF-v1          MPMC-FS-v1       MPMC-FS-LF-v1
   Ps   Cs      Ops  Qsz
@@ -288,5 +297,27 @@ Results:
  10   10      500   10          38,266,300          22,844,900          21,782,700          20,834,000          22,432,700
  20   20    5,000   10          55,132,200          72,395,200          67,074,900          59,002,600          81,626,200
 100  100  100,000   10       2,295,550,100       2,431,142,400       2,478,145,000       1,805,269,200       5,109,587,200
+
+with sleep time:
+
+             Test Case     MPMC-U-v1-deque      MPMC-U-v1-list    MPMC-U-v1-fwlist        MPMC-U-LF-v1          MPMC-FS-v1       MPMC-FS-LF-v1
+ Ps   Cs      Ops  Qsz
+  
+  1    1        1    1          92,102,700          10,272,600           6,010,200           3,792,700           6,103,700
+  1    1      100   10          83,918,700         100,351,700          53,518,900          19,444,000          86,004,600
+  2    2      100   10          34,781,400          92,310,700          63,236,300          95,707,000          23,135,100
+  3    3      100   10          21,879,600          32,206,500          48,652,900          21,996,700          40,132,600
+  4    4      100   10          56,095,700          44,570,000          80,877,500          99,548,200          83,371,200
+  4    4      500   10         185,091,700         157,041,800         359,332,200          48,801,400          57,415,300
+  5    5      100   10          36,853,100          33,966,900          35,237,300          58,058,000          37,894,300
+  6    6      100   10          48,523,400          53,955,700          57,150,600          49,072,000          62,781,500
+  7    7      100   10          72,806,100          74,893,300          53,730,900          50,012,300          51,488,200
+  8    8      100   10          45,376,600          54,049,900         101,916,200          72,101,200          67,888,400
+  9    9      100   10          48,577,500          95,669,300         108,464,700         119,415,700         127,087,700
+ 10   10      100   10          89,290,600         105,511,700          80,415,200          94,005,500          53,200,700
+ 10   10      500   10         127,712,600         118,717,600         128,169,700         103,525,000          96,378,100
+ 20   20    5,000   10       1,106,625,400       1,019,265,200       1,241,381,200         854,424,200       1,328,750,700
+100  100  100,000   10      51,701,202,200      60,164,323,300      57,437,982,400      53,855,787,000      63,660,670,200
+
 
 */
