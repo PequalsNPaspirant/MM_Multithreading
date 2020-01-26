@@ -221,6 +221,8 @@ namespace mm {
 		{ 9, 9, 100, 10, {} },
 		{ 10, 10, 100, 10, {} },
 		{ 10, 10, 500, 10, {} },
+		{ 20, 20, 5000, 10,{} },
+		{ 100, 100, 100000, 10,{} },
 		};
 
 		for (int i = 0; i < results.size(); ++i)
@@ -230,8 +232,12 @@ namespace mm {
 		}
 
 		//Print results
-		int firstColWidth = 19;
-		int colWidth = 20;
+		constexpr const int subCol1 = 5;
+		constexpr const int subCol2 = 5;
+		constexpr const int subCol3 = 9;
+		constexpr const int subCol4 = 5;
+		constexpr const int firstColWidth = subCol1 + subCol2 + subCol3 + subCol4;
+		constexpr const int colWidth = 20;
 		cout
 			<< "\n\n"
 			<< std::setw(firstColWidth) << "Test Case"
@@ -242,13 +248,18 @@ namespace mm {
 			<< std::setw(colWidth) << "MPMC-FS-v1"
 			<< std::setw(colWidth) << "MPMC-FS-LF-v1"
 			<< "\n";
+		cout << "\n"
+			<< std::setw(5) << "Ps"
+			<< std::setw(5) << "Cs"
+			<< std::setw(6) << "Ops"
+			<< std::setw(4) << "Qsz";
 		for (int i = 0; i < results.size(); ++i)
 		{
 			cout << "\n"
-				<< std::setw(4) << results[i].numProducers_ << ","
-				<< std::setw(4) << results[i].numConsumers_ << ","
-				<< std::setw(4) << results[i].numOperations_ << ","
-				<< std::setw(4) << results[i].queueSize_;
+				<< std::setw(subCol1) << results[i].numProducers_
+				<< std::setw(subCol2) << results[i].numConsumers_
+				<< std::setw(subCol3) << results[i].numOperations_
+				<< std::setw(subCol4) << results[i].queueSize_;
 			for (int k = 0; k < results[i].nanosPerQueueType_.size(); ++k)
 				cout << std::setw(colWidth) << results[i].nanosPerQueueType_[k];
 		}
