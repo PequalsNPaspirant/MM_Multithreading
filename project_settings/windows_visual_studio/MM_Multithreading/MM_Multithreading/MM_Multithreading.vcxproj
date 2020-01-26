@@ -46,7 +46,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2.h" />
-    <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnsafeQueue_v1.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeQueue_v1.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnlimitedQueue_v1.h" />

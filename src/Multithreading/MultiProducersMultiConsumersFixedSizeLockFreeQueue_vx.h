@@ -39,19 +39,21 @@ using namespace std;
 #define ____cacheline_aligned	__attribute__((aligned(DCACHE1_LINESIZE)))
 #endif
 
+/*
+Note: This queue does NOT work.
+This is Multi Producers Multi Consumers Fixed Size Lock Free Queue.
+This is implemented using native (compiler specific) atomic operations.
+Reference: http://natsys-lab.blogspot.com/2013/05/lock-free-multi-producer-multi-consumer.html
+https://github.com/tempesta-tech/blog/blob/master/lockfree_rb_q.cc
+*/
+
 namespace mm {
 
-	/*
-	Reference: http://natsys-lab.blogspot.com/2013/05/lock-free-multi-producer-multi-consumer.html
-	https://github.com/tempesta-tech/blog/blob/master/lockfree_rb_q.cc
-	Note: This queue does NOT work.
-	*/
-
 	template <typename T>
-	class MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1
+	class MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx
 	{
 	public:
-		MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1(size_t maxSize, size_t numProducers, size_t numConsumers)
+		MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx(size_t maxSize, size_t numProducers, size_t numConsumers)
 			: maxSize_(maxSize), 
 			vec_(maxSize),
 			size_(0),

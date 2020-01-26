@@ -14,7 +14,7 @@ using namespace std;
 #include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2.h"
 
 #include "MultiProducersMultiConsumersFixedSizeQueue_v1.h"
-#include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1.h"
+#include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h"
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
@@ -48,7 +48,7 @@ namespace mm {
 	std::vector<ResultSet> results;
 
 	template<typename T>
-	void producerThreadFunction(T& queue, int numOperationsPerThread, int threadId)
+	void producerThreadFunction(T& queue, size_t numOperationsPerThread, int threadId)
 	{
 		for (int i = 0; i < numOperationsPerThread; ++i)
 		{
@@ -65,7 +65,7 @@ namespace mm {
 	}
 
 	template<>
-	void producerThreadFunction<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>(MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>& queue, int numOperationsPerThread, int threadId)
+	void producerThreadFunction<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>& queue, size_t numOperationsPerThread, int threadId)
 	{
 		for (int i = 0; i < numOperationsPerThread; ++i)
 		{
@@ -79,7 +79,7 @@ namespace mm {
 	}
 
 	template<typename T>
-	void consumerThreadFunction(T& queue, int numOperationsPerThread, int threadId)
+	void consumerThreadFunction(T& queue, size_t numOperationsPerThread, int threadId)
 	{
 		for(int i = 0; i < numOperationsPerThread; ++i)
 		{
@@ -93,7 +93,7 @@ namespace mm {
 		}
 	}
 	template<>
-	void consumerThreadFunction<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>(MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>& queue, int numOperationsPerThread, int threadId)
+	void consumerThreadFunction<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>& queue, size_t numOperationsPerThread, int threadId)
 	{
 		for (int i = 0; i < numOperationsPerThread; ++i)
 		{
@@ -159,9 +159,9 @@ namespace mm {
 		test_mpmcu_queue(queue, numProducerThreads, numConsumerThreads, numOperationsPerThread, resultIndex);
 	}
 	template<>
-	void test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>(size_t numProducerThreads, size_t numConsumerThreads, size_t numOperationsPerThread, size_t queueSize, int resultIndex)
+	void test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(size_t numProducerThreads, size_t numConsumerThreads, size_t numOperationsPerThread, size_t queueSize, int resultIndex)
 	{
-		MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int> queue{ queueSize, numProducerThreads, numConsumerThreads };
+		MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int> queue{ queueSize, numProducerThreads, numConsumerThreads };
 		test_mpmcu_queue(queue, numProducerThreads, numConsumerThreads, numOperationsPerThread, resultIndex);
 	}
 	

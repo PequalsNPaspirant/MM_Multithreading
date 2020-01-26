@@ -12,6 +12,14 @@ using namespace std;
 //#include "Multithreading\Multithreading_SingleProducerMultipleConsumers_v1.h"
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
+/*
+This is Multi Producers Multi Consumers Fixed Size Queue.
+This is very common and basic implemention using one mutex and two condition variables (one each for producers and consumers).
+It uses std::vector of fixed length to store data.
+Producers have to wait if the queue is full.
+Consumers have to wait if the queue is empty.
+*/
+
 namespace mm {
 
 	template <typename T>

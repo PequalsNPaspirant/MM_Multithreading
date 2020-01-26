@@ -15,6 +15,13 @@ using namespace std;
 #define CACHE_LINE_SIZE 64
 
 /*
+This is Multi Producers Multi Consumers Unlimited Size Lock Free Queue.
+This is implemented using two atomic boolean flags to create spin locks for producers and consumers.
+It uses its own forward list implementation having atomic next ptr in each node. 
+The list stores T* and uses two dynamic allocations to allocate memory for node and also for data.
+Producers never need to wait because its unlimited queue and will never be full.
+Consumers have to wait and retry on their own because it returns false if the queue is empty.
+
 Reference: Herb Sutter's blog:
 https://www.drdobbs.com/parallel/writing-a-generalized-concurrent-queue/211601363?pgno=1
 */

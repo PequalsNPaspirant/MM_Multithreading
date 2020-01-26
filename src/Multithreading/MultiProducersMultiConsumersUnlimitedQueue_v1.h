@@ -12,6 +12,14 @@
 #include <forward_list>
 using namespace std;
 
+/*
+This is Multi Producers Multi Consumers Unlimited Size Queue.
+This is the most common and basic implementation using one mutex and one condition variable.
+It uses std::queue<T, Container<T>> to store data where Container is std::vector, std::list and std::forward_list
+Producers never need to wait because its unlimited queue and will never be full.
+Consumers have to wait if the queue is empty.
+*/
+
 namespace mm {
 
 	//template <typename T, typename Container>

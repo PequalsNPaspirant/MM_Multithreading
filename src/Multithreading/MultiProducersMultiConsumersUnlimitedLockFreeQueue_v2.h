@@ -12,6 +12,15 @@
 #include <atomic>
 using namespace std;
 
+/*
+TODO:
+This is Multi Producers Multi Consumers Unlimited Size Queue.
+This is implemented using four atomic boolean flags, 2 for producers and 2 for consumers and it uses spin locks.
+It uses xxx to store data.
+Producers never need to wait because its unlimited queue and will never be full.
+Consumers have to wait if the queue is empty.
+*/
+
 namespace mm {
 
 	template <typename T>
