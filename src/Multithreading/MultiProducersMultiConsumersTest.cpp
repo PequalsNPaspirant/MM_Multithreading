@@ -8,13 +8,15 @@
 #include <forward_list>
 using namespace std;
 
-#include "MultiProducersMultiConsumersUnsafeQueue_v1.h"
-#include "MultiProducersMultiConsumersUnlimitedQueue_v1.h"
+#include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h"
+#include "MultiProducersMultiConsumersFixedSizeQueue_v1.h"
+
 #include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1.h"
 #include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2.h"
+#include "MultiProducersMultiConsumersUnlimitedQueue_v1.h"
+#include "MultiProducersMultiConsumersUnlimitedQueue_v2.h"
 
-#include "MultiProducersMultiConsumersFixedSizeQueue_v1.h"
-#include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h"
+#include "MultiProducersMultiConsumersUnsafeQueue_v1.h"
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
@@ -199,7 +201,10 @@ namespace mm {
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		cout << "\nMPMC-U-v1-deque"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		cout << "\nMPMC-U-v1-list"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::list>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//cout << "\nMPMC-U-v2-list"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::list>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		cout << "\nMPMC-U-v1-fwlist"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::forward_list>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//cout << "\nMPMC-U-v2-fwlist"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::forward_list>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		cout << "\nMPMC-U-v2-mylist"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		cout << "\nMPMC-U-LF-v1"; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
 		/***** Fixed Size Queues ****/
@@ -213,21 +218,22 @@ namespace mm {
 	{
 		MM_SET_PAUSE_ON_ERROR(true);
 
+		int numOperations = 8400 / 4;
 		results =
 		{
-		{ 1, 1,     8400, 10, {} },
-		{ 2, 2,     8400, 10, {} },
-		{ 3, 3,     8400, 10, {} },
-		{ 4, 4,     8400, 10, {} },
-		{ 5, 5,     8400, 10, {} },
-		{ 6, 6,     8400, 10, {} },
-		{ 7, 7,     8400, 10, {} },
-		{ 8, 8,     8400, 10, {} },
-		{ 9, 9,     8400, 10, {} },
-		{ 10, 10,   8400, 10, {} },
-		{ 20, 20,   8400, 10, {} },
-		{ 50, 50,   8400, 10, {} },
-		{ 100, 100, 8400, 10, {} },
+		{ 1, 1,     numOperations, 10, {} },
+		{ 2, 2,     numOperations, 10, {} },
+		{ 3, 3,     numOperations, 10, {} },
+		{ 4, 4,     numOperations, 10, {} },
+		{ 5, 5,     numOperations, 10, {} },
+		{ 6, 6,     numOperations, 10, {} },
+		{ 7, 7,     numOperations, 10, {} },
+		{ 8, 8,     numOperations, 10, {} },
+		{ 9, 9,     numOperations, 10, {} },
+		{ 10, 10,   numOperations, 10, {} },
+		{ 20, 20,   numOperations, 10, {} },
+		{ 50, 50,   numOperations, 10, {} },
+		{ 100, 100, numOperations, 10, {} },
 		};
 
 		for (int i = 0; i < results.size(); ++i)
