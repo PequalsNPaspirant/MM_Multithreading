@@ -23,7 +23,6 @@ Consumers have to wait if the queue is empty.
 
 namespace mm {
 
-/*
 	//template <typename T, typename Container>
 	template<typename T, template <typename... Args> class Container>
 	class MultiProducersMultiConsumersUnlimitedQueue_v2
@@ -44,15 +43,21 @@ namespace mm {
 		void push(T&& obj)
 		{
 			std::unique_lock<std::mutex> mlock(mutexProducer_);
-			if (size_.load() <= 2)
+			if (size_.load() == 1)
 			{
 				std::unique_lock<std::mutex> mlock(mutexCommon_);
-				queue_.insert(queue_.end(), std::move(obj));
+				queue_.insert(tail_, std::move(obj));
+				if (size_.load() == 0)
+					head_ = queue_.begin();
+				tail_ = queue_.end();
 				++size_;
 			}
 			else
 			{
-				queue_.insert(queue_.end(), std::move(obj));
+				queue_.insert(tail_, std::move(obj));
+				if (size_.load() == 0)
+					head_ = queue_.begin();
+				tail_ = queue_.end();
 				++size_;
 			}
 
@@ -76,18 +81,20 @@ namespace mm {
 			//cv_.wait(mlock, [this](){ return !this->queue_.empty(); });
 
 			T obj;
-			if (size_.load() <= 2)
+			if (size_.load() == 1)
 			{
 				std::unique_lock<std::mutex> mlock(mutexCommon_);
-				obj = queue_.front();
-				queue_.erase(queue_.begin());
+				obj = *head_;
+				head_ = queue_.erase(head_);
+				head_ = queue_.begin();
 				--size_;
 			}
 			else
 			{
-				obj = *queue_.begin();
-				queue_.erase(queue_.begin());
 				--size_;
+				obj = *head_;
+				head_ = queue_.erase(head_);
+				head_ = queue_.begin();
 			}
 			
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
@@ -179,6 +186,8 @@ namespace mm {
 			}
 			else
 			{
+				if (size_.load() == 0)
+					last_ = queue_.before_begin();
 				last_ = queue_.insert_after(last_, std::move(obj)); //Push element at the tail.
 				++size_;
 			}
@@ -214,11 +223,11 @@ namespace mm {
 			}
 			else
 			{
+				--size_;
 				obj = queue_.front();
 				queue_.erase_after(queue_.before_begin());
-				if (queue_.empty())
-					last_ = queue_.before_begin();
-				--size_;
+				//if (queue_.empty())
+				//	last_ = queue_.before_begin();
 			}
 			
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
@@ -277,10 +286,10 @@ namespace mm {
 		std::condition_variable cv_;
 	};
 
-*/
+	template <typename... Args> class Undefined {};
 
 	template<typename T>
-	class MultiProducersMultiConsumersUnlimitedQueue_v2
+	class MultiProducersMultiConsumersUnlimitedQueue_v2<T, Undefined>
 	{
 	private:
 		struct Node
