@@ -49,7 +49,7 @@ namespace mm {
 	};
 
 	std::vector<ResultSet> results;
-	std::vector<std::string> columns;
+	std::vector<std::string> columnNames;
 
 	//================ end of global variables ================
 
@@ -162,20 +162,26 @@ namespace mm {
 	}
 
 	template<typename Tqueue>
-	void test_mpmcu_queue_sfinae(size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
+	void test_mpmcu_queue_sfinae(const string& colName, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
 	{
+		columnNames.push_back(colName);
+		cout << "\n" << colName;
 		Tqueue queue{};
 		test_mpmcu_queue(queue, numProducerThreads, numConsumerThreads, numOperations, resultIndex);
 	}
 	template<>
-	void test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
+	void test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(const string& colName, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
 	{
+		columnNames.push_back(colName);
+		cout << "\n" << colName;
 		MultiProducersMultiConsumersFixedSizeQueue_v1<int> queue{ queueSize };
 		test_mpmcu_queue(queue, numProducerThreads, numConsumerThreads, numOperations, resultIndex);
 	}
 	template<>
-	void test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
+	void test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(const string& colName, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
 	{
+		columnNames.push_back(colName);
+		cout << "\n" << colName;
 		MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int> queue{ queueSize, numProducerThreads, numConsumerThreads };
 		test_mpmcu_queue(queue, numProducerThreads, numConsumerThreads, numOperations, resultIndex);
 	}
@@ -199,41 +205,24 @@ namespace mm {
 		}
 		//totalSleepTimeNanos *= 1000ULL;
 #endif
-		if (columns.empty())
-		{
-			/***** Unlimited Queues ****/
-			columns.push_back("MPMC-U-v1-deque");
-			columns.push_back("MPMC-U-v1-list");
-			columns.push_back("MPMC-U-v1-fwlist");
-			columns.push_back("MPMC-U-v2-list");
-			columns.push_back("MPMC-U-v2-fwlist");
-			columns.push_back("MPMC-U-v2-myfwlist");
-			columns.push_back("MPMC-U-LF-v1");
-			/***** Fixed Size Queues ****/
-			columns.push_back("MPMC-FS-v1");
-			columns.push_back("MPMC-FS-LF-v1");
-			columns.push_back("");
-			columns.push_back("");
-		}
-
-		int col = -1;
+		columnNames.clear(); //Not a good fix! Make sure the columnNames are not pushed again and again for all test cases
 		/***** Unlimited Queues ****/
 		//The below queue crashes the program due to lack of synchronization
-		//test_mpmcu_queue_sfinae<UnsafeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); 
+		//test_mpmcu_queue_sfinae<UnsafeQueue_v1<int>>("UNSAFE queue", numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); 
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector<int>>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		cout << "\n" << columns[++col]; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		cout << "\n" << columns[++col]; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::list>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		cout << "\n" << columns[++col]; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::forward_list>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		//cout << "\n" << columns[++col]; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::list>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		//cout << "\n" << columns[++col]; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::forward_list>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		cout << "\n" << columns[++col]; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, Undefined>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		cout << "\n" << columns[++col]; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int>>("MPMC-U-v1-deque", numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::list>>("MPMC-U-v1-list", numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::forward_list>>("MPMC-U-v1-fwlist", numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::list>>("MPMC-U-v2-fwlist", "MPMC-U-v2-list", numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::forward_list>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, Undefined>>("MPMC-U-v2-myfwlist", numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<int>>("MPMC-U-LF-v1", numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
 		/***** Fixed Size Queues ****/
-		cout << "\n" << columns[++col]; test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>("MPMC-FS-v1", numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 		//The below queue does not work
-		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>("MPMC-FS-LF-v1", numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 	}
 
 	MM_DECLARE_FLAG(Multithreading_mpmcu_queue);
@@ -280,9 +269,9 @@ namespace mm {
 			<< "\n\n"
 			<< std::setw(firstColWidth) << "Test Case";
 
-		for (int i = 0; i < columns.size(); ++i)
+		for (int i = 0; i < columnNames.size(); ++i)
 		{
-			cout << std::setw(colWidth) << columns[i];
+			cout << std::setw(colWidth) << columnNames[i];
 		}
 
 		cout << "\n"
@@ -368,5 +357,23 @@ with sleep time:
  50   50    8,400   10         479,273,600         441,260,200         465,822,300         445,276,700         444,507,600
 100  100    8,400   10         526,583,200         434,620,500         447,173,500         494,508,100         455,340,700
 
+
+
+             Test Case     MPMC-U-v1-deque      MPMC-U-v1-list    MPMC-U-v1-fwlist  MPMC-U-v2-myfwlist        MPMC-U-LF-v1          MPMC-FS-v1
+  Ps   Cs   TotOps  Qsz
+  
+  1    1    2,100   10       3,526,535,800       3,425,023,800       3,239,210,900       3,378,489,200       3,430,575,700       3,353,570,600
+  2    2    2,100   10       1,683,799,000       1,589,979,400       1,659,027,300       1,713,031,900       1,705,787,100       1,690,169,300
+  3    3    2,100   10       1,104,418,700       1,120,953,100       1,103,292,100       1,152,263,600       1,117,678,600       1,238,963,400
+  4    4    2,100   10         861,775,700         902,676,400         914,569,300         865,973,200         900,788,300         879,610,700
+  5    5    2,100   10         673,393,500         704,575,900         659,334,600         695,468,500         729,754,100         740,043,200
+  6    6    2,100   10         660,255,800         640,265,100         586,447,100         606,560,600         592,222,400         639,309,000
+  7    7    2,100   10         583,527,200         525,216,500         526,902,000         557,093,600         566,718,700         570,452,900
+  8    8    2,100   10         460,388,600         503,199,400         464,088,600         502,845,300         509,734,000         513,877,200
+  9    9    2,100   10         433,424,000         401,457,600         411,747,800         434,682,300         485,467,500         456,625,700
+ 10   10    2,100   10         413,122,600         412,532,000         367,249,900         427,021,100         382,729,300         434,349,800
+ 20   20    2,100   10         271,392,600         258,420,200         252,598,300         270,116,200         298,531,000         277,366,600
+ 50   50    2,100   10         239,467,100         241,762,000         216,692,700         231,421,800         252,337,000         232,998,000
+100  100    2,100   10         427,344,200         338,983,000         321,968,700         313,574,300         344,150,500         317,002,800
 
 */
