@@ -52,35 +52,6 @@ namespace mm {
 			cvConsumers_.notify_one();
 		}
 
-		//exception UNSAFE pop() version
-		T pop()
-		{
-			std::unique_lock<std::mutex> mlock(mutex_);
-			//while(size_ == 0)
-			while (head_ == tail_)
-			{
-				cvConsumers_.wait(mlock);
-			}
-			//OR we can use below
-			//cond_.wait(mlock, [this](){ return this->size_ != 0; });
-			auto obj = vec_[tail_ % maxSize_];
-			if (++tail_ == maxSize_)
-			{
-				head_ %= maxSize_;
-				tail_ %= maxSize_;
-			}
-			//--size_;
-			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
-
-			mlock.unlock();
-			cvProducers_.notify_one();
-
-			return obj; //this object can be returned by copy/move and it will be lost if the copy/move constructor throws exception.
-		}
-
-		//exception SAFE pop() version
-		//void pop(T& outVal) { //same implementation as above except the return statement. }
-
 		//pop() with timeout. Returns false if timeout occurs.
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
@@ -88,11 +59,14 @@ namespace mm {
 			//while (size_ == 0)
 			while (head_ == tail_)
 			{
+				//cvConsumers_.wait(mlock);
 				cvConsumers_.wait_for(mlock, timeout);
 			}
-			//OR we can use below
+			//OR
+			//cond_.wait(mlock, [this](){ return this->size_ != 0; });
 			//cond_.wait_for(mlock, timeout, [this](){ return this->size_ != 0; });
-			auto obj = vec_[tail_ % maxSize_];
+
+			outVal = vec_[tail_ % maxSize_];
 			if (++tail_ == maxSize_)
 			{
 				head_ %= maxSize_;
@@ -103,7 +77,6 @@ namespace mm {
 
 			mlock.unlock();
 			cvProducers_.notify_one();
-			outVal = obj;
 		}
 
 		size_t size()

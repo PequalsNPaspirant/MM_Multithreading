@@ -68,33 +68,8 @@ namespace mm {
 			producerLock = false;       // release exclusivity
 		}
 
-		//exception UNSAFE pop() version
-		T pop()
-		{
-			while (consumerLock.exchange(true))
-			{
-			}    // acquire exclusivity
-			Node* theFirst = first;
-			Node* theNext = first->next;
-			if (theNext != nullptr)      // if queue is nonempty
-			{
-				T* val = theNext->value;    // take it out
-				//T result = *val;    // now copy it back. If exception is thrown here, the queue state will be unchanged. The function is exception neutral. but this retains lock for more time.
-				theNext->value = nullptr;  // of the Node
-				first = theNext;          // swing first forward
-				consumerLock = false;             // release exclusivity
-				T result = *val;    // now copy it back. availability of queue i.e. locking it for least possible time is more important than exceptional neutrality.
-				delete val;       // clean up the value
-				delete theFirst;      // and the old dummy
-				return result;      // and report success
-			}
-
-			consumerLock = false;   // release exclusivity
-			return T();                  // report queue was empty
-		}
-
-		//exception SAFE pop() version
-		bool pop(T& outVal)
+		//exception SAFE pop() version. TODO: Returns false if timeout occurs.
+		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
 			while (consumerLock.exchange(true))
 			{
@@ -104,28 +79,23 @@ namespace mm {
 			if (theNext != nullptr)      // if queue is nonempty
 			{   
 				T* val = theNext->value;    // take it out
-				//outVal = *val;    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
+				outVal = *val;    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
 				theNext->value = nullptr;  // of the Node
 				first = theNext;          // swing first forward
 				consumerLock = false;             // release exclusivity
-				outVal = *val;    // now copy it back. availability of queue i.e. locking it for least possible time is more important than exceptional neutrality. 
+				//outVal = *val;    // now copy it back here if the availability of queue i.e. locking it for least possible time is more important than exceptional neutrality. 
 				delete val;       // clean up the value
 				delete theFirst;      // and the old dummy
 				return true;      // and report success
 			}
+
 			consumerLock = false;   // release exclusivity
 			return false;                  // report queue was empty
 		}
 
-		//pop() with timeout. Returns false if timeout occurs.
-		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
-		{
-			//TODO: implement the timeout using sleep and (atomic?) counter
-			return true;
-		}
-
 		size_t size()
 		{
+			//TODO: Use synchronization
 			size_t size = 0;
 			for (; first != nullptr; first = first->next)      // release the list
 			{
@@ -137,6 +107,7 @@ namespace mm {
 
 		bool empty()
 		{
+			//TODO: Use synchronization
 			return first == nullptr || (first != nullptr && first->next == nullptr);
 		}
 

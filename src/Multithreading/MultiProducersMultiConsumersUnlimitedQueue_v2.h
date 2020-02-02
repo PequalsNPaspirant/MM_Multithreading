@@ -342,15 +342,14 @@ namespace mm {
 				} while (curr != tail_);
 			}
 
-			T pop_front()
+			void pop_front(T& outVal)
 			{
-				T obj = head_->data_;
+				outVal = head_->data_;
 				Node* removed = head_;
 				head_ = head_->next_;
 				if (head_ == nullptr)
 					tail_ = nullptr;
 				delete removed;
-				return obj;
 			}
 
 			void push_back(T obj)
@@ -403,7 +402,7 @@ namespace mm {
 					//cond_.wait(mlock, [this](){ return !this->queue_.empty(); });
 				}
 
-				obj = queue_.pop_front();
+				queue_.pop_front(obj);
 				--noAtomicSize_;
 			}
 			else
@@ -411,52 +410,57 @@ namespace mm {
 				--noAtomicSize_;
 				p_lock.unlock(); //Release the lock as this consumer thread is working on a part of queue which will not be touched by any producer thread because size > 1
 				
-				obj = queue_.pop_front();
+				queue_.pop_front(obj);
 			}
 
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
 			return obj; //this object can be returned by copy/move and it will be lost if the copy/move constructor throws exception.
 		}
 
-		//exception SAFE pop() version
-		void pop(T& outVal)
-		{
-			std::unique_lock<std::mutex> mlock(mutexConsumer_);
-			while (queue_.empty())
-			{
-				cv_.wait(mlock);
-			}
-			outVal = queue_.front();
-			queue_.erase_after(queue_.before_begin());
-			--noAtomicSize_;
-			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
-		}
-
-		//pop() with timeout. Returns false if timeout occurs.
+		//exception SAFE pop() with timeout. Returns false if timeout occurs.
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
-			std::unique_lock<std::mutex> mlock(mutexConsumer_);
+			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
+
+			std::unique_lock<std::mutex> p_lock(mutexProducer_);
+			//If the thread is active due to spurious wake-up or more number of threads are notified than the number of elements in queue, 
+			//force it to check if queue is empty so that it can wait again if the queue is empty
 			while (noAtomicSize_ == 0)
 			{
-				if (cv_.wait_for(mlock, timeout) == std::cv_status::timeout)
+				//cv_.wait(p_lock);
+				if (cv_.wait_for(p_lock, timeout) == std::cv_status::timeout)
 					return false;
 			}
-			//OR we can use below
+			//OR
+			//cond_.wait(mlock, [this](){ return !this->queue_.empty(); });
 			//cv_.wait_for(mlock, timeout, [this](){ return !this->queue_.empty(); });
-			outVal = queue_.front();
-			queue_.erase_after(queue_.before_begin());
-			--noAtomicSize_;
+
+			
+
+			if (noAtomicSize_ == 1)
+			{
+				--noAtomicSize_;
+			}
+			else
+			{
+				--noAtomicSize_;
+				p_lock.unlock(); //Release the lock as this consumer thread is working on a part of queue which will not be touched by any producer thread because size > 1
+			}
+
+			queue_.pop_front(outVal);
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
 			return true;
 		}
 
 		size_t size()
 		{
+			std::unique_lock<std::mutex> p_lock(mutexProducer_);
 			return noAtomicSize_;
 		}
 
 		bool empty()
 		{
+			std::unique_lock<std::mutex> p_lock(mutexProducer_);
 			return noAtomicSize_ == 0;
 		}
 
