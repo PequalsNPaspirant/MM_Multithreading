@@ -47,8 +47,8 @@ namespace mm {
 		MPMC_U_v1_deque,
 		MPMC_U_v1_list,
 		MPMC_U_v1_fwlist,
-		//MPMC_U_v2_list,
-		//MPMC_U_v2_fwlist,
+		MPMC_U_v2_list,
+		MPMC_U_v2_fwlist,
 		MPMC_U_v2_myfwlist,
 		MPMC_U_LF_v1,
 		MPMC_FS_v1,
@@ -61,8 +61,8 @@ namespace mm {
 		{ QueueType::MPMC_U_v1_deque, "MPMC_U_v1_deque"},
 		{ QueueType::MPMC_U_v1_list, "MPMC_U_v1_list" },
 		{ QueueType::MPMC_U_v1_fwlist, "MPMC_U_v1_fwlist" },
-		//{ QueueType::MPMC_U_v2_list, "MPMC_U_v2_list" },
-		//{ QueueType::MPMC_U_v2_fwlist, "MPMC_U_v2_fwlist" },
+		{ QueueType::MPMC_U_v2_list, "MPMC_U_v2_list" },
+		{ QueueType::MPMC_U_v2_fwlist, "MPMC_U_v2_fwlist" },
 		{ QueueType::MPMC_U_v2_myfwlist, "MPMC_U_v2_myfwlist" },
 		{ QueueType::MPMC_U_LF_v1, "MPMC_U_LF_v1" },
 		{ QueueType::MPMC_FS_v1, "MPMC_FS_v1" }
@@ -266,7 +266,7 @@ namespace mm {
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::list>>(QueueType::MPMC_U_v1_list, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::forward_list>>(QueueType::MPMC_U_v1_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::list>>(QueueType::MPMC_U_v2_list, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::forward_list>>(QueueType::MPMC_U_v2_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::forward_list>>(QueueType::MPMC_U_v2_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, Undefined>>(QueueType::MPMC_U_v2_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<int>>(QueueType::MPMC_U_LF_v1, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
@@ -342,19 +342,19 @@ namespace mm {
 		useSleep = false;
 		std::vector<TestCase> testsWithoutSleep =
 			{
-				{ 1, 1,     numOperations * 2, 10 },
-				{ 2, 2,     numOperations * 2, 10 },
-				{ 3, 3,     numOperations * 2, 10 },
-				{ 4, 4,     numOperations * 2, 10 },
-				{ 5, 5,     numOperations * 2, 10 },
-				{ 6, 6,     numOperations * 2, 10 },
-				{ 7, 7,     numOperations * 2, 10 },
-				{ 8, 8,     numOperations * 2, 10 },
-				{ 9, 9,     numOperations * 2, 10 },
-				{ 10, 10,   numOperations * 2, 10 },
-				{ 20, 20,   numOperations * 2, 10 },
-				{ 50, 50,   numOperations * 2, 10 },
-				{ 100, 100, numOperations * 2, 10 },
+				{ 1, 1,     numOperations * 4, 10 },
+				{ 2, 2,     numOperations * 4, 10 },
+				{ 3, 3,     numOperations * 4, 10 },
+				{ 4, 4,     numOperations * 4, 10 },
+				{ 5, 5,     numOperations * 4, 10 },
+				{ 6, 6,     numOperations * 4, 10 },
+				{ 7, 7,     numOperations * 4, 10 },
+				{ 8, 8,     numOperations * 4, 10 },
+				{ 9, 9,     numOperations * 4, 10 },
+				{ 10, 10,   numOperations * 4, 10 },
+				{ 20, 20,   numOperations * 4, 10 },
+				{ 50, 50,   numOperations * 4, 10 },
+				{ 100, 100, numOperations * 4, 10 },
 			};
 
 		results.insert(results.end(), testsWithoutSleep.begin(), testsWithoutSleep.end());
