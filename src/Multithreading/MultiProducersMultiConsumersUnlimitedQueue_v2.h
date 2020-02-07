@@ -34,16 +34,17 @@ namespace mm {
 	{
 	public:
 		MultiProducersMultiConsumersUnlimitedQueue_v2()
-			//: //head_{ queue_.begin() },
+			: 
+			//head_{ queue_.begin() },
 			//tail_{ queue_.end() },
-			//nonAtomicSize_{	0 }
+			nonAtomicSize_{	0 }
 		{}
 
 		void push(T&& obj)
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
 			queue_.push_back(std::move(obj));
-
+			++nonAtomicSize_;
 			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << queue_.size();
 			p_lock.unlock(); //release the lock on mutex, so that the notified thread can acquire that mutex immediately when awakened,
 							//Otherwise waiting thread may try to acquire mutex before this thread releases it.
@@ -58,7 +59,7 @@ namespace mm {
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
 			//If the thread is active due to spurious wake-up or more number of threads are notified than the number of elements in queue, 
 			//force it to check if queue is empty so that it can wait again if the queue is empty
-			while (queue_.empty()) 
+			while(nonAtomicSize_ == 0) //Do not use 'while(queue_.empty())' because it internally uses size_ inside std::list which is not protected/thread safe
 			{
 				//cv_.wait(mlock);
 				if(cv_.wait_for(p_lock, timeout) == std::cv_status::timeout)
@@ -68,8 +69,14 @@ namespace mm {
 			//cv_.wait(mlock, [this](){ return !this->queue_.empty(); });
 			//cv_.wait_for(mlock, timeout, [this](){ return !this->queue_.empty(); });
 
-			if (queue_.size() > 1)
+			//if (queue_.size() > 1) //Do not use this size() because it may be updated concurrently. We are not protecting write access to it by multiple threads.
+			if(nonAtomicSize_ > 1)
+			{
+				--nonAtomicSize_; //protect this under mutex for producer
 				p_lock.unlock(); //Release the lock as this consumer thread is working on a part of queue which will not be touched by any producer thread because size > 1
+			}
+			else
+				--nonAtomicSize_;
 
 			outVal = queue_.front();
 			queue_.pop_front();
@@ -82,14 +89,16 @@ namespace mm {
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
 			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
-			return queue_.size();
+			//return queue_.size();
+			return nonAtomicSize_;
 		}
 
 		bool empty()
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
 			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
-			return queue_.empty();
+			//return queue_.empty();
+			return nonAtomicSize_ == 0;
 		}
 
 	private:
@@ -97,6 +106,7 @@ namespace mm {
 		//typename std::list<T>::iterator head_;
 		//typename std::list<T>::iterator tail_;
 		//std::atomic<size_t> size_;
+		size_t nonAtomicSize_;
 		std::mutex mutexProducer_;
 		std::mutex mutexConsumer_;
 		std::condition_variable cv_;
@@ -116,7 +126,7 @@ namespace mm {
 		void push(T&& obj)
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
-			if(queue_.empty())
+			if(nonAtomicSize_ == 0) //if(queue_.empty()) also works but better check the value of nonAtomicSize_
 				last_ = queue_.before_begin();
 			last_ = queue_.insert_after(last_, std::move(obj)); //Push element at the tail.
 			++nonAtomicSize_;
@@ -134,7 +144,7 @@ namespace mm {
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
 			//If the thread is active due to spurious wake-up or more number of threads are notified than the number of elements in queue, 
 			//force it to check if queue is empty so that it can wait again if the queue is empty
-			while (queue_.empty()) 
+			while(nonAtomicSize_ == 0) //while(queue_.empty()) also works but better check the value of nonAtomicSize_
 			{
 				//cond_.wait(mlock);
 				if (cv_.wait_for(p_lock, timeout) == std::cv_status::timeout)
@@ -165,14 +175,16 @@ namespace mm {
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
 			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
-			return std::distance(queue_.begin(), queue_.end());
+			//return std::distance(queue_.begin(), queue_.end());
+			return nonAtomicSize_;
 		}
 
 		bool empty()
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
 			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
-			return queue_.empty();
+			//return queue_.empty();
+			return nonAtomicSize_ == 0;
 		}
 
 	private:

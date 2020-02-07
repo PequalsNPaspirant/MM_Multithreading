@@ -102,7 +102,7 @@ namespace mm {
 				++size;
 			}
 
-			return size - 1;
+			return size > 0 ? size - 1 : 0;
 		}
 
 		bool empty()
