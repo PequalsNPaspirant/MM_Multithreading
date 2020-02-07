@@ -60,7 +60,8 @@ namespace mm {
 			while (head_ == tail_)
 			{
 				//cvConsumers_.wait(mlock);
-				cvConsumers_.wait_for(mlock, timeout);
+				if (cvConsumers_.wait_for(mlock, timeout) == std::cv_status::timeout)
+					return false;
 			}
 			//OR
 			//cond_.wait(mlock, [this](){ return this->size_ != 0; });
@@ -77,6 +78,7 @@ namespace mm {
 
 			mlock.unlock();
 			cvProducers_.notify_one();
+			return true;
 		}
 
 		size_t size()

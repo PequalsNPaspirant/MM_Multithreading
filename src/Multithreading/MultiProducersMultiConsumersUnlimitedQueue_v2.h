@@ -81,12 +81,14 @@ namespace mm {
 		size_t size()
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
+			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
 			return queue_.size();
 		}
 
 		bool empty()
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
+			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
 			return queue_.empty();
 		}
 
@@ -107,7 +109,8 @@ namespace mm {
 	{
 	public:
 		MultiProducersMultiConsumersUnlimitedQueue_v2()
-			: last_{ queue_.before_begin() }
+			: last_{ queue_.before_begin() },
+			nonAtomicSize_{ 0 }
 		{}
 
 		void push(T&& obj)
@@ -116,7 +119,7 @@ namespace mm {
 			if(queue_.empty())
 				last_ = queue_.before_begin();
 			last_ = queue_.insert_after(last_, std::move(obj)); //Push element at the tail.
-
+			++nonAtomicSize_;
 			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << queue_.size();
 			p_lock.unlock(); //release the lock on mutex, so that the notified thread can acquire that mutex immediately when awakened,
 							//Otherwise waiting thread may try to acquire mutex before this thread releases it.
@@ -141,8 +144,13 @@ namespace mm {
 			//cv_.wait(p_lock, [this](){ return !this->queue_.empty(); });
 			//cv_.wait_for(p_lock, timeout, [this](){ return !this->queue_.empty(); });
 
-			if (queue_.max_size() > 1)
+			if (nonAtomicSize_ > 1)
+			{
+				--nonAtomicSize_; //protect this under mutex for producer
 				p_lock.unlock(); //Release the lock as this consumer thread is working on a part of queue which will not be touched by any producer thread because size > 1
+			}
+			else
+				--nonAtomicSize_;
 
 			outVal = queue_.front();
 			queue_.erase_after(queue_.before_begin());
@@ -171,7 +179,7 @@ namespace mm {
 		std::forward_list<T> queue_; //The queue internally uses the vector by default
 		typename std::forward_list<T>::iterator last_;
 		//std::atomic<size_t> size_;
-		//size_t nonAtomicSize_;
+		size_t nonAtomicSize_;
 		std::mutex mutexProducer_;
 		std::mutex mutexConsumer_;
 		std::condition_variable cv_;
@@ -297,12 +305,14 @@ namespace mm {
 		size_t size()
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
+			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
 			return nonAtomicSize_;
 		}
 
 		bool empty()
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
+			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
 			return nonAtomicSize_ == 0;
 		}
 
@@ -314,4 +324,21 @@ namespace mm {
 		std::mutex mutexConsumer_;
 		std::condition_variable cv_;
 	};
+
+
+
+	//TODO:
+	//Implement the thread safe forward list using std::unique_ptr
+
+
+
+	//TODO:
+	//Implement the thread safe forward list using std::shared_ptr
+
+
+
+	//TODO:
+	//Implement the thread safe forward list based on article: https://www.justsoftwaresolutions.co.uk/threading/why-do-we-need-atomic_shared_ptr.html
+
+
 }

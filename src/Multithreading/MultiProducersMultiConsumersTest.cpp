@@ -105,7 +105,7 @@ namespace mm {
 	constexpr const int subCol3 = 9;
 	constexpr const int subCol4 = 5;
 	constexpr const int firstColWidth = subCol1 + subCol2 + subCol3 + subCol4;
-	constexpr const int colWidth = 18;
+	constexpr const int colWidth = 20;
 
 	//================ end of global variables ================
 
@@ -156,8 +156,13 @@ namespace mm {
 				this_thread::sleep_for(chrono::nanoseconds(sleepTime));
 			}
 			int n;
-			std::chrono::milliseconds timeout{std::numeric_limits<unsigned long long>::max()};
-			bool result = queue.pop(n, timeout);
+			//long long timeout = std::numeric_limits<long long>::max();
+			std::chrono::milliseconds timeoutMilisec{ 60 * 1000 }; // timeout = 1 min
+			bool result = queue.pop(n, timeoutMilisec);
+			if (!result)
+			{
+				int n = 100; //This is just for debugging purpose
+			}
 			//cout << "\nThread " << this_thread::get_id() << " popped " << n << " from queue";
 		}
 	}
@@ -216,7 +221,15 @@ namespace mm {
 		//	<< " Total sleep time: " << totalSleepTimeNanos << " nanos." 
 		//	<< " Average sleep time per thread: " << totalSleepTimeNanos / (numProducerThreads + numConsumerThreads) << " nanos.";
 		results[resultIndex].result_[static_cast<int>(queueType)] = { queueType, duration, queue.empty(), queue.size() };
-		cout << std::setw(colWidth) << duration;
+		string suffix{};
+		if (!queue.empty() || queue.size() != 0)
+		{
+			suffix += "(";
+			suffix += (queue.empty() ? "Y" : "N");
+			suffix += to_string(queue.size());
+			suffix += ")";
+		}
+		cout << std::setw(colWidth) << duration << suffix;
 	}
 
 	template<typename Tqueue>
@@ -303,26 +316,27 @@ namespace mm {
 			<< std::setw(subCol3) << "TotOps"
 			<< std::setw(subCol4) << "Qsz";
 
-		int numOperations = 8400 / 4;
+		int numOperations = 84000;
 		int resultIndex = -1;
 
 		cout << "\n=============== with sleep time ===============";
 		useSleep = true;
+		int divFactor = 40;
 		std::vector<TestCase> testsWithSleep =
 			{
-				{ 1, 1,     numOperations, 10 },
-				{ 2, 2,     numOperations, 10 },
-				{ 3, 3,     numOperations, 10 },
-				{ 4, 4,     numOperations, 10 },
-				{ 5, 5,     numOperations, 10 },
-				{ 6, 6,     numOperations, 10 },
-				{ 7, 7,     numOperations, 10 },
-				{ 8, 8,     numOperations, 10 },
-				{ 9, 9,     numOperations, 10 },
-				{ 10, 10,   numOperations, 10 },
-				{ 20, 20,   numOperations, 10 },
-				{ 50, 50,   numOperations, 10 },
-				{ 100, 100, numOperations, 10 },
+				{ 1, 1,     numOperations / divFactor, 10 },
+				{ 2, 2,     numOperations / divFactor, 10 },
+				{ 3, 3,     numOperations / divFactor, 10 },
+				{ 4, 4,     numOperations / divFactor, 10 },
+				{ 5, 5,     numOperations / divFactor, 10 },
+				{ 6, 6,     numOperations / divFactor, 10 },
+				{ 7, 7,     numOperations / divFactor, 10 },
+				{ 8, 8,     numOperations / divFactor, 10 },
+				{ 9, 9,     numOperations / divFactor, 10 },
+				{ 10, 10,   numOperations / divFactor, 10 },
+				{ 20, 20,   numOperations / divFactor, 10 },
+				{ 50, 50,   numOperations / divFactor, 10 },
+				{ 100, 100, numOperations / divFactor, 10 },
 			};
 
 		results.insert(results.end(), testsWithSleep.begin(), testsWithSleep.end());
@@ -342,19 +356,19 @@ namespace mm {
 		useSleep = false;
 		std::vector<TestCase> testsWithoutSleep =
 			{
-				{ 1, 1,     numOperations * 4, 10 },
-				{ 2, 2,     numOperations * 4, 10 },
-				{ 3, 3,     numOperations * 4, 10 },
-				{ 4, 4,     numOperations * 4, 10 },
-				{ 5, 5,     numOperations * 4, 10 },
-				{ 6, 6,     numOperations * 4, 10 },
-				{ 7, 7,     numOperations * 4, 10 },
-				{ 8, 8,     numOperations * 4, 10 },
-				{ 9, 9,     numOperations * 4, 10 },
-				{ 10, 10,   numOperations * 4, 10 },
-				{ 20, 20,   numOperations * 4, 10 },
-				{ 50, 50,   numOperations * 4, 10 },
-				{ 100, 100, numOperations * 4, 10 },
+				{ 1, 1,     numOperations, 10 },
+				{ 2, 2,     numOperations, 10 },
+				{ 3, 3,     numOperations, 10 },
+				{ 4, 4,     numOperations, 10 },
+				{ 5, 5,     numOperations, 10 },
+				{ 6, 6,     numOperations, 10 },
+				{ 7, 7,     numOperations, 10 },
+				{ 8, 8,     numOperations, 10 },
+				{ 9, 9,     numOperations, 10 },
+				{ 10, 10,   numOperations, 10 },
+				{ 20, 20,   numOperations, 10 },
+				{ 50, 50,   numOperations, 10 },
+				{ 100, 100, numOperations, 10 },
 			};
 
 		results.insert(results.end(), testsWithoutSleep.begin(), testsWithoutSleep.end());

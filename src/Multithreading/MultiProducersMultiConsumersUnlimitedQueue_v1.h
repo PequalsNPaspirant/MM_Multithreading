@@ -91,6 +91,8 @@ namespace mm {
 		void push(T&& obj)
 		{
 			std::unique_lock<std::mutex> p_lock(mutex_);
+			if(queue_.empty())
+				last_ = queue_.before_begin(); //The last_ can be updated in pop() as well as shown below by commented code, but it is used by only producer, so keep it in push()
 			last_ = queue_.insert_after(last_, std::move(obj)); //Push element at the tail.
 
 			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << queue_.size();
@@ -117,8 +119,8 @@ namespace mm {
 
 			outVal = queue_.front();
 			queue_.erase_after(queue_.before_begin());
-			if (queue_.empty())
-				last_ = queue_.before_begin();
+			//if (queue_.empty())
+			//	last_ = queue_.before_begin();
 
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
 			return true;
