@@ -17,6 +17,7 @@ using namespace std;
 #include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2.h"
 #include "MultiProducersMultiConsumersUnlimitedQueue_v1.h"
 #include "MultiProducersMultiConsumersUnlimitedQueue_v2.h"
+#include "MultiProducersMultiConsumersUnlimitedQueue_v3.h"
 
 #include "MultiProducersMultiConsumersUnsafeQueue_v1.h"
 
@@ -49,6 +50,7 @@ namespace mm {
 		MPMC_U_v2_list,
 		MPMC_U_v2_fwlist,
 		MPMC_U_v2_myfwlist,
+		MPMC_U_v3_myfwlist,
 		MPMC_U_LF_v1,
 		MPMC_U_LF_v2,
 
@@ -65,6 +67,7 @@ namespace mm {
 		{ QueueType::MPMC_U_v2_list, "MPMC_U_v2_list" },
 		{ QueueType::MPMC_U_v2_fwlist, "MPMC_U_v2_fwlist" },
 		{ QueueType::MPMC_U_v2_myfwlist, "MPMC_U_v2_myfwlist" },
+		{ QueueType::MPMC_U_v3_myfwlist, "MPMC_U_v3_myfwlist" },
 		{ QueueType::MPMC_U_LF_v1, "MPMC_U_LF_v1" },
 		{ QueueType::MPMC_U_LF_v2, "MPMC_U_LF_v2" },
 
@@ -284,6 +287,7 @@ namespace mm {
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::list>>(QueueType::MPMC_U_v2_list, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::forward_list>>(QueueType::MPMC_U_v2_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, Undefined>>(QueueType::MPMC_U_v2_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v3<int>>(QueueType::MPMC_U_v3_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<int>>(QueueType::MPMC_U_LF_v1, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2<int>>(QueueType::MPMC_U_LF_v2, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
