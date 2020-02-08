@@ -15,7 +15,7 @@ using namespace std;
 /*
 This is Multi Producers Multi Consumers Unlimited Size Queue.
 This is implemented using two mutexes and one condition variable.
-It uses std::queue<T, Container<T>> to store data where Container is std::list and std::forward_list
+It uses std::queue<T, Container<T>> to store data where Container is std::list, std::forward_list and custom implementation of ForwardList
 Producers never need to wait because its unlimited queue and will never be full.
 Consumers have to wait if the queue is empty.
 */

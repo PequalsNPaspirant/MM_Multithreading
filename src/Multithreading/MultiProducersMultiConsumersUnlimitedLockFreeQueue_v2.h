@@ -12,13 +12,18 @@
 #include <atomic>
 using namespace std;
 
+#define CACHE_LINE_SIZE 64
+
 /*
-TODO:
-This is Multi Producers Multi Consumers Unlimited Size Queue.
-This is implemented using four atomic boolean flags, 2 for producers and 2 for consumers and it uses spin locks.
-It uses xxx to store data.
+This is Multi Producers Multi Consumers Unlimited Size Lock Free Queue.
+This is implemented using two atomic boolean flags to create spin locks for producers and consumers.
+It uses its own forward list implementation having atomic next ptr in each node.
+The list stores T* and uses two dynamic allocations to allocate memory for node and also for data.
 Producers never need to wait because its unlimited queue and will never be full.
-Consumers have to wait if the queue is empty.
+Consumers have to wait and retry on their own because it returns false if the queue is empty.
+
+Reference: Herb Sutter's blog:
+https://www.drdobbs.com/parallel/writing-a-generalized-concurrent-queue/211601363?pgno=1
 */
 
 namespace mm {
@@ -26,51 +31,108 @@ namespace mm {
 	template <typename T>
 	class MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2
 	{
+	private:
+		struct Node
+		{
+			Node(const T& val) : value(val), next_a(nullptr) { }
+			T value;
+			atomic<Node*> next_a;
+			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>)];
+		};
+
 	public:
+		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2()
+		{
+			first_ = last_ = new Node(T{ 0 });
+			producerLock_a = consumerLock_a = false;
+		}
+		~MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2()
+		{
+			while (first_ != nullptr)      // release the list
+			{
+				Node* tmp = first_;
+				first_ = tmp->next_a;
+				//delete tmp->value;       // no-op if null
+				delete tmp;
+			}
+		}
 
 		void push(T&& obj)
 		{
-			std::unique_lock<std::mutex> mlock(mutex_);
-			queue_.push(std::move(obj));
-			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << queue_.size();
-			mlock.unlock(); //release the lock on mutex, so that the notified thread can acquire that mutex immediately when awakened,
-							//Otherwise waiting thread may try to acquire mutex before this thread releases it.
-			cond_.notify_one(); //This will always notify one thread even though there are no waiting threads
+			Node* tmp = new Node(obj);
+			while (producerLock_a.exchange(true))
+			{
+			}   // acquire exclusivity
+			last_->next_a = tmp;         // publish to consumers
+			last_ = tmp;             // swing last forward
+			producerLock_a = false;       // release exclusivity
 		}
 
-		//pop() with timeout. Returns false if timeout occurs.
+		//exception SAFE pop() version. TODO: Returns false if timeout occurs.
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
-			std::unique_lock<std::mutex> mlock(mutex_);
-			while (queue_.empty())
+			while (consumerLock_a.exchange(true))
 			{
-				//cond_.wait(mlock);
-				if(cond_.wait_for(mlock, timeout) == std::cv_status::timeout)
-					return false;
+			}    // acquire exclusivity
+			while (first_->next_a == nullptr) {} //Wait on consumer thread if the queue is empty
+			Node* theFirst = first_;
+			Node* theNext = first_->next_a;
+			//if (theNext != nullptr)      // if queue is nonempty
+			{
+				//T* val = theNext->value;    // take it out
+				outVal = theNext->value;    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
+				//theNext->value = nullptr;  // of the Node
+				first_ = theNext;          // swing first forward
+				consumerLock_a = false;             // release exclusivity
+													//outVal = *val;    // now copy it back here if the availability of queue i.e. locking it for least possible time is more important than exceptional neutrality. 
+				//delete val;       // clean up the value
+				delete theFirst;      // and the old dummy
+				return true;      // and report success
 			}
-			//OR we can use below
-			//cond_.wait_for(mlock, timeout, [this](){ return !this->queue_.empty(); });
-			outVal = queue_.front();
-			queue_.pop();
-			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
-			return true;
+
+			//consumerLock_a = false;   // release exclusivity
+			//return false;                  // report queue was empty
 		}
 
 		size_t size()
 		{
-			std::unique_lock<std::mutex> mlock(mutex_);
-			return queue_.size();
+			//TODO: Use synchronization
+			size_t size = 0;
+			for (; first_ != nullptr; first_ = first_->next_a)      // release the list
+			{
+				++size;
+			}
+
+			return size > 0 ? size - 1 : 0;
 		}
 
 		bool empty()
 		{
-			std::unique_lock<std::mutex> mlock(mutex_);
-			return queue_.empty();
+			//TODO: Use synchronization
+			return first_ == nullptr || (first_ != nullptr && first_->next_a == nullptr);
 		}
 
 	private:
-		std::queue<T> queue_;
-		std::atomic<size_t> head_; //stores the index where next element will be pushed
-		std::atomic<size_t> tail_; //stores the index of object which will be popped
+		char pad0[CACHE_LINE_SIZE];
+
+		// for one consumer at a time
+		Node* first_;
+
+		char pad1[CACHE_LINE_SIZE - sizeof(Node*)];
+
+		// shared among consumers
+		atomic<bool> consumerLock_a;
+
+		char pad2[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
+
+		// for one producer at a time
+		Node* last_;
+
+		char pad3[CACHE_LINE_SIZE - sizeof(Node*)];
+
+		// shared among producers
+		atomic<bool> producerLock_a;
+
+		char pad4[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
 	};
 }
