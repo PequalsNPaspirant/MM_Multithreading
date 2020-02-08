@@ -10,15 +10,17 @@
 #include <unordered_map>
 using namespace std;
 
-#include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h"
-#include "MultiProducersMultiConsumersFixedSizeQueue_v1.h"
-
-#include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1.h"
-#include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2.h"
 #include "MultiProducersMultiConsumersUnlimitedQueue_v1.h"
 #include "MultiProducersMultiConsumersUnlimitedQueue_v2.h"
 #include "MultiProducersMultiConsumersUnlimitedQueue_v3.h"
 
+#include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1.h"
+#include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2.h"
+#include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3.h"
+
+#include "MultiProducersMultiConsumersFixedSizeQueue_v1.h"
+
+#include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h"
 #include "MultiProducersMultiConsumersUnsafeQueue_v1.h"
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
@@ -51,8 +53,10 @@ namespace mm {
 		MPMC_U_v2_fwlist,
 		MPMC_U_v2_myfwlist,
 		MPMC_U_v3_myfwlist,
+
 		MPMC_U_LF_v1,
 		MPMC_U_LF_v2,
+		MPMC_U_LF_v3,
 
 		MPMC_FS_v1,
 		//MPMC_FS_LF_v1,
@@ -68,8 +72,10 @@ namespace mm {
 		{ QueueType::MPMC_U_v2_fwlist, "MPMC_U_v2_fwlist" },
 		{ QueueType::MPMC_U_v2_myfwlist, "MPMC_U_v2_myfwlist" },
 		{ QueueType::MPMC_U_v3_myfwlist, "MPMC_U_v3_myfwlist" },
+
 		{ QueueType::MPMC_U_LF_v1, "MPMC_U_LF_v1" },
 		{ QueueType::MPMC_U_LF_v2, "MPMC_U_LF_v2" },
+		{ QueueType::MPMC_U_LF_v3, "MPMC_U_LF_v3" },
 
 		{ QueueType::MPMC_FS_v1, "MPMC_FS_v1" }
 		//{ QueueType::MPMC_FS_LF_v1, "MPMC_FS_LF_v1"}
@@ -288,8 +294,10 @@ namespace mm {
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, std::forward_list>>(QueueType::MPMC_U_v2_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<int, Undefined>>(QueueType::MPMC_U_v2_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v3<int>>(QueueType::MPMC_U_v3_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<int>>(QueueType::MPMC_U_LF_v1, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2<int>>(QueueType::MPMC_U_LF_v2, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3<int>>(QueueType::MPMC_U_LF_v3, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
 		/***** Fixed Size Queues ****/
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);

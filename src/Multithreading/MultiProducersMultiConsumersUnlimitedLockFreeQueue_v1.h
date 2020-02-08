@@ -74,6 +74,7 @@ namespace mm {
 			while (consumerLock_a.exchange(true))
 			{
 			}    // acquire exclusivity
+			while (first_->next_a == nullptr) {} //(This line is not a part of original implementation.) Wait on consumer thread if the queue is empty
 			Node* theFirst = first_;
 			Node* theNext = first_->next_a;
 			if (theNext != nullptr)      // if queue is nonempty

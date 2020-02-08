@@ -10,6 +10,7 @@
 #include <cassert> //for assert()
 #include <cmath>
 #include <forward_list>
+#include <atomic>
 using namespace std;
 
 /*
@@ -175,21 +176,6 @@ namespace mm {
 		std::mutex mutexConsumer_;
 		std::condition_variable cv_;
 	};
-
-
-
-	//TODO:
-	//Implement the thread safe forward list using std::unique_ptr
-
-
-
-	//TODO:
-	//Implement the thread safe forward list using std::shared_ptr
-
-
-
-	//TODO:
-	//Implement the thread safe forward list based on article: https://www.justsoftwaresolutions.co.uk/threading/why-do-we-need-atomic_shared_ptr.html
 
 
 }
