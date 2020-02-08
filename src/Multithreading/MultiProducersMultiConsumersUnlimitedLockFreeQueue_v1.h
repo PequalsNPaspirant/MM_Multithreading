@@ -71,10 +71,19 @@ namespace mm {
 		//exception SAFE pop() version. TODO: Returns false if timeout occurs.
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
+			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
 			while (consumerLock_a.exchange(true))
 			{
 			}    // acquire exclusivity
-			while (first_->next_a == nullptr) {} //(This line is not a part of original implementation.) Wait on consumer thread if the queue is empty
+			while (first_->next_a == nullptr) 
+			{
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
+			} //(This line is not a part of original implementation.) Wait on consumer thread if the queue is empty
+
 			Node* theFirst = first_;
 			Node* theNext = first_->next_a;
 			if (theNext != nullptr)      // if queue is nonempty

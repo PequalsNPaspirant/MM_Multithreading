@@ -10,6 +10,7 @@
 #include <cassert> //for assert()
 #include <cmath>
 #include <atomic>
+#include <chrono>
 using namespace std;
 
 /*
@@ -40,12 +41,12 @@ namespace mm {
 	public:
 		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3()
 		{
-			first_ = last_ = new Node(T{});
+			first_a = last_a = new Node(T{});
 			//producerLock_a = consumerLock_a = false;
 		}
 		~MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3()
 		{
-			Node* curr = first_;
+			Node* curr = first_a;
 			while(curr != nullptr)      // release the list
 			{
 				Node* tmp = curr;
@@ -61,15 +62,16 @@ namespace mm {
 /*			while (producerLock_a.exchange(true))
 			{
 			} */  // acquire exclusivity
-			Node* old = last_.exchange(tmp);
+			Node* old = last_a.exchange(tmp);
 			old->next_a.store(tmp);         // publish to consumers
-			//last_ = tmp;             // swing last forward
+			//last_a = tmp;             // swing last forward
 			//producerLock_a = false;       // release exclusivity
 		}
 
 		//exception SAFE pop() version. TODO: Returns false if timeout occurs.
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
+			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 /*			while (consumerLock_a.exchange(true))
 			{
 			} */   // acquire exclusivity
@@ -78,15 +80,23 @@ namespace mm {
 			Node* theNext = nullptr;
 			do
 			{
-				theFirst = first_.load();
-				theNext = first_.load()->next_a;
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
+
+				theFirst = first_a.load();
+				theNext = first_a.load()->next_a;
 				//if (!theNext)
 				//	continue;
 			}
-			while(theNext == nullptr || !first_.compare_exchange_strong(theFirst, theNext));
+			while(
+				theNext == nullptr                                          // queue is empty
+				|| !first_a.compare_exchange_strong(theFirst, theNext)      // queue is being used by other consumer thread
+				);
 
-			//Node* theFirst = first_.load();
-			//while(theFirst->next_a == nullptr || !first_.compare_exchange_weak(theFirst, theFirst->next_a));
+			//Node* theFirst = first_a.load();
+			//while(theFirst->next_a == nullptr || !first_a.compare_exchange_weak(theFirst, theFirst->next_a));
 
 			
 			//if (theNext != nullptr)      // if queue is nonempty
@@ -94,7 +104,7 @@ namespace mm {
 				//T* val = theNext->value_;    // take it out
 				outVal = theNext->value_;    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
 				//theNext->value_ = nullptr;  // of the Node
-				//first_ = theNext;          // swing first forward
+				//first_a = theNext;          // swing first forward
 				//consumerLock_a = false;             // release exclusivity
 													//outVal = *val;    // now copy it back here if the availability of queue i.e. locking it for least possible time is more important than exceptional neutrality. 
 				//delete val;       // clean up the value_
@@ -110,7 +120,7 @@ namespace mm {
 		{
 			//TODO: Use synchronization
 			size_t size = 0;
-			Node* curr = first_.load()->next_a;
+			Node* curr = first_a.load()->next_a;
 			for (; curr != nullptr; curr = curr->next_a)      // release the list
 			{
 				++size;
@@ -122,15 +132,15 @@ namespace mm {
 		bool empty()
 		{
 			//TODO: Use synchronization
-			//return first_ == nullptr || (first_ != nullptr && first_->next_a == nullptr);
-			return first_.load()->next_a == nullptr;
+			//return first_a == nullptr || (first_a != nullptr && first_a->next_a == nullptr);
+			return first_a.load()->next_a == nullptr;
 		}
 
 	private:
 		char pad0[CACHE_LINE_SIZE];
 
 		// for one consumer at a time
-		atomic<Node*> first_;
+		atomic<Node*> first_a;
 
 		char pad1[CACHE_LINE_SIZE - sizeof(Node*)];
 
@@ -140,7 +150,7 @@ namespace mm {
 		//char pad2[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
 
 		// for one producer at a time
-		atomic<Node*> last_;
+		atomic<Node*> last_a;
 
 		char pad3[CACHE_LINE_SIZE - sizeof(Node*)];
 
