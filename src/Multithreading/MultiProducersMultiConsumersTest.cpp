@@ -8,6 +8,7 @@
 #include <forward_list>
 #include <limits>
 #include <unordered_map>
+#include <type_traits>
 using namespace std;
 
 #include "MultiProducersMultiConsumersUnlimitedQueue_v1.h"
@@ -19,6 +20,7 @@ using namespace std;
 #include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3.h"
 
 #include "MultiProducersMultiConsumersFixedSizeQueue_v1.h"
+#include "MultiProducersMultiConsumersFixedSizeQueue_v2.h"
 
 #include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h"
 #include "MultiProducersMultiConsumersUnsafeQueue_v1.h"
@@ -59,6 +61,8 @@ namespace mm {
 		MPMC_U_LF_v3,
 
 		MPMC_FS_v1,
+		MPMC_FS_v2,
+
 		//MPMC_FS_LF_v1,
 
 		maxQueueTypes
@@ -77,7 +81,9 @@ namespace mm {
 		{ QueueType::MPMC_U_LF_v2, "MPMC_U_LF_v2" },
 		{ QueueType::MPMC_U_LF_v3, "MPMC_U_LF_v3" },
 
-		{ QueueType::MPMC_FS_v1, "MPMC_FS_v1" }
+		{ QueueType::MPMC_FS_v1, "MPMC_FS_v1" },
+		{ QueueType::MPMC_FS_v2, "MPMC_FS_v2" }
+
 		//{ QueueType::MPMC_FS_LF_v1, "MPMC_FS_LF_v1"}
 	};
 
@@ -244,16 +250,23 @@ namespace mm {
 		cout << std::setw(colWidth) << duration << suffix;
 	}
 
-	template<typename Tqueue>
+	template<typename T>
+	struct Condition
+	{
+		static const bool value = typename std::is_same<T, MultiProducersMultiConsumersFixedSizeQueue_v1<int>>::value
+			|| typename std::is_same<T, MultiProducersMultiConsumersFixedSizeQueue_v2<int>>::value;
+	};
+
+	template<typename Tqueue, typename std::enable_if<!Condition<Tqueue>::value, void>::type* = nullptr>
 	void test_mpmcu_queue_sfinae(QueueType queueType, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
 	{
 		Tqueue queue{};
 		test_mpmcu_queue(queueType, queue, numProducerThreads, numConsumerThreads, numOperations, resultIndex);
 	}
-	template<>
-	void test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(QueueType queueType, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
+	template<typename Tqueue, typename std::enable_if<Condition<Tqueue>::value, void>::type* = nullptr>
+	void test_mpmcu_queue_sfinae(QueueType queueType, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
 	{
-		MultiProducersMultiConsumersFixedSizeQueue_v1<int> queue{ queueSize };
+		Tqueue queue{ queueSize };
 		test_mpmcu_queue(queueType, queue, numProducerThreads, numConsumerThreads, numOperations, resultIndex);
 	}
 	template<>
@@ -282,6 +295,7 @@ namespace mm {
 		//totalSleepTimeNanos *= 1000ULL;
 
 		columnNames.clear(); //Not a good fix! Make sure the columnNames are not pushed again and again for all test cases
+		
 		/***** Unlimited Queues ****/
 		//The below queue crashes the program due to lack of synchronization
 		//test_mpmcu_queue_sfinae<UnsafeQueue_v1<int>>("UNSAFE queue", numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); 
@@ -301,6 +315,8 @@ namespace mm {
 
 		/***** Fixed Size Queues ****/
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v2<int>>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		
 		//The below queue does not work
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(QueueType::MPMC_FS_LF_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 	}
