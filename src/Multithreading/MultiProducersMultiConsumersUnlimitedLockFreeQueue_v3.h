@@ -74,12 +74,12 @@ namespace mm {
 			{
 			} */   // acquire exclusivity
 
-			Node* theFirst = first_.load();
-			Node* theNext = theFirst->next_a;
+			Node* theFirst = nullptr;
+			Node* theNext = nullptr;
 			do
 			{
 				theFirst = first_.load();
-				theNext = theFirst->next_a;
+				theNext = first_.load()->next_a;
 				//if (!theNext)
 				//	continue;
 			}
