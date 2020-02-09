@@ -21,6 +21,7 @@ using namespace std;
 
 #include "MultiProducersMultiConsumersFixedSizeQueue_v1.h"
 #include "MultiProducersMultiConsumersFixedSizeQueue_v2.h"
+#include "MultiProducersMultiConsumersFixedSizeQueue_v3.h"
 
 #include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h"
 #include "MultiProducersMultiConsumersUnsafeQueue_v1.h"
@@ -62,6 +63,7 @@ namespace mm {
 
 		MPMC_FS_v1,
 		MPMC_FS_v2,
+		MPMC_FS_v3,
 
 		//MPMC_FS_LF_v1,
 
@@ -82,7 +84,8 @@ namespace mm {
 		{ QueueType::MPMC_U_LF_v3, "MPMC_U_LF_v3" },
 
 		{ QueueType::MPMC_FS_v1, "MPMC_FS_v1" },
-		{ QueueType::MPMC_FS_v2, "MPMC_FS_v2" }
+		{ QueueType::MPMC_FS_v2, "MPMC_FS_v2" },
+		{ QueueType::MPMC_FS_v3, "MPMC_FS_v3" }
 
 		//{ QueueType::MPMC_FS_LF_v1, "MPMC_FS_LF_v1"}
 	};
@@ -254,7 +257,8 @@ namespace mm {
 	struct Condition
 	{
 		static const bool value = typename std::is_same<T, MultiProducersMultiConsumersFixedSizeQueue_v1<int>>::value
-			|| typename std::is_same<T, MultiProducersMultiConsumersFixedSizeQueue_v2<int>>::value;
+			|| typename std::is_same<T, MultiProducersMultiConsumersFixedSizeQueue_v2<int>>::value
+			|| typename std::is_same<T, MultiProducersMultiConsumersFixedSizeQueue_v3<int>>::value;
 	};
 
 	template<typename Tqueue, typename std::enable_if<!Condition<Tqueue>::value, void>::type* = nullptr>
@@ -316,7 +320,8 @@ namespace mm {
 		/***** Fixed Size Queues ****/
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<int>>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v2<int>>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v3<int>>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+
 		//The below queue does not work
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(QueueType::MPMC_FS_LF_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 	}

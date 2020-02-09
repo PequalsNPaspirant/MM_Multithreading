@@ -23,13 +23,13 @@ Consumers have to wait if the queue is empty.
 namespace mm {
 
 	template <typename T>
-	class MultiProducersMultiConsumersFixedSizeQueue_v2
+	class MultiProducersMultiConsumersFixedSizeQueue_v3
 	{
 	public:
-		MultiProducersMultiConsumersFixedSizeQueue_v2(size_t maxSize)
+		MultiProducersMultiConsumersFixedSizeQueue_v3(size_t maxSize)
 			: maxSize_(maxSize), 
 			vec_(maxSize), 
-			nonAtomicSize_{ 0 },
+			size_a{ 0 },
 			head_(0), 
 			tail_(0)
 		{
@@ -39,7 +39,7 @@ namespace mm {
 		{
 			std::unique_lock<std::mutex> p_lock(mutexProducer_);
 
-			while (nonAtomicSize_ == maxSize_)
+			while (size_a.load() == maxSize_)
 			{
 				//cvProducers_.wait(c_lock);
 				if (cvProducers_.wait_for(p_lock, timeout) == std::cv_status::timeout)
@@ -49,7 +49,7 @@ namespace mm {
 			vec_[head_ % maxSize_] = std::move(obj);
 			if (++head_ == maxSize_)
 				head_ %= maxSize_;
-			++nonAtomicSize_;
+			++size_a;
 			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << size_;
 			p_lock.unlock(); //release the lock on mutex, so that the notified thread can acquire that mutex immediately when awakened,
 							//Otherwise waiting thread may try to acquire mutex before this thread releases it.
@@ -61,15 +61,24 @@ namespace mm {
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
 			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
+			if (size_a.load() == maxSize_)
 			{
 				std::unique_lock<std::mutex> p_lock(mutexProducer_);
-				while (nonAtomicSize_ == 0)
+				--size_a;
+			}
+			else
+			{
+				if (size_a.load() == 0)
 				{
-					//cvConsumers_.wait(mlock);
-					if (cvConsumers_.wait_for(p_lock, timeout) == std::cv_status::timeout)
-						return false;
+					std::unique_lock<std::mutex> p_lock(mutexProducer_);
+					while (size_a.load() == 0)
+					{
+						//cvConsumers_.wait(mlock);
+						if (cvConsumers_.wait_for(p_lock, timeout) == std::cv_status::timeout)
+							return false;
+					}
 				}
-				--nonAtomicSize_;
+				--size_a;
 			}
 			//OR
 			//cond_.wait(mlock, [this](){ return this->size_ != 0; });
@@ -88,23 +97,23 @@ namespace mm {
 
 		size_t size()
 		{
-			std::unique_lock<std::mutex> p_lock(mutexProducer_);
-			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
-			return nonAtomicSize_;
+			//std::unique_lock<std::mutex> p_lock(mutexProducer_);
+			//std::unique_lock<std::mutex> c_lock(mutexConsumer_);
+			return size_a.load();
 		}
 
 		bool empty()
 		{
-			std::unique_lock<std::mutex> p_lock(mutexProducer_);
-			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
+			//std::unique_lock<std::mutex> p_lock(mutexProducer_);
+			//std::unique_lock<std::mutex> c_lock(mutexConsumer_);
 			//return vec_.empty(); //vector is never empty. The elements will be overwritten by push if the queue is already full.
-			return nonAtomicSize_ == 0;
+			return size_a.load() == 0;
 		}
 
 	private:
 		size_t maxSize_;
 		std::vector<T> vec_; //This will be used as ring buffer / circular queue
-		size_t nonAtomicSize_;
+		std::atomic<size_t> size_a;
 		size_t head_; //stores the index where next element will be pushed
 		size_t tail_; //stores the index of object which will be popped
 		std::mutex mutexProducer_;
