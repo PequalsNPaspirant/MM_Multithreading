@@ -23,7 +23,9 @@ using namespace std;
 #include "MultiProducersMultiConsumersFixedSizeQueue_v2.h"
 #include "MultiProducersMultiConsumersFixedSizeQueue_v3.h"
 
+#include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1.h"
 #include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h"
+
 #include "MultiProducersMultiConsumersUnsafeQueue_v1.h"
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
@@ -65,7 +67,8 @@ namespace mm {
 		MPMC_FS_v2,
 		MPMC_FS_v3,
 
-		//MPMC_FS_LF_v1,
+		MPMC_FS_LF_v1,
+		//MPMC_FS_LF_vx,
 
 		maxQueueTypes
 	};
@@ -85,9 +88,10 @@ namespace mm {
 
 		{ QueueType::MPMC_FS_v1, "MPMC_FS_v1" },
 		{ QueueType::MPMC_FS_v2, "MPMC_FS_v2" },
-		{ QueueType::MPMC_FS_v3, "MPMC_FS_v3" }
+		{ QueueType::MPMC_FS_v3, "MPMC_FS_v3" },
 
-		//{ QueueType::MPMC_FS_LF_v1, "MPMC_FS_LF_v1"}
+		{ QueueType::MPMC_FS_LF_v1, "MPMC_FS_LF_v1" }
+		//{ QueueType::MPMC_FS_LF_vx, "MPMC_FS_LF_vx"}
 	};
 
 	struct ResultSet
@@ -254,20 +258,22 @@ namespace mm {
 	}
 
 	template<typename T>
-	struct Condition
+	struct is_fixed_size_queue
 	{
 		static const bool value = typename std::is_same<T, MultiProducersMultiConsumersFixedSizeQueue_v1<int>>::value
 			|| typename std::is_same<T, MultiProducersMultiConsumersFixedSizeQueue_v2<int>>::value
-			|| typename std::is_same<T, MultiProducersMultiConsumersFixedSizeQueue_v3<int>>::value;
+			|| typename std::is_same<T, MultiProducersMultiConsumersFixedSizeQueue_v3<int>>::value
+			|| typename std::is_same<T, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>::value
+			;
 	};
 
-	template<typename Tqueue, typename std::enable_if<!Condition<Tqueue>::value, void>::type* = nullptr>
+	template<typename Tqueue, typename std::enable_if<!is_fixed_size_queue<Tqueue>::value, void>::type* = nullptr>
 	void test_mpmcu_queue_sfinae(QueueType queueType, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
 	{
 		Tqueue queue{};
 		test_mpmcu_queue(queueType, queue, numProducerThreads, numConsumerThreads, numOperations, resultIndex);
 	}
-	template<typename Tqueue, typename std::enable_if<Condition<Tqueue>::value, void>::type* = nullptr>
+	template<typename Tqueue, typename std::enable_if<is_fixed_size_queue<Tqueue>::value, void>::type* = nullptr>
 	void test_mpmcu_queue_sfinae(QueueType queueType, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
 	{
 		Tqueue queue{ queueSize };
@@ -322,8 +328,10 @@ namespace mm {
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v2<int>>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v3<int>>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<int>>(QueueType::MPMC_FS_LF_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+
 		//The below queue does not work
-		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(QueueType::MPMC_FS_LF_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(QueueType::MPMC_FS_LF_vx, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 	}
 
 	MM_DECLARE_FLAG(Multithreading_mpmcu_queue);

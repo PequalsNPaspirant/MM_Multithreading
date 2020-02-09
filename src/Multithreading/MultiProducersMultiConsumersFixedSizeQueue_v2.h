@@ -46,7 +46,7 @@ namespace mm {
 					return false;
 			}
 
-			vec_[head_ % maxSize_] = std::move(obj);
+			vec_[head_] = std::move(obj);
 			if (++head_ == maxSize_)
 				head_ %= maxSize_;
 			++nonAtomicSize_;
@@ -75,7 +75,7 @@ namespace mm {
 			//cond_.wait(mlock, [this](){ return this->size_ != 0; });
 			//cond_.wait_for(mlock, timeout, [this](){ return this->size_ != 0; });
 
-			outVal = vec_[tail_ % maxSize_];
+			outVal = vec_[tail_];
 			if (++tail_ == maxSize_)
 				tail_ %= maxSize_;
 			
