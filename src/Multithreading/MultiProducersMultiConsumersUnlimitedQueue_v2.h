@@ -78,7 +78,7 @@ namespace mm {
 			else
 				--nonAtomicSize_;
 
-			outVal = queue_.front();
+			outVal = std::move(queue_.front());
 			queue_.pop_front();
 			
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
@@ -162,7 +162,7 @@ namespace mm {
 			else
 				--nonAtomicSize_;
 
-			outVal = queue_.front();
+			outVal = std::move(queue_.front());
 			queue_.erase_after(queue_.before_begin());
 			//if (queue_.empty())
 			//	last_ = queue_.before_begin();
@@ -240,7 +240,7 @@ namespace mm {
 
 			void pop_front(T& outVal)
 			{
-				outVal = head_->data_;
+				outVal = std::move(head_->data_);
 				Node* removed = head_;
 				head_ = head_->next_;
 				if (head_ == nullptr)

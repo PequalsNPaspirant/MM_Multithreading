@@ -70,7 +70,7 @@ namespace mm {
 			//cond_.wait(mlock, [this](){ return this->size_ != 0; });
 			//cond_.wait_for(mlock, timeout, [this](){ return this->size_ != 0; });
 
-			outVal = vec_[tail_ % maxSize_];
+			outVal = std::move(vec_[tail_ % maxSize_]);
 			if (++tail_ == maxSize_)
 			{
 				head_ %= maxSize_;

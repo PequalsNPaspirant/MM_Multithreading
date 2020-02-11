@@ -54,7 +54,7 @@ namespace mm {
 			//cv_.wait(mlock, [this](){ return !this->queue_.empty(); });
 			//cv_.wait_for(mlock, timeout, [this](){ return !this->queue_.empty(); });
 
-			outVal = queue_.front();
+			outVal = std::move(queue_.front());
 			queue_.pop();
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << queue_.size();
 			return true;
@@ -117,7 +117,7 @@ namespace mm {
 			//cv_.wait(p_lock, [this](){ return !this->queue_.empty(); });
 			//cv_.wait_for(p_lock, timeout, [this](){ return !this->queue_.empty(); });
 
-			outVal = queue_.front();
+			outVal = std::move(queue_.front());
 			queue_.erase_after(queue_.before_begin());
 			//if (queue_.empty())
 			//	last_ = queue_.before_begin();

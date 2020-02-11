@@ -68,7 +68,7 @@ namespace mm {
 			{
 				Node* removed = head_;
 				Node* theNext = head_->next_a;
-				outVal = theNext->data_;
+				outVal = std::move(theNext->data_);
 				head_ = theNext;
 				//if (head_ == nullptr)
 				//	tail_ = nullptr;

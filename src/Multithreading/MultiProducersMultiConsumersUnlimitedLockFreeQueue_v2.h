@@ -36,7 +36,7 @@ namespace mm {
 	private:
 		struct Node
 		{
-			Node(const T& val) : value_(val), next_a(nullptr) { }
+			Node(T&& val) : value_{ std::move(val) }, next_a{ nullptr } { }
 			T value_;
 			atomic<Node*> next_a;
 			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>)];
@@ -61,7 +61,7 @@ namespace mm {
 
 		void push(T&& obj)
 		{
-			Node* tmp = new Node(obj);
+			Node* tmp = new Node(std::move(obj));
 			while (producerLock_a.exchange(true))
 			{
 			}   // acquire exclusivity
@@ -91,7 +91,7 @@ namespace mm {
 			//if (theNext != nullptr)      // if queue is nonempty
 			{
 				//T* val = theNext->value_;    // take it out
-				outVal = theNext->value_;    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
+				outVal = std::move(theNext->value_);    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
 				//theNext->value_ = nullptr;  // of the Node
 				first_ = theNext;          // swing first forward
 				consumerLock_a = false;             // release exclusivity

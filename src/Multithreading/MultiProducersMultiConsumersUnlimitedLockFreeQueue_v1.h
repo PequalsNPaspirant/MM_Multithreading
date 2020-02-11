@@ -89,7 +89,7 @@ namespace mm {
 			if (theNext != nullptr)      // if queue is nonempty
 			{   
 				T* val = theNext->value_;    // take it out
-				outVal = *val;    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
+				outVal = std::move(*val);    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
 				theNext->value_ = nullptr;  // of the Node
 				first_ = theNext;          // swing first forward
 				consumerLock_a = false;             // release exclusivity

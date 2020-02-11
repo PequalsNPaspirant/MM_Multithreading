@@ -37,9 +37,15 @@ namespace mm {
 
 		bool push(T&& obj, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 1000 * 60 * 60 }) //default timeout = 1 hr
 		{
+			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 			size_t localHead;
 			do
 			{
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
+
 				localHead = head_.load();
 
 			} while (localHead - tail_.load() == maxSize_ || !head_.compare_exchange_weak(localHead, localHead + 1));
@@ -65,13 +71,19 @@ namespace mm {
 		//pop() with timeout. Returns false if timeout occurs.
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
+			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 			size_t localTail;
 			do
 			{
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
+
 				localTail = tail_.load();
 
 			} while (head_.load() == localTail || !tail_.compare_exchange_weak(localTail, localTail + 1));
-			outVal = vec_[localTail % maxSize_];
+			outVal = std::move(vec_[localTail % maxSize_]);
 
 
 
