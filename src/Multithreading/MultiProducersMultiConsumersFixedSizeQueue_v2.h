@@ -69,7 +69,6 @@ namespace mm {
 					if (cvConsumers_.wait_for(p_lock, timeout) == std::cv_status::timeout)
 						return false;
 				}
-				--nonAtomicSize_;
 			}
 			//OR
 			//cond_.wait(mlock, [this](){ return this->size_ != 0; });
@@ -81,6 +80,10 @@ namespace mm {
 			
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
 
+			{
+				std::unique_lock<std::mutex> p_lock(mutexProducer_);
+				--nonAtomicSize_;
+			}
 			c_lock.unlock();
 			cvProducers_.notify_one();
 			return true;

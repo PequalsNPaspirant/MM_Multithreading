@@ -287,8 +287,6 @@ namespace mm {
 				this_thread::sleep_for(chrono::nanoseconds(sleepTime));
 			}
 			Object obj = std::move(queue.pop(threadId));
-			Object b1;
-			Object b = std::move(b1);
 			int n = obj.getValue();
 		}
 	}
@@ -414,8 +412,8 @@ namespace mm {
 
 		///***** Fixed Size Queues ****/
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<Object>>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v2<Object>>(QueueType::MPMC_FS_v2, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v3<Object>>(QueueType::MPMC_FS_v3, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v2<Object>>(QueueType::MPMC_FS_v2, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v3<Object>>(QueueType::MPMC_FS_v3, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<Object>>(QueueType::MPMC_FS_LF_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2<Object>>(QueueType::MPMC_FS_LF_v2, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);

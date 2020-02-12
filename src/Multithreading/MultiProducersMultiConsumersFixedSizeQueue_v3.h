@@ -61,24 +61,16 @@ namespace mm {
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
 			std::unique_lock<std::mutex> c_lock(mutexConsumer_);
-			if (size_a.load() == maxSize_)
+			
+			if (size_a.load() == 0)
 			{
 				std::unique_lock<std::mutex> p_lock(mutexProducer_);
-				--size_a;
-			}
-			else
-			{
-				if (size_a.load() == 0)
+				while (size_a.load() == 0)
 				{
-					std::unique_lock<std::mutex> p_lock(mutexProducer_);
-					while (size_a.load() == 0)
-					{
-						//cvConsumers_.wait(mlock);
-						if (cvConsumers_.wait_for(p_lock, timeout) == std::cv_status::timeout)
-							return false;
-					}
+					//cvConsumers_.wait(mlock);
+					if (cvConsumers_.wait_for(p_lock, timeout) == std::cv_status::timeout)
+						return false;
 				}
-				--size_a;
 			}
 			//OR
 			//cond_.wait(mlock, [this](){ return this->size_ != 0; });
@@ -89,6 +81,16 @@ namespace mm {
 				tail_ %= maxSize_;
 			
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
+			if (size_a.load() == maxSize_)
+			{
+				//Take a lock even though its atomic variable, so that you decrement it after the producer thread "unlocks mutexProducer_ and goes to wait" atomically
+				//There will be a race if producer thread checks size_a.load() == maxSize_ and goes into while loop, then consumer does --size_a and  cvProducers_.notify_one(), 
+				// and then producer goes into wait state....producer will miss the notification
+				std::unique_lock<std::mutex> p_lock(mutexProducer_); 
+				--size_a;
+			}
+			else
+				--size_a;
 
 			c_lock.unlock();
 			cvProducers_.notify_one();
