@@ -80,6 +80,9 @@ namespace mm {
 			while (consumerLock_a.exchange(true))
 			{
 			}    // acquire exclusivity
+
+			//The below loop should be after consumerLock_a loop above to ensure that only one consumer access it.
+			//Otherwise first_ can be deleted by another consumer below (at the end through theFirst) and this consumer thread may crash while accessing deleted first_
 			while (first_->next_a == nullptr) 
 			{
 				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();

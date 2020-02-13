@@ -83,33 +83,17 @@ namespace mm {
 				do
 				{
 					theFirst = first_a.load(memory_order_seq_cst);
-					theNext = theFirst->next_a;
+					//theNext = theFirst->next_a; //theFirst can be deleted by another consumer thread at line: 'a' below
+					theNext = first_a.load(memory_order_seq_cst)->next_a;
 				} while (theNext == nullptr);
 			}
 			while(
 				!first_a.compare_exchange_strong(theFirst, theNext, memory_order_seq_cst)      // queue is being used by other consumer thread
 				);
 				
-			{
-				int n = theFirst->value_.getValue();
-				const string& str = theFirst->value_.getStr();
-				if ((n % 256) != str.length())
-				{
-					int  x = 0;
-				}
-			}
-
-				// now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. 
-				// but this makes unnecessary copy of object if it fails further in compare_exchange_weak().
+				// now copy it back. If the exception is thrown at this statement, the object will be lost! 
 				outVal = std::move(theFirst->value_);
-				delete theFirst;      // and the old dummy
-
-				int n = outVal.getValue();
-				const string& str = outVal.getStr();
-				if ((n % 256) != str.length())
-				{
-					int  x = 0;
-				}
+				delete theFirst;      // and the old dummy // This is line: 'a'
 
 				return true;      // and report success
 		}
