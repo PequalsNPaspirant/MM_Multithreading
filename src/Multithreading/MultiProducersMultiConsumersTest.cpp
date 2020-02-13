@@ -18,6 +18,7 @@ using namespace std;
 #include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1.h"
 #include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2.h"
 #include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3.h"
+#include "MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4.h"
 
 #include "MultiProducersMultiConsumersFixedSizeQueue_v1.h"
 #include "MultiProducersMultiConsumersFixedSizeQueue_v2.h"
@@ -63,6 +64,7 @@ namespace mm {
 		MPMC_U_LF_v1,
 		MPMC_U_LF_v2,
 		MPMC_U_LF_v3,
+		MPMC_U_LF_v4,
 
 		MPMC_FS_v1,
 		MPMC_FS_v2,
@@ -87,6 +89,7 @@ namespace mm {
 		{ QueueType::MPMC_U_LF_v1, "MPMC_U_LF_v1" },
 		{ QueueType::MPMC_U_LF_v2, "MPMC_U_LF_v2" },
 		{ QueueType::MPMC_U_LF_v3, "MPMC_U_LF_v3" },
+		{ QueueType::MPMC_U_LF_v4, "MPMC_U_LF_v4" },
 
 		{ QueueType::MPMC_FS_v1, "MPMC_FS_v1" },
 		{ QueueType::MPMC_FS_v2, "MPMC_FS_v2" },
@@ -240,12 +243,12 @@ namespace mm {
 			}
 			Object obj;
 			//long long timeout = std::numeric_limits<long long>::max();
-			std::chrono::milliseconds timeoutMilisec{ 60 * 1000 }; // timeout = 1 min
+			std::chrono::milliseconds timeoutMilisec{ 1000 * 60 * 60 }; // timeout = 1 hour
 			bool result = queue.pop(obj, timeoutMilisec);
 			my_runtime_assert(result);
 			int n = obj.getValue();
 			const string& str = obj.getStr();
-			//my_runtime_assert((n % 256) == str.length());
+			my_runtime_assert((n % 256) == str.length());
 				
 			if (!result)
 			{
@@ -369,6 +372,7 @@ namespace mm {
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<Object>>(QueueType::MPMC_U_LF_v1, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2<Object>>(QueueType::MPMC_U_LF_v2, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3<Object>>(QueueType::MPMC_U_LF_v3, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4<Object>>(QueueType::MPMC_U_LF_v4, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
 		///***** Fixed Size Queues ****/
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<Object>>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);

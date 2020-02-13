@@ -44,6 +44,7 @@
     <ClCompile Include="..\..\..\..\src\_MM_Multithreading_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeQueue_v3.h" />
