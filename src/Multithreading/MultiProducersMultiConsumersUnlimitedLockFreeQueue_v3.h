@@ -32,49 +32,41 @@ namespace mm {
 	private:
 		struct Node
 		{
+			Node() : value_{}, next_a { nullptr } { }
 			Node(T&& val) : value_{ std::move(val) }, next_a{ nullptr } { }
 			T value_;
 			atomic<Node*> next_a;
-			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>)];
+			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) > 0 ? CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) : 1];
 		};
 
 	public:
 		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3()
 		{
-			first_a = last_a = new Node(T{});
-			//producerLock_a = consumerLock_a = false;
+			first_a = last_a = new Node{};
 		}
 		~MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3()
 		{
-			Node* curr = first_a;
+			Node* curr = first_a.load();
 			while(curr != nullptr)      // release the list
 			{
 				Node* tmp = curr;
 				curr = curr->next_a;
-				//delete tmp->value_;       // no-op if null
 				delete tmp;
 			}
 		}
 
 		void push(T&& obj)
 		{
-			Node* tmp = new Node(std::move(obj));
-/*			while (producerLock_a.exchange(true))
-			{
-			} */  // acquire exclusivity
-			Node* old = last_a.exchange(tmp);
-			old->next_a.store(tmp);         // publish to consumers
-			//last_a = tmp;             // swing last forward
-			//producerLock_a = false;       // release exclusivity
+			Node* tmp = new Node{};
+			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
+			oldLast->value_ = std::move(obj);
+			oldLast->next_a.store(tmp, memory_order_seq_cst);         // publish to consumers
 		}
 
-		//exception SAFE pop() version. TODO: Returns false if timeout occurs.
+		//exception SAFE pop() version. Returns false if timeout occurs.
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-/*			while (consumerLock_a.exchange(true))
-			{
-			} */   // acquire exclusivity
 
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
@@ -85,48 +77,53 @@ namespace mm {
 				if (duration >= timeout)
 					return false;
 
-				theFirst = first_a.load();
-				theNext = first_a.load()->next_a;
-				//if (!theNext)
-				//	continue;
+				//
+				//theNext = first_a.load()->next_a;
+				//theNext = theFirst->next_a;
+				do
+				{
+					theFirst = first_a.load(memory_order_seq_cst);
+					theNext = theFirst->next_a;
+				} while (theNext == nullptr);
 			}
 			while(
-				theNext == nullptr                                          // queue is empty
-				|| !first_a.compare_exchange_strong(theFirst, theNext)      // queue is being used by other consumer thread
+				!first_a.compare_exchange_strong(theFirst, theNext, memory_order_seq_cst)      // queue is being used by other consumer thread
 				);
-
-			//Node* theFirst = first_a.load();
-			//while(theFirst->next_a == nullptr || !first_a.compare_exchange_weak(theFirst, theFirst->next_a));
-
-			
-			//if (theNext != nullptr)      // if queue is nonempty
+				
 			{
-				//T* val = theNext->value_;    // take it out
-				outVal = std::move(theNext->value_);    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
-				//theNext->value_ = nullptr;  // of the Node
-				//first_a = theNext;          // swing first forward
-				//consumerLock_a = false;             // release exclusivity
-													//outVal = *val;    // now copy it back here if the availability of queue i.e. locking it for least possible time is more important than exceptional neutrality. 
-				//delete val;       // clean up the value_
-				delete theFirst;      // and the old dummy
-				return true;      // and report success
+				int n = theFirst->value_.getValue();
+				const string& str = theFirst->value_.getStr();
+				if ((n % 256) != str.length())
+				{
+					int  x = 0;
+				}
 			}
 
-			//consumerLock_a = false;   // release exclusivity
-			//return false;                  // report queue was empty
+				// now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. 
+				// but this makes unnecessary copy of object if it fails further in compare_exchange_weak().
+				outVal = std::move(theFirst->value_);
+				delete theFirst;      // and the old dummy
+
+				int n = outVal.getValue();
+				const string& str = outVal.getStr();
+				if ((n % 256) != str.length())
+				{
+					int  x = 0;
+				}
+
+				return true;      // and report success
 		}
 
 		size_t size()
 		{
 			//TODO: Use synchronization
 			size_t size = 0;
-			Node* curr = first_a.load()->next_a;
-			for (; curr != nullptr; curr = curr->next_a)      // release the list
+			for (Node* curr = first_a.load()->next_a; curr != nullptr; curr = curr->next_a)      // release the list
 			{
 				++size;
 			}
 
-			return size > 0 ? size - 1 : 0;
+			return size;
 		}
 
 		bool empty()

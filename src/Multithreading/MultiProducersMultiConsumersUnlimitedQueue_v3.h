@@ -39,7 +39,7 @@ namespace mm {
 			}
 			T data_;
 			atomic<Node*> next_a;
-			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>)];
+			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) > 0 ? CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) : 1];
 		};
 
 		class ForwardList

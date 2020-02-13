@@ -39,7 +39,7 @@ namespace mm {
 			Node(T&& val) : value_{ std::move(val) }, next_a{ nullptr } { }
 			T value_;
 			atomic<Node*> next_a;
-			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>)];
+			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) > 0 ? CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) : 1];
 		};
 
 	public:
@@ -88,34 +88,24 @@ namespace mm {
 
 			Node* theFirst = first_;
 			Node* theNext = first_->next_a;
-			//if (theNext != nullptr)      // if queue is nonempty
-			{
-				//T* val = theNext->value_;    // take it out
-				outVal = std::move(theNext->value_);    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
-				//theNext->value_ = nullptr;  // of the Node
-				first_ = theNext;          // swing first forward
-				consumerLock_a = false;             // release exclusivity
-													//outVal = *val;    // now copy it back here if the availability of queue i.e. locking it for least possible time is more important than exceptional neutrality. 
-				//delete val;       // clean up the value_
-				delete theFirst;      // and the old dummy
-				return true;      // and report success
-			}
-
-			//consumerLock_a = false;   // release exclusivity
-			//return false;                  // report queue was empty
+			outVal = std::move(theNext->value_);    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
+			first_ = theNext;          // swing first forward
+			consumerLock_a = false;             // release exclusivity
+												//outVal = *val;    // now copy it back here if the availability of queue i.e. locking it for least possible time is more important than exceptional neutrality. 
+			delete theFirst;      // and the old dummy
+			return true;      // and report success
 		}
 
 		size_t size()
 		{
 			//TODO: Use synchronization
 			size_t size = 0;
-			Node* curr = first_->next_a;
-			for (; curr != nullptr; curr = curr->next_a)      // release the list
+			for (Node* curr = first_->next_a; curr != nullptr; curr = curr->next_a)      // release the list
 			{
 				++size;
 			}
 
-			return size > 0 ? size - 1 : 0;
+			return size;
 		}
 
 		bool empty()

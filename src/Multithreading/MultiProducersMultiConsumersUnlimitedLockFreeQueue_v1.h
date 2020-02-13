@@ -18,10 +18,14 @@ This is implemented using two atomic boolean flags to create spin locks for prod
 It uses its own forward list implementation having atomic next ptr in each node. 
 The list stores T* and uses two dynamic allocations to allocate memory for node and also for data.
 Producers never need to wait because its unlimited queue and will never be full.
-Consumers have to wait and retry on their own because it returns false if the queue is empty.
+//Consumers have to wait and retry on their own because it returns false if the queue is empty.
+Consumers wait if the queue is empty.
 
 Reference: Herb Sutter's blog:
 https://www.drdobbs.com/parallel/writing-a-generalized-concurrent-queue/211601363?pgno=1
+
+Modifications to original implementation (original code is commented):
+function pop() waits if the queue is empty, instead of returning false.
 */
 
 #define CACHE_LINE_SIZE 64
@@ -59,7 +63,7 @@ namespace mm {
 
 		void push(T&& obj)
 		{
-			Node* tmp = new Node(new T(obj));
+			Node* tmp = new Node(new T(std::move(obj)));
 			while (producerLock_a.exchange(true))
 			{
 			}   // acquire exclusivity
@@ -86,7 +90,7 @@ namespace mm {
 
 			Node* theFirst = first_;
 			Node* theNext = first_->next_a;
-			if (theNext != nullptr)      // if queue is nonempty
+			//if (theNext != nullptr)      // if queue is nonempty
 			{   
 				T* val = theNext->value_;    // take it out
 				outVal = std::move(*val);    // now copy it back. If the exception is thrown at this statement, the state of the entire queue will remain unchanged. but this retains lock for more time.
@@ -99,16 +103,15 @@ namespace mm {
 				return true;      // and report success
 			}
 
-			consumerLock_a = false;   // release exclusivity
-			return false;                  // report queue was empty
+			//consumerLock_a = false;   // release exclusivity
+			//return false;                  // report queue was empty
 		}
 
 		size_t size()
 		{
 			//TODO: Use synchronization
 			size_t size = 0;
-			Node* curr = first_->next_a;
-			for (; curr != nullptr; curr = curr->next_a)      // release the list
+			for (Node* curr = first_->next_a; curr != nullptr; curr = curr->next_a)      // release the list
 			{
 				++size;
 			}
