@@ -73,67 +73,7 @@ namespace mm {
 
 				} while (!first_a.compare_exchange_weak(expected, tmp, memory_order_seq_cst));
 			}
-				
 
-			//Node* expected;
-			////Check if queue is empty
-			//expected = nullptr;
-			//if (first_a.compare_exchange_weak(expected, tmp, memory_order_seq_cst))
-			//	return;
-
-			////if there is just one element in queue, block consumer threads until push is done 
-			//expected = oldLast;
-			//if(first_a.compare_exchange_weak(expected, nullptr, memory_order_seq_cst))
-			//{
-			//	if (oldLast)
-			//		oldLast->next_a.store(tmp, memory_order_seq_cst);
-			//	first_a.store(oldLast, memory_order_seq_cst); //restore the value of first_a back if its still nullptr
-			//}
-			//else
-			//{
-			//	if (oldLast)
-			//		oldLast->next_a.store(tmp, memory_order_seq_cst);
-			//}
-
-			{
-				//if(oldLast == nullptr) //the queue is empty
-				//	first_a.store(tmp, memory_order_seq_cst);
-				//else
-				//	oldLast->next_a.store(tmp, memory_order_seq_cst);
-				
-
-				////If oldLast is still valid i.e. it's not deleted i.e. first_a is not nullptr
-				//if(first_a.load(memory_order_seq_cst) != nullptr)
-				//	//At this time, consumer may delete one or more elements from queue including oldLast
-					//oldLast->next_a.store(tmp, memory_order_seq_cst);
-
-				//Node* theFirst = nullptr;
-				//Node* theNext = nullptr;
-				//do
-				//{
-				//	theFirst = first_a.load(memory_order_seq_cst);
-				//	if(theFirst)
-				//		theNext = theFirst->next_a.load(memory_order_seq_cst);
-				//}while(theFirst != nullptr
-				//	&& theFirst->next_a.load)
-
-				//oldLast may be deleted if queue has just one element and a consumer pops it...
-				//Node* expectedFirst = oldLast;
-				//bool success = first_a.compare_exchange_weak(expectedFirst, nullptr, memory_order_seq_cst); //Check if queue has just one element
-				//if (success) //The first_a is same as oldLast i.e. the queue has just one element and no consumer thread has not even started pop operation. first_a is set to nullptr, so all the consumers threads will be blocked if they are trying to call pop().
-				//{
-				//	oldLast->next_a.store(tmp, memory_order_seq_cst);
-				//	first_a.store(oldLast, memory_order_seq_cst); //restore first_a back to old value
-				//}
-				//else //first_a is NOT same as oldLast
-				//{
-				//	if (expectedFirst == nullptr) //If the first_a is null, that means, consumers have popped all the elements from queue and queue is empty now
-				//		first_a.store(tmp, memory_order_seq_cst);
-				//	else //If the first_a is NOT null, that means, the queue has more than one elements
-				//		//At this time, consumer may delete one or more elements from queue including oldLast
-				//		oldLast->next_a.store(tmp, memory_order_seq_cst);
-				//}
-			}
 		}
 
 		//exception SAFE pop() version. Returns false if timeout occurs.
@@ -142,6 +82,7 @@ namespace mm {
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();			
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
+			bool reloop = false;
 			do
 			{
 				do
@@ -158,61 +99,16 @@ namespace mm {
 				//If theFirst & last_a are same, the queue has just one element and is now going to be popped out of queue
 				Node* expected = theFirst;
 				bool success = last_a.compare_exchange_weak(expected, nullptr, memory_order_seq_cst);
-
 				theNext = theFirst->next_a.load(memory_order_seq_cst);
-			} while (!first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
+				//If there are more than one elements in queue, we can not expect theNext to be nullptr
+				//that means push operation is in midway, so lets wait for its completion
+				reloop = !success && theNext == nullptr;
+			} while (reloop
+				|| !first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
 			
 			//At this time, theFirst is not a part of queue and consumer has got exclusive right to use it
 			outVal = std::move(theFirst->value_);
 			delete theFirst;
-
-			
-
-			//the statements below this line can be in any order, because they act only on local variable 'theFirst'
-			//Multiple threads can come here only when:
-			//    at this point, the queue is empty and producer pushes first element and changes first_a to some non-nullptr value 
-			//    which is same as last_a. But its safe as it acts only on local variable 'theFirst'
-			//outVal = std::move(theFirst->value_);
-			//Node* theNext = theFirst->next_a;
-			//the statements above this line can be in any order
-
-			//If first_a is not changed yet by any producer thread, then set it to whatever theNext is
-			//Node* expected = nullptr;
-			//first_a.compare_exchange_weak(expected, theNext, memory_order_seq_cst);
-			//delete theFirst;
-
-/*			size_t size = 0;
-			size_t newSize = 0;
-			do
-			{
-				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-				if (duration >= timeout)
-					return false;
-
-				size = size_a.load(memory_order_seq_cst);
-				newSize = size - 1;
-			} while (size == 0 || !size_a.compare_exchange_weak(size, newSize, memory_order_seq_cst)); // size - 1 will be calculated before calling compare_exchange_weak(), so its safe
-			*/
-
-			//Node* theFirst = nullptr;
-			//Node* theNext = nullptr;
-			//do
-			//{
-			//	theFirst = first_a.load(memory_order_seq_cst);
-			//	//theNext = theFirst->next_a; //theFirst can be deleted by another consumer thread at line: 'a' below
-			//	theNext = first_a.load(memory_order_seq_cst)->next_;
-			//}
-			//while(!first_a.compare_exchange_strong(theFirst, theNext, memory_order_seq_cst));      // queue is being used by other consumer thread
-
-			//Node* theFirst = first_a.load(memory_order_seq_cst);
-			//theNext = theFirst->next_a; //theFirst can be deleted by another consumer thread at line: 'a' below
-			//Node* theNext = first_a.load(memory_order_seq_cst)->next_;
-			//Node* theFirst = first_a.exchange(theNext, memory_order_seq_cst);
-
-			// now copy it back. If the exception is thrown at this statement, the object will be lost! 
-			//outVal = std::move(theFirst->value_);
-			//delete theFirst;      // and the old dummy // This is line: 'a'
 
 			return true;      // and report success
 		}
