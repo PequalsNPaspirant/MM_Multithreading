@@ -70,7 +70,7 @@ namespace mm {
 				Node* expected = nullptr;
 				do
 				{
-
+					expected = nullptr;
 				} while (!first_a.compare_exchange_weak(expected, tmp, memory_order_seq_cst));
 			}
 
