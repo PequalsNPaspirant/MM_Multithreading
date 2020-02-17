@@ -23,15 +23,15 @@ Consumers have to wait if the queue is empty.
 namespace mm {
 
 	template <typename T>
-	class MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2
+	class MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5
 	{
 	public:
-		MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2(size_t maxSize)
+		MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5(size_t maxSize)
 			: maxSize_(maxSize),
 			size_{ 0 },
 			vec_(maxSize), 
-			headProducers_{ 0 },
-			headConsumers_{ 0 },
+			producersLock_{ false },
+			consumersLock_{ false },
 			tailProducers_{ 0 },			
 			tailConsumers_{ 0 }
 		{
@@ -128,10 +128,10 @@ namespace mm {
 		size_t maxSize_;
 		std::atomic<size_t> size_;
 		std::vector<T> vec_; //This will be used as ring buffer / circular queue
-		std::atomic<size_t> headProducers_; //stores the index where next element will be pushed/produced
-		std::atomic<size_t> headConsumers_; //stores the index where next element will be pushed/produced - published to consumers
-		std::atomic<size_t> tailProducers_; //stores the index of object which will be popped/consumed - published to producers		
-		std::atomic<size_t> tailConsumers_; //stores the index of object which will be popped/consumed
+		std::atomic<bool> producersLock_;
+		std::atomic<bool> consumersLock_;
+		size_t head_;
+		size_t tail_;
 	};
 	
 }
