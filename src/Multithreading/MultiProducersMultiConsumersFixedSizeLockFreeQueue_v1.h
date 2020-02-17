@@ -39,8 +39,7 @@ namespace mm {
 		bool push(T&& obj, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 1000 * 60 * 60 }) //default timeout = 1 hr
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-			size_t localHead, localTail, nextLocalHead;
-			bool queueFull = false;
+			size_t localHead, localTail;
 			do
 			{
 				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
@@ -49,22 +48,20 @@ namespace mm {
 					return false;
 
 				localHead = headProducers_.load(memory_order_seq_cst); //Read tail value only once at the start
-				nextLocalHead = (localHead + 1); // % maxSize_;
 				localTail = tailProducers_.load(memory_order_seq_cst);
 
 			} while (
-				!(localHead >= localTail && localHead - localTail < maxSize_)                         // if the queue is not full
-				|| !headProducers_.compare_exchange_weak(localHead, nextLocalHead, memory_order_seq_cst) // if some other producer thread updated head_ till now
+				!(localTail <= localHead && localHead - localTail < maxSize_)                         // if the queue is not full
+				|| !headProducers_.compare_exchange_weak(localHead, localHead + 1, memory_order_seq_cst) // if some other producer thread updated head_ till now
 				);
-
-			if (!(localHead >= localTail && localHead - localTail < maxSize_))
-			{
-				int x = 0;
-			}
 
 			vec_[localHead % maxSize_] = std::move(obj);
 
-			do {} while (!headConsumers_.compare_exchange_weak(localHead, nextLocalHead, memory_order_seq_cst));
+			size_t expected = localHead;
+			do 
+			{
+				expected = localHead;
+			} while (!headConsumers_.compare_exchange_weak(expected, localHead + 1, memory_order_seq_cst));
 
 			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << size_;
 			return true;
@@ -74,7 +71,7 @@ namespace mm {
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-			size_t localHead, localTail, nextLocalTail;
+			size_t localHead, localTail;
 			do
 			{
 				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
@@ -83,22 +80,20 @@ namespace mm {
 					return false;
 
 				localTail = tailConsumers_.load(memory_order_seq_cst); //Read tail value only once at the start
-				nextLocalTail = (localTail + 1); // % maxSize_;
 				localHead = headConsumers_.load(memory_order_seq_cst);
 
 			} while (
 				!(localTail < localHead)                                      // Make sure the queue is not empty
-				|| !tailConsumers_.compare_exchange_weak(localTail, nextLocalTail, memory_order_seq_cst) // Make sure no other consumer thread updated tail_ till now
+				|| !tailConsumers_.compare_exchange_weak(localTail, localTail + 1, memory_order_seq_cst) // Make sure no other consumer thread updated tail_ till now
 				);
-
-			if (!(localTail < localHead))
-			{
-				int x = 0;
-			}
 
 			outVal = std::move(vec_[localTail % maxSize_]);
 
-			do {} while (!tailProducers_.compare_exchange_weak(localTail, nextLocalTail, memory_order_seq_cst));
+			size_t expected = localTail;
+			do 
+			{
+				expected = localTail;
+			} while (!tailProducers_.compare_exchange_weak(expected, localTail + 1, memory_order_seq_cst));
 
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
 			return true;
