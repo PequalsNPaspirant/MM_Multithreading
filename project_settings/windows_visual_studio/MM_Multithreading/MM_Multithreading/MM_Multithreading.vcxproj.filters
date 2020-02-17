@@ -131,5 +131,8 @@
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\compare_exchange_weak_vs_strong.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

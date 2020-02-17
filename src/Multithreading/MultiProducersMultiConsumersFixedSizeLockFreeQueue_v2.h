@@ -27,19 +27,20 @@ namespace mm {
 	{
 	public:
 		MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2(size_t maxSize)
-			: maxSize_(maxSize), 
+			: maxSize_(maxSize),
+			size_{ 0 },
 			vec_(maxSize), 
-			head1_{ 0 },
-			tail1_{ 0 },
-			head2_{ 0 },
-			tail2_{ 0 }
+			headProducers_{ 0 },
+			headConsumers_{ 0 },
+			tailProducers_{ 0 },			
+			tailConsumers_{ 0 }
 		{
 		}
 
 		bool push(T&& obj, const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 1000 * 60 * 60 }) //default timeout = 1 hr
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-			size_t currentHead, localHead, localTail, nextLocalHead;
+			size_t localHead, localTail, nextLocalHead;
 			bool queueFull = false;
 			do
 			{
@@ -48,28 +49,30 @@ namespace mm {
 				if (duration >= timeout)
 					return false;
 
-				currentHead = head1_.load(); //Read tail value only once at the start
-				nextLocalHead = (currentHead + 1) % maxSize_;
-				localTail = tail2_.load();
+				localHead = headProducers_.load(); //Read tail value only once at the start
+				nextLocalHead = (localHead + 1) % maxSize_;
+				//localTail = tailProducers_.load();
 				
 				//if (currentHead - localTail == maxSize_)
 				//	queueFull = true;
 				//else if (currentHead > maxSize_)
 				//	localHead %= maxSize_;
-				localHead = currentHead % maxSize_;
-				if (nextLocalHead == localTail) //queue will be full after inserting current element into queue
-					nextLocalHead += maxSize_; //set it to a value offset by maxSize_, so that the condition to check whether queue is full will be true
+				//localHead = currentHead; // % maxSize_;
+				//if (nextLocalHead == localTail) //queue will be full after inserting current element into queue
+				//	nextLocalHead += maxSize_; //set it to a value offset by maxSize_, so that the condition to check whether queue is full will be true
 
 			} while (
-				currentHead - localTail == maxSize_                         // if the queue is not full
-				|| !head1_.compare_exchange_weak(currentHead, nextLocalHead) // if some other producer thread updated head_ till now
+				size_.load() == maxSize_                         // if the queue is not full
+				|| !headProducers_.compare_exchange_weak(localHead, nextLocalHead) // if some other producer thread updated head_ till now
 				);
 			vec_[localHead] = std::move(obj);
 
 			do
 			{
 
-			} while (!head2_.compare_exchange_weak(currentHead, nextLocalHead));
+			} while (!headConsumers_.compare_exchange_weak(localHead, nextLocalHead));
+
+			++size_;
 
 			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << size_;
 			return true;
@@ -87,20 +90,22 @@ namespace mm {
 				if (duration >= timeout)
 					return false;
 
-				localTail = tail1_.load(); //Read tail value only once at the start
+				localTail = tailConsumers_.load(); //Read tail value only once at the start
 				nextLocalTail = (localTail + 1) % maxSize_;
-				localHead = head2_.load();
+				localHead = headConsumers_.load();
 
 			} while (
-				localHead == localTail                                      // Make sure the queue is not empty
-				|| !tail1_.compare_exchange_weak(localTail, nextLocalTail) // Make sure no other consumer thread updated tail_ till now
+				size_.load() == 0                                      // Make sure the queue is not empty
+				|| !tailConsumers_.compare_exchange_weak(localTail, nextLocalTail) // Make sure no other consumer thread updated tail_ till now
 				);
 			outVal = std::move(vec_[localTail]);
 
 			do
 			{
 
-			} while (!tail2_.compare_exchange_weak(localTail, nextLocalTail));
+			} while (!tailProducers_.compare_exchange_weak(localTail, nextLocalTail));
+
+			--size_;
 			
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
 			return true;
@@ -108,21 +113,25 @@ namespace mm {
 
 		size_t size()
 		{
-			return head2_.load() - tail2_.load();
+			size_t size = headConsumers_.load() - tailProducers_.load();
+			//return (size < 0 ? maxSize_ - size : size);
+			return size;
 		}
 
 		bool empty()
 		{
-			return head2_.load() == tail2_.load();
+			size_t size = headConsumers_.load() - tailProducers_.load();
+			return size == 0;
 		}
 
 	private:
 		size_t maxSize_;
+		std::atomic<size_t> size_;
 		std::vector<T> vec_; //This will be used as ring buffer / circular queue
-		std::atomic<size_t> head1_; //stores the index where next element will be pushed
-		std::atomic<size_t> tail1_; //stores the index of object which will be popped
-		std::atomic<size_t> head2_; //stores the index where next element will be pushed
-		std::atomic<size_t> tail2_; //stores the index of object which will be popped
+		std::atomic<size_t> headProducers_; //stores the index where next element will be pushed/produced
+		std::atomic<size_t> headConsumers_; //stores the index where next element will be pushed/produced - published to consumers
+		std::atomic<size_t> tailProducers_; //stores the index of object which will be popped/consumed - published to producers		
+		std::atomic<size_t> tailConsumers_; //stores the index of object which will be popped/consumed
 	};
 	
 }
