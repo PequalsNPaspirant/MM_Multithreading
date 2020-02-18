@@ -72,6 +72,27 @@ public:
 		return true;
 	}
 
+	//with memory barriers
+	bool compare_exchange_strong(T& expectedVal, T newVal, std::memory_order on_success, std::memory_order on_failure)
+	{
+		T temp = data_.load(on_failure);                      // Read the current value
+		if (temp != expectedVal)
+		{
+			expectedVal = data_;
+			return false;
+		}
+
+		HardwareLock lock{};                 // Get exclusive hardware lock
+		temp = data_;                        // Read the current value again because it might  have changed
+		if (temp != expectedVal)
+		{
+			expectedVal = data_;
+			return false;
+		}
+		data_.store(newVal, on_failure);
+		return true;
+	}
+
 	//Optimized implementation
 	//Does exactly same as compare_exchange_strong() but can 'spuriously fail' and return false even if this->data_ == expectedVal
 	bool compare_exchange_weak(T& expectedVal, T newVal)
@@ -97,5 +118,5 @@ public:
 	}
 
 private:
-	data_;
+	T data_;
 };

@@ -62,7 +62,7 @@ namespace mm {
 			Node* tmp = new Node{ std::move(obj) };
 			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
 			if(oldLast)
-				oldLast->next_a.store(tmp, memory_order_seq_cst);
+				oldLast->next_a.store(tmp, memory_order_seq_cst); //TODO: oldLast might be deleted by consumer. Protect it! DONE: line #1 does it!
 			else
 			{
 				//Either this is initial condition i.e. first_a = last_a = nullptr
@@ -102,7 +102,7 @@ namespace mm {
 				theNext = theFirst->next_a.load(memory_order_seq_cst);
 				//If there are more than one elements in queue, we can not expect theNext to be nullptr
 				//that means push operation is in midway, so lets wait for its completion
-				reloop = !success && theNext == nullptr;
+				reloop = !success && theNext == nullptr;  //line #1
 			} while (reloop
 				|| !first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
 			
