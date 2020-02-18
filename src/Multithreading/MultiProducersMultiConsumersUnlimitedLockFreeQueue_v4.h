@@ -98,11 +98,12 @@ namespace mm {
 
 				//If theFirst & last_a are same, the queue has just one element and is now going to be popped out of queue
 				Node* expected = theFirst;
-				bool success = last_a.compare_exchange_weak(expected, nullptr, memory_order_seq_cst);
+				bool queueHasJustOneElement = last_a.compare_exchange_weak(expected, nullptr, memory_order_seq_cst);
 				theNext = theFirst->next_a.load(memory_order_seq_cst);
 				//If there are more than one elements in queue, we can not expect theNext to be nullptr
-				//that means push operation is in midway, so lets wait for its completion
-				reloop = !success && theNext == nullptr;  //line #1
+				//If there are more than one elements in queue, and theNext is nullptr
+				// that means push operation for a second element is in midway, so lets wait for its completion
+				reloop = !queueHasJustOneElement && theNext == nullptr;  //line #1
 			} while (reloop
 				|| !first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
 			
