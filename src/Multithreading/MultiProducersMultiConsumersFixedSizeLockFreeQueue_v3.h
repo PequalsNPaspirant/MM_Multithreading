@@ -31,10 +31,8 @@ namespace mm {
 		MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3(size_t maxSize)
 			: maxSize_(maxSize),
 			vec_(maxSize),
-			headProducers_{ 0 },
-			headConsumers_{ 0 },
-			tailProducers_{ 0 },
-			tailConsumers_{ 0 }
+			head_{ 0 },
+			tail_{ 0 }
 		{
 		}
 
@@ -42,8 +40,9 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-			size_t localHead = headProducers_.fetch_add(1, memory_order_seq_cst);
-			size_t localTail = 0;
+			size_t localHead = head_.fetch_add(1, memory_order_seq_cst) % maxSize_;
+			T* ptr = new T{ std::move(obj) };
+			T* expectedPtr = nullptr;
 			do
 			{
 				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
@@ -51,17 +50,8 @@ namespace mm {
 				if (duration >= timeout)
 					return false;
 
-				localTail = tailProducers_.load(memory_order_seq_cst);
-
-			} while (!(localTail <= localHead && localHead - localTail < maxSize_));     // if the queue is not full
-
-			vec_[localHead % maxSize_].obj_ = std::move(obj);
-
-			size_t expected = localHead;
-			do 
-			{
-				expected = localHead;
-			} while (!headConsumers_.compare_exchange_weak(expected, localHead + 1, memory_order_seq_cst));
+				expectedPtr = nullptr;
+			} while (!vec_[localHead].pObj_.compare_exchange_weak(expectedPtr, ptr, memory_order_seq_cst));  //Make sure this slot in queue is not already occupied
 
 			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << size_;
 			return true;
@@ -72,26 +62,18 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-			size_t localTail = tailConsumers_.fetch_add(1, memory_order_seq_cst);
-			size_t localHead = 0;
-			do
+			size_t localTail = tail_.fetch_add(1, memory_order_seq_cst) % maxSize_;
+			T* ptr = nullptr;
+			while((ptr = vec_[localTail].pObj_.exchange(nullptr, memory_order_seq_cst)) == nullptr)
 			{
 				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 				if (duration >= timeout)
 					return false;
+			}
 
-				localHead = headConsumers_.load(memory_order_seq_cst);
-
-			} while (!(localTail < localHead));        // Make sure the queue is not empty
-
-			outVal = std::move(vec_[localTail % maxSize_].obj_);
-
-			size_t expected = localTail;
-			do 
-			{
-				expected = localTail;
-			} while (!tailProducers_.compare_exchange_weak(expected, localTail + 1, memory_order_seq_cst));
+			outVal = std::move(*ptr);
+			delete ptr;
 
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
 			return true;
@@ -99,13 +81,13 @@ namespace mm {
 
 		size_t size()
 		{
-			size_t size = headConsumers_.load() - tailProducers_.load();
+			size_t size = head_.load() - tail_.load();
 			return size;
 		}
 
 		bool empty()
 		{
-			size_t size = headConsumers_.load() - tailProducers_.load();
+			size_t size = head_.load() - tail_.load();
 			return size == 0;
 		}
 
@@ -113,14 +95,16 @@ namespace mm {
 		size_t maxSize_;
 		struct Data
 		{
-			T obj_;
-			char pad[CACHE_LINE_SIZE - sizeof(T)];
+			Data()
+				: pObj_{ nullptr }
+			{}
+
+			std::atomic<T*> pObj_;
+			char pad[CACHE_LINE_SIZE - sizeof(std::atomic<T*>)];
 		};
 		std::vector<Data> vec_; //This will be used as ring buffer / circular queue
-		std::atomic<size_t> headProducers_; //stores the index where next element will be pushed/produced
-		std::atomic<size_t> headConsumers_; //stores the index where next element will be pushed/produced - published to consumers
-		std::atomic<size_t> tailProducers_; //stores the index of object which will be popped/consumed - published to producers		
-		std::atomic<size_t> tailConsumers_; //stores the index of object which will be popped/consumed
+		std::atomic<size_t> head_; //stores the index where next element will be pushed/produced
+		std::atomic<size_t> tail_; //stores the index where next element will be pushed/produced - published to consumers
 	};
 
 }

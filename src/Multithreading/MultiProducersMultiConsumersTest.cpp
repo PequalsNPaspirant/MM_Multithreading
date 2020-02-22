@@ -29,9 +29,10 @@ using namespace std;
 #include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3.h"
 #include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4.h"
 #include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5.h"
+#include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6.h"
 #include "MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx.h"
 
-#include "MultiProducersMultiConsumersUnsafeQueue_v1.h"
+#include "MultiProducersMultiConsumersUnlimitedUnsafeQueue_v1.h"
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
@@ -78,6 +79,7 @@ namespace mm {
 		MPMC_FS_LF_v3,
 		MPMC_FS_LF_v4,
 		MPMC_FS_LF_v5,
+		MPMC_FS_LF_v6,
 		//MPMC_FS_LF_vx,
 
 		maxQueueTypes
@@ -106,6 +108,7 @@ namespace mm {
 		{ QueueType::MPMC_FS_LF_v3, "MPMC_FS_LF_v3" },
 		{ QueueType::MPMC_FS_LF_v4, "MPMC_FS_LF_v4" },
 		{ QueueType::MPMC_FS_LF_v5, "MPMC_FS_LF_v5" },
+		{ QueueType::MPMC_FS_LF_v6, "MPMC_FS_LF_v6" }
 		//{ QueueType::MPMC_FS_LF_vx, "MPMC_FS_LF_vx"}
 	};
 
@@ -353,6 +356,7 @@ namespace mm {
 			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3<Tobj>>::value
 			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4<Tobj>>::value
 			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5<Tobj>>::value
+			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6<Tobj>>::value
 			;
 	};
 
@@ -419,6 +423,7 @@ namespace mm {
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3<T>, T>(QueueType::MPMC_FS_LF_v3, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4<T>, T>(QueueType::MPMC_FS_LF_v4, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5<T>, T>(QueueType::MPMC_FS_LF_v5, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6<T>, T>(QueueType::MPMC_FS_LF_v6, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 
 		//The below queue does not work
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(QueueType::MPMC_FS_LF_vx, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);

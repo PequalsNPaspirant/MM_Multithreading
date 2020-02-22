@@ -28,12 +28,11 @@ namespace mm {
 	public:
 		MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5(size_t maxSize)
 			: maxSize_(maxSize),
-			size_a{ 0 },
-			vec_(maxSize), 
-			producerLock_a{ false },
-			consumerLock_a{ false },
-			head_{ 0 },
-			tail_{ 0 }
+			vec_(maxSize),
+			headProducers_{ 0 },
+			headConsumers_{ 0 },
+			tailProducers_{ 0 },
+			tailConsumers_{ 0 }
 		{
 		}
 
@@ -41,18 +40,26 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-			while (producerLock_a.exchange(true))
+			size_t localHead = headProducers_.fetch_add(1, memory_order_seq_cst);
+			size_t localTail = 0;
+			do
 			{
-			}   // acquire exclusivity
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
 
-			while (size_a.load(memory_order_seq_cst) == maxSize_)
+				localTail = tailProducers_.load(memory_order_seq_cst);
+
+			} while (!(localTail <= localHead && localHead - localTail < maxSize_));     // if the queue is not full
+
+			vec_[localHead % maxSize_] = std::move(obj);
+
+			size_t expected = localHead;
+			do 
 			{
-			}
-
-			vec_[head_] = std::move(obj);
-			head_ = (head_ + 1) % maxSize_;
-			++size_a;
-			producerLock_a = false;       // release exclusivity
+				expected = localHead;
+			} while (!headConsumers_.compare_exchange_weak(expected, localHead + 1, memory_order_seq_cst));
 
 			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << size_;
 			return true;
@@ -63,18 +70,26 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-			while (consumerLock_a.exchange(true))
+			size_t localTail = tailConsumers_.fetch_add(1, memory_order_seq_cst);
+			size_t localHead = 0;
+			do
 			{
-			}    // acquire exclusivity
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
 
-			while (size_a.load(memory_order_seq_cst) == 0)
+				localHead = headConsumers_.load(memory_order_seq_cst);
+
+			} while (!(localTail < localHead));        // Make sure the queue is not empty
+
+			outVal = std::move(vec_[localTail % maxSize_]);
+
+			size_t expected = localTail;
+			do 
 			{
-			}
-
-			outVal = std::move(vec_[tail_]);
-			tail_ = (tail_ + 1) % maxSize_;
-			--size_a;			
-			consumerLock_a = false;             // release exclusivity
+				expected = localTail;
+			} while (!tailProducers_.compare_exchange_weak(expected, localTail + 1, memory_order_seq_cst));
 
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
 			return true;
@@ -82,22 +97,23 @@ namespace mm {
 
 		size_t size()
 		{
-			return size_a.load(memory_order_seq_cst);
+			size_t size = headConsumers_.load() - tailProducers_.load();
+			return size;
 		}
 
 		bool empty()
 		{
-			return size_a.load(memory_order_seq_cst) == 0;
+			size_t size = headConsumers_.load() - tailProducers_.load();
+			return size == 0;
 		}
 
 	private:
 		size_t maxSize_;
-		std::atomic<size_t> size_a;
 		std::vector<T> vec_; //This will be used as ring buffer / circular queue
-		std::atomic<bool> producerLock_a;
-		std::atomic<bool> consumerLock_a;
-		size_t head_;
-		size_t tail_;
+		std::atomic<size_t> headProducers_; //stores the index where next element will be pushed/produced
+		std::atomic<size_t> headConsumers_; //stores the index where next element will be pushed/produced - published to consumers
+		std::atomic<size_t> tailProducers_; //stores the index of object which will be popped/consumed - published to producers		
+		std::atomic<size_t> tailConsumers_; //stores the index of object which will be popped/consumed
 	};
-	
+
 }

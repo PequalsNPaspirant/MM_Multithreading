@@ -15,7 +15,7 @@ using namespace std;
 namespace mm {
 
 	template <typename T>
-	class UnsafeQueue_v1
+	class UnlimitedUnsafeQueue_v1
 	{
 	public:
 
