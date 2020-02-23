@@ -34,6 +34,7 @@ using namespace std;
 
 #include "MultiProducersMultiConsumersUnlimitedUnsafeQueue_v1.h"
 
+#include "MM_HighResolutionClock.h"
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
 
@@ -301,7 +302,8 @@ namespace mm {
 	template<typename Tqueue, typename Tobj>
 	void test_mpmcu_queue(QueueType queueType, Tqueue& queue, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, int resultIndex)
 	{
-		std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+		//std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+		mm::MM_HighResolutionClock::time_point start = mm::MM_HighResolutionClock::now();
 
 		//Tqueue queue = createQueue_sfinae<Tqueue>(queueSize);
 		const size_t threadsCount = numProducerThreads > numConsumerThreads ? numProducerThreads : numConsumerThreads;
@@ -325,7 +327,8 @@ namespace mm {
 		for (size_t i = 0; i < numConsumerThreads; ++i)
 			consumerThreads[i].join();
 
-		std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+		//std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+		mm::MM_HighResolutionClock::time_point end = mm::MM_HighResolutionClock::now();
 		unsigned long long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
 		//cout << "      Queue is empty ? : " << (queue.empty() ? "Yes" : "No") << " Queue Size : " << queue.size();
