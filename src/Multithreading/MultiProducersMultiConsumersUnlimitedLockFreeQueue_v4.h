@@ -61,28 +61,27 @@ namespace mm {
 		{
 			Node* tmp = new Node{ std::move(obj) };
 			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
-			if(oldLast)
-				oldLast->next_a.store(tmp, memory_order_seq_cst); //TODO: oldLast might be deleted by consumer. Protect it! DONE: line #1 does it!
-			else
-			{
-				//Either this is initial condition i.e. first_a = last_a = nullptr
-				//OR the queue has just one element and pop() operation is in progress, so wait for its completion
-				Node* expected = nullptr;
-				do
-				{
-					expected = nullptr;
-				} while (!first_a.compare_exchange_weak(expected, tmp, memory_order_seq_cst));
-			}
 
+			Node* expected = oldLast;
+			bool oneElement = first_a.compare_exchange_weak(expected, nullptr, memory_order_seq_cst);
+
+			if (oldLast)
+			{
+				oldLast->next_a.store(tmp, memory_order_seq_cst); //TODO: oldLast might be deleted by consumer. Protect it! DONE: line #1 does it!
+				if (oneElement)
+					first_a.store(oldLast, memory_order_seq_cst);
+			}
+			else
+				first_a.store(tmp, memory_order_seq_cst);
 		}
 
 		//exception SAFE pop() version. Returns false if timeout occurs.
 		bool pop(T& outVal, const std::chrono::milliseconds& timeout)
 		{
-			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();			
+			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
-			bool reloop = false;
 			do
 			{
 				do
@@ -93,25 +92,18 @@ namespace mm {
 						return false;
 
 					theFirst = first_a.load(memory_order_seq_cst);
-					
+
 				} while (theFirst == nullptr);
 
-				//If theFirst & last_a are same, the queue has just one element and is now going to be popped out of queue
-				Node* expected = theFirst;
-				bool queueHasJustOneElement = last_a.compare_exchange_weak(expected, nullptr, memory_order_seq_cst);
 				theNext = theFirst->next_a.load(memory_order_seq_cst);
-				//If there are more than one elements in queue, we can not expect theNext to be nullptr
-				//If there are more than one elements in queue, and theNext is nullptr
-				// that means push operation for a second element is in midway, so lets wait for its completion
-				reloop = !queueHasJustOneElement && theNext == nullptr;  //line #1
-			} while (reloop
-				|| !first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
-			
-			//At this time, theFirst is not a part of queue and consumer has got exclusive right to use it
+			} while (!first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
+
+			Node* expected = theFirst;
+			bool oneElement = last_a.compare_exchange_weak(expected, nullptr, memory_order_seq_cst);
+
 			outVal = std::move(theFirst->value_);
 			delete theFirst;
-
-			return true;      // and report success
+			return true;
 		}
 
 		size_t size()

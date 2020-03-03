@@ -53,7 +53,7 @@ namespace mm {
 
 				localTail = tailProducers_.load(memory_order_seq_cst);
 
-			} while (!(localTail <= localHead && localHead - localTail < maxSize_));     // if the queue is not full
+			} while (!(localTail <= localHead && localHead - localTail < maxSize_));     // while the queue is full
 
 			vec_[localHead % maxSize_].obj_ = std::move(obj);
 
@@ -117,10 +117,19 @@ namespace mm {
 			char pad[CACHE_LINE_SIZE - sizeof(T)];
 		};
 		std::vector<Data> vec_; //This will be used as ring buffer / circular queue
+		char pad1[CACHE_LINE_SIZE - sizeof(std::vector<Data>)];
+
 		std::atomic<size_t> headProducers_; //stores the index where next element will be pushed/produced
+		char pad2[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
+
 		std::atomic<size_t> headConsumers_; //stores the index where next element will be pushed/produced - published to consumers
-		std::atomic<size_t> tailProducers_; //stores the index of object which will be popped/consumed - published to producers		
+		char pad3[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
+
+		std::atomic<size_t> tailProducers_; //stores the index of object which will be popped/consumed - published to producers
+		char pad4[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
+
 		std::atomic<size_t> tailConsumers_; //stores the index of object which will be popped/consumed
+		char pad5[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
 	};
 
 }

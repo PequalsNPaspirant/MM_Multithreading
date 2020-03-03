@@ -146,7 +146,7 @@ namespace mm {
 
 	constexpr const int subCol1 = 5;
 	constexpr const int subCol2 = 5;
-	constexpr const int subCol3 = 9;
+	constexpr const int subCol3 = 10;
 	constexpr const int subCol4 = 5;
 	constexpr const int firstColWidth = subCol1 + subCol2 + subCol3 + subCol4;
 	constexpr const int colWidth = 20;
@@ -288,6 +288,8 @@ namespace mm {
 				if (!result)
 				{
 					int n = 100; //This is just for debugging purpose
+					int * p = nullptr;
+					*p = n;
 				}
 			}
 			//cout << "\nThread " << this_thread::get_id() << " popped " << n << " from queue";
@@ -403,30 +405,30 @@ namespace mm {
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector<int>>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<T>, T>(QueueType::MPMC_U_v1_deque, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::list>, T>(QueueType::MPMC_U_v1_list, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::forward_list>, T>(QueueType::MPMC_U_v1_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<T, std::list>, T>(QueueType::MPMC_U_v2_list, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<T, std::forward_list>, T>(QueueType::MPMC_U_v2_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<T, Undefined>, T>(QueueType::MPMC_U_v2_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v3<T>, T>(QueueType::MPMC_U_v3_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<T>, T>(QueueType::MPMC_U_v1_deque, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::list>, T>(QueueType::MPMC_U_v1_list, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::forward_list>, T>(QueueType::MPMC_U_v1_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<T, std::list>, T>(QueueType::MPMC_U_v2_list, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<T, std::forward_list>, T>(QueueType::MPMC_U_v2_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v2<T, Undefined>, T>(QueueType::MPMC_U_v2_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v3<T>, T>(QueueType::MPMC_U_v3_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<T>, T>(QueueType::MPMC_U_LF_v1, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2<T>, T>(QueueType::MPMC_U_LF_v2, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3<T>, T>(QueueType::MPMC_U_LF_v3, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<T>, T>(QueueType::MPMC_U_LF_v1, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2<T>, T>(QueueType::MPMC_U_LF_v2, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3<T>, T>(QueueType::MPMC_U_LF_v3, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4<T>, T>(QueueType::MPMC_U_LF_v4, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
 		///***** Fixed Size Queues ****/
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<T>, T>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v2<T>, T>(QueueType::MPMC_FS_v2, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v3<T>, T>(QueueType::MPMC_FS_v3, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<T>, T>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v2<T>, T>(QueueType::MPMC_FS_v2, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v3<T>, T>(QueueType::MPMC_FS_v3, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<T>, T>(QueueType::MPMC_FS_LF_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2<T>, T>(QueueType::MPMC_FS_LF_v2, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3<T>, T>(QueueType::MPMC_FS_LF_v3, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4<T>, T>(QueueType::MPMC_FS_LF_v4, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5<T>, T>(QueueType::MPMC_FS_LF_v5, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6<T>, T>(QueueType::MPMC_FS_LF_v6, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<T>, T>(QueueType::MPMC_FS_LF_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2<T>, T>(QueueType::MPMC_FS_LF_v2, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3<T>, T>(QueueType::MPMC_FS_LF_v3, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4<T>, T>(QueueType::MPMC_FS_LF_v4, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		////test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5<T>, T>(QueueType::MPMC_FS_LF_v5, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		////test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6<T>, T>(QueueType::MPMC_FS_LF_v6, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 
 		//The below queue does not work
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(QueueType::MPMC_FS_LF_vx, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
@@ -435,7 +437,7 @@ namespace mm {
 	template<typename T>
 	void runAllTestCasesPerType(int numOperations, bool useSleepLocal, int& resultIndex)
 	{
-		cout << "\n=============== useSleep: " << useSleepLocal << " ===============";
+		cout << "\n===============" << " Object Type: " << std::string{ typeid(T).name() } << " useSleep: " << useSleepLocal << " ===============";
 		useSleep = useSleepLocal;
 		std::vector<TestCase> tests =
 		{
@@ -502,9 +504,9 @@ namespace mm {
 			<< std::setw(subCol3) << "TotOps"
 			<< std::setw(subCol4) << "Qsz";
 
-		int numOperations = 84000 * 4;
+		int numOperations = 84000 * 4 * 4;
 		int resultIndex = -1;
-		int divFactor = 40 * 4;
+		int divFactor = 40 * 4 * 2;
 
 		runAllTestCasesPerType<Object>(numOperations, false, resultIndex);
 		runAllTestCasesPerType<int>(numOperations, false, resultIndex);

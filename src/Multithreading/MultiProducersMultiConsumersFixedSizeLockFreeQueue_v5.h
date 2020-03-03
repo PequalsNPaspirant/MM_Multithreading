@@ -22,6 +22,8 @@ Consumers have to wait if the queue is empty.
 
 namespace mm {
 
+#define CACHE_LINE_SIZE 64
+
 	template <typename T>
 	class MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5
 	{
@@ -51,7 +53,7 @@ namespace mm {
 
 				localTail = tailProducers_.load(memory_order_seq_cst);
 
-			} while (!(localTail <= localHead && localHead - localTail < maxSize_));     // if the queue is not full
+			} while (!(localTail <= localHead && localHead - localTail < maxSize_));     // while the queue is full
 
 			vec_[localHead % maxSize_] = std::move(obj);
 
@@ -109,11 +111,22 @@ namespace mm {
 
 	private:
 		size_t maxSize_;
+		char pad1[CACHE_LINE_SIZE - sizeof(size_t)];
+
 		std::vector<T> vec_; //This will be used as ring buffer / circular queue
+		char pad2[CACHE_LINE_SIZE - sizeof(std::vector<T>)];
+
 		std::atomic<size_t> headProducers_; //stores the index where next element will be pushed/produced
+		char pad3[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
+
 		std::atomic<size_t> headConsumers_; //stores the index where next element will be pushed/produced - published to consumers
-		std::atomic<size_t> tailProducers_; //stores the index of object which will be popped/consumed - published to producers		
+		char pad4[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
+
+		std::atomic<size_t> tailProducers_; //stores the index of object which will be popped/consumed - published to producers	
+		char pad5[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
+
 		std::atomic<size_t> tailConsumers_; //stores the index of object which will be popped/consumed
+		char pad6[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
 	};
 
 }
