@@ -70,21 +70,23 @@ namespace mm {
 
 			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
 
-			//Node* theFirst = first_a.load(memory_order_seq_cst);
-			//if (theFirst != oldLast)
+			Node* theFirst = first_a.load(memory_order_seq_cst);
+			//bool holdLock = theFirst == nullptr || theFirst == oldLast;
+			//bool holdLock = theFirst == oldLast;
+			//if (!holdLock)
 			//	queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 
-			//if (oldLast)
-			//	oldLast->next_a.store(tmp, memory_order_seq_cst); //TODO: oldLast might be deleted by consumer. Protect it! DONE: line #1 does it!
-			//else
-			//	first_a.store(tmp, memory_order_seq_cst);
-			Node* theFirst = first_a.load(memory_order_seq_cst);
-			if(!theFirst)
-				first_a.store(tmp, memory_order_seq_cst);
+			if (oldLast)
+				oldLast->next_a.store(tmp, memory_order_seq_cst); //TODO: oldLast might be deleted by consumer. Protect it! DONE: line #1 does it!
 			else
-				oldLast->next_a.store(tmp, memory_order_seq_cst);
+				first_a.store(tmp, memory_order_seq_cst);
+			//Node* theFirst = first_a.load(memory_order_seq_cst);
+			//if(theFirst == nullptr)
+			//	first_a.store(tmp, memory_order_seq_cst);
+			//else
+			//	oldLast->next_a.store(tmp, memory_order_seq_cst);
 
-			//if (theFirst == oldLast)
+			//if (holdLock)
 				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 		}
 
@@ -117,17 +119,18 @@ namespace mm {
 					queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst); //release the lock and retry
 			} while (true);
 
+			if (theNext == nullptr)
+				last_a.store(nullptr, memory_order_seq_cst);
+
+			bool holdLock = theNext == nullptr;
+			if (!holdLock)
+				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+
 			outVal = std::move(theFirst->value_);
-
-			//if (theNext != nullptr)
-			//	queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
-
-			//if (theNext == nullptr)
-			//	last_a.store(nullptr, memory_order_seq_cst);
 			
 			delete theFirst;
 
-			//if (theNext == nullptr)
+			if (holdLock)
 				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 
 			return true;
