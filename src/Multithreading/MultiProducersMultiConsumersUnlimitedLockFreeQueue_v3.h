@@ -35,7 +35,7 @@ namespace mm {
 			Node() : value_{}, next_a { nullptr } { }
 			Node(T&& val) : value_{ std::move(val) }, next_a{ nullptr } { }
 			T value_;
-			atomic<Node*> next_a;
+			atomic<Node*> next_a; //TODO: Check if we can use non-atomic variable next_ here
 			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) > 0 ? CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) : 1];
 		};
 

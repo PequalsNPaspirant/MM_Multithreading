@@ -42,7 +42,9 @@ namespace mm {
 
 	public:
 		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4()
-			//: size_a{ 0 }
+			: 
+			//size_a{ 0 },
+			queueHasOneElementAndPushOrPopInProgress_a{ false }
 		{
 			first_a = last_a = nullptr;
 		}
@@ -60,19 +62,30 @@ namespace mm {
 		void push(T&& obj)
 		{
 			Node* tmp = new Node{ std::move(obj) };
+
+			//When queue has just one element, allow only one producer or only one consumer
+			while (queueHasOneElementAndPushOrPopInProgress_a.exchange(true))
+			{
+			}
+
 			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
 
-			Node* expected = oldLast;
-			bool oneElement = first_a.compare_exchange_weak(expected, nullptr, memory_order_seq_cst);
+			//Node* theFirst = first_a.load(memory_order_seq_cst);
+			//if (theFirst != oldLast)
+			//	queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 
-			if (oldLast)
-			{
-				oldLast->next_a.store(tmp, memory_order_seq_cst); //TODO: oldLast might be deleted by consumer. Protect it! DONE: line #1 does it!
-				if (oneElement)
-					first_a.store(oldLast, memory_order_seq_cst);
-			}
-			else
+			//if (oldLast)
+			//	oldLast->next_a.store(tmp, memory_order_seq_cst); //TODO: oldLast might be deleted by consumer. Protect it! DONE: line #1 does it!
+			//else
+			//	first_a.store(tmp, memory_order_seq_cst);
+			Node* theFirst = first_a.load(memory_order_seq_cst);
+			if(!theFirst)
 				first_a.store(tmp, memory_order_seq_cst);
+			else
+				oldLast->next_a.store(tmp, memory_order_seq_cst);
+
+			//if (theFirst == oldLast)
+				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 		}
 
 		//exception SAFE pop() version. Returns false if timeout occurs.
@@ -82,6 +95,9 @@ namespace mm {
 
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
+
+			//theNext = theFirst->next_a.load(memory_order_seq_cst);
+			//first_a.store(theNext, memory_order_seq_cst);
 			do
 			{
 				do
@@ -91,18 +107,29 @@ namespace mm {
 					if (duration >= timeout)
 						return false;
 
-					theFirst = first_a.load(memory_order_seq_cst);
+				} while (queueHasOneElementAndPushOrPopInProgress_a.exchange(true));
 
-				} while (theFirst == nullptr);
-
-				theNext = theFirst->next_a.load(memory_order_seq_cst);
-			} while (!first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
-
-			Node* expected = theFirst;
-			bool oneElement = last_a.compare_exchange_weak(expected, nullptr, memory_order_seq_cst);
+				theFirst = first_a.load(memory_order_seq_cst);
+				theNext = theFirst ? theFirst->next_a.load(memory_order_seq_cst) : nullptr;
+				if (theFirst != nullptr && first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst))
+					break;
+				else
+					queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst); //release the lock and retry
+			} while (true);
 
 			outVal = std::move(theFirst->value_);
+
+			//if (theNext != nullptr)
+			//	queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+
+			//if (theNext == nullptr)
+			//	last_a.store(nullptr, memory_order_seq_cst);
+			
 			delete theFirst;
+
+			//if (theNext == nullptr)
+				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+
 			return true;
 		}
 
@@ -134,22 +161,22 @@ namespace mm {
 	private:
 		char pad0[CACHE_LINE_SIZE];
 
-		// for one consumer at a time
 		atomic<Node*> first_a;
-		//Node* first_;
 		char pad1[CACHE_LINE_SIZE - sizeof(Node*)];
 
-		// shared among consumers
-		//atomic<bool> consumerLock_a;
-		//char pad2[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
-
-		// for one producer at a time
 		atomic<Node*> last_a;
-		char pad3[CACHE_LINE_SIZE - sizeof(Node*)];
+		char pad2[CACHE_LINE_SIZE - sizeof(Node*)];
 
-		// shared among producers
-		//atomic<bool> producerLock_a;
 		//atomic<size_t> size_a;
-		//char pad4[CACHE_LINE_SIZE - sizeof(atomic<size_t>)];
+		//char pad3[CACHE_LINE_SIZE - sizeof(atomic<size_t>)];
+
+		atomic<bool> queueHasOneElementAndPushOrPopInProgress_a;
+		char pad4[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
+
+		atomic<bool> consumerLock_a;
+		char pad5[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
+
+		atomic<bool> producerLock_a;
+		char pad6[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
 	};
 }
