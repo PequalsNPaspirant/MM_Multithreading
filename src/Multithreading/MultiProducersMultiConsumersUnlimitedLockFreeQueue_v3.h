@@ -71,26 +71,6 @@ namespace mm {
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
 
-			/*
-			do
-			{
-				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-				if (duration >= timeout)
-					return false;
-
-				do
-				{
-					theFirst = first_a.load(memory_order_seq_cst);
-					//theNext = theFirst->next_a; //theFirst can be deleted by another consumer thread at line: 'a' below
-					theNext = first_a.load(memory_order_seq_cst)->next_a;
-				} while (theNext == nullptr);
-
-			} while(!first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));     // queue is being used by other consumer thread
-
-			//We can combine these two loop into one as below
-			*/
-
 			do
 			{
 				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
@@ -100,7 +80,7 @@ namespace mm {
 
 				theFirst = first_a.load(memory_order_seq_cst);
 				//theNext = theFirst->next_a; //theFirst can be deleted by another consumer thread at line#1 below
-				theNext = first_a.load(memory_order_seq_cst)->next_a;
+				theNext = first_a.load(memory_order_seq_cst)->next_a.load(memory_order_seq_cst);
 
 			} while (
 				theNext == nullptr                                                             // if the queue is empty

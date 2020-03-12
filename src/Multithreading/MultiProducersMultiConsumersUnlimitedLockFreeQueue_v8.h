@@ -27,7 +27,7 @@ https://www.drdobbs.com/parallel/writing-a-generalized-concurrent-queue/21160136
 namespace mm {
 
 	template <typename T>
-	class MultiProducersMultiConsumersUnlimitedLockFreeQueue_v7
+	class MultiProducersMultiConsumersUnlimitedLockFreeQueue_v8
 	{
 	private:
 		struct Node
@@ -41,14 +41,14 @@ namespace mm {
 		};
 
 	public:
-		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v7()
+		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v8()
 			: 
 			//size_a{ 0 },
 			queueHasOneElementAndPushOrPopInProgress_a{ false }
 		{
 			first_a = last_a = nullptr;
 		}
-		~MultiProducersMultiConsumersUnlimitedLockFreeQueue_v7()
+		~MultiProducersMultiConsumersUnlimitedLockFreeQueue_v8()
 		{
 			Node* curr = first_a.load(memory_order_seq_cst);
 			while(curr != nullptr)      // release the list
@@ -68,24 +68,23 @@ namespace mm {
 			{
 			}
 
-			Node* first = first_a.load(memory_order_seq_cst);
-			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
+			Node* first = nullptr;
+			Node* last = nullptr;
+			first = first_a.load(memory_order_seq_cst);
+			last = last_a.load(memory_order_seq_cst);
 
-			bool holdLock = first != nullptr && first == oldLast;
-			//if (!holdLock)
-			//	queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+			bool holdLock = first != nullptr && first == last;
+			if (!holdLock)
+				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+
+			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
 
 			if (oldLast)
 				oldLast->next_a.store(tmp, memory_order_seq_cst); //TODO: oldLast might be deleted by consumer. Protect it! DONE: line #1 does it!
 			else
 				first_a.store(tmp, memory_order_seq_cst);
 
-			//if(theFirst == nullptr)
-			//	first_a.store(tmp, memory_order_seq_cst);
-			//else
-			//	oldLast->next_a.store(tmp, memory_order_seq_cst);
-
-			//if (holdLock)
+			if (holdLock)
 				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 		}
 
@@ -94,11 +93,26 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
+			//When queue has just one element, allow only one producer or only one consumer
+			while (queueHasOneElementAndPushOrPopInProgress_a.exchange(true))
+			{
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
+			}
+
+			Node* first = nullptr;
+			Node* last = nullptr;
+			first = first_a.load(memory_order_seq_cst);
+			last = last_a.load(memory_order_seq_cst);
+
+			bool holdLock = first != nullptr && first == last;
+			if (!holdLock)
+				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
-
-			//theNext = theFirst->next_a.load(memory_order_seq_cst);
-			//first_a.store(theNext, memory_order_seq_cst);
 			do
 			{
 				do
@@ -108,25 +122,16 @@ namespace mm {
 					if (duration >= timeout)
 						return false;
 
-				} while (queueHasOneElementAndPushOrPopInProgress_a.exchange(true));
+					theFirst = first_a.load(memory_order_seq_cst);
 
-				theFirst = first_a.load(memory_order_seq_cst);
-				theNext = theFirst ? theFirst->next_a.load(memory_order_seq_cst) : nullptr;
-				if (theFirst != nullptr && first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst))
-					break;
-				else
-					queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst); //release the lock and retry
-			} while (true);
+				} while (theFirst == nullptr);
+
+				theNext = theFirst->next_a.load(memory_order_seq_cst);
+			} while (!first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
 
 			if (theNext == nullptr)
 				last_a.store(nullptr, memory_order_seq_cst);
-
-			bool holdLock = theNext == nullptr;
-			if (!holdLock)
-				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
-
 			outVal = std::move(theFirst->value_);
-			
 			delete theFirst;
 
 			if (holdLock)

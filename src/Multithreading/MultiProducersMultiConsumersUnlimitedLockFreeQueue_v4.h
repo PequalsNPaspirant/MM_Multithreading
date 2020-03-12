@@ -44,8 +44,8 @@ namespace mm {
 		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4()
 		{
 			Node* node = new Node{};
-			first_.next_a.store(node, memory_order_relaxed);
-			last_a.store(node, memory_order_relaxed);
+			first_.next_a.store(node, memory_order_release);
+			last_a.store(node, memory_order_release);
 		}
 		~MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4()
 		{
@@ -53,7 +53,7 @@ namespace mm {
 			while(curr != nullptr)      // release the list
 			{
 				Node* tmp = curr;
-				curr = curr->next_a.load(memory_order_relaxed);
+				curr = curr->next_a.load(memory_order_acquire);
 				delete tmp;
 			}
 		}
@@ -63,7 +63,7 @@ namespace mm {
 			Node* tmp = new Node{};
 			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
 			oldLast->value_ = std::move(obj);
-			oldLast->next_a.store(tmp, memory_order_relaxed);         // line#1
+			oldLast->next_a.store(tmp, memory_order_release);         // line#1
 		}
 
 		//exception SAFE pop() version. Returns false if timeout occurs.
@@ -73,26 +73,6 @@ namespace mm {
 
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
-
-			/*
-			do
-			{
-				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-				if (duration >= timeout)
-					return false;
-
-				do
-				{
-					theFirst = first_a.load(memory_order_seq_cst);
-					//theNext = theFirst->next_a; //theFirst can be deleted by another consumer thread at line: 'a' below
-					theNext = first_a.load(memory_order_seq_cst)->next_a;
-				} while (theNext == nullptr);
-
-			} while(!first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));     // queue is being used by other consumer thread
-
-			//We can combine these two loop into one as below
-			*/
 
 			do
 			{

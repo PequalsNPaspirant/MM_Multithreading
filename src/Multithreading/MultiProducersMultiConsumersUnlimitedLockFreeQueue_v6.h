@@ -42,15 +42,14 @@ namespace mm {
 
 	public:
 		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v6()
-			: 
-			//size_a{ 0 },
-			queueHasOneElementAndPushOrPopInProgress_a{ false }
 		{
-			first_a = last_a = nullptr;
+			Node* node = new Node{};
+			first_.next_a.store(node, memory_order_release);
+			last_a.store(node, memory_order_release);
 		}
 		~MultiProducersMultiConsumersUnlimitedLockFreeQueue_v6()
 		{
-			Node* curr = first_a.load(memory_order_seq_cst);
+			Node* curr = first_.next_a.load();
 			while(curr != nullptr)      // release the list
 			{
 				Node* tmp = curr;
@@ -61,32 +60,10 @@ namespace mm {
 
 		void push(T&& obj)
 		{
-			Node* tmp = new Node{ std::move(obj) };
-
-			//When queue has just one element, allow only one producer or only one consumer
-			while (queueHasOneElementAndPushOrPopInProgress_a.exchange(true))
-			{
-			}
-
-			Node* first = first_a.load(memory_order_seq_cst);
+			Node* tmp = new Node{};
 			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
-
-			bool holdLock = first != nullptr && first == oldLast;
-			//if (!holdLock)
-			//	queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
-
-			if (oldLast)
-				oldLast->next_a.store(tmp, memory_order_seq_cst); //TODO: oldLast might be deleted by consumer. Protect it! DONE: line #1 does it!
-			else
-				first_a.store(tmp, memory_order_seq_cst);
-
-			//if(theFirst == nullptr)
-			//	first_a.store(tmp, memory_order_seq_cst);
-			//else
-			//	oldLast->next_a.store(tmp, memory_order_seq_cst);
-
-			//if (holdLock)
-				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+			oldLast->value_ = std::move(obj);
+			oldLast->next_a.store(tmp, memory_order_release);         // line#1
 		}
 
 		//exception SAFE pop() version. Returns false if timeout occurs.
@@ -97,49 +74,34 @@ namespace mm {
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
 
-			//theNext = theFirst->next_a.load(memory_order_seq_cst);
-			//first_a.store(theNext, memory_order_seq_cst);
 			do
 			{
-				do
-				{
-					std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-					const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-					if (duration >= timeout)
-						return false;
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
 
-				} while (queueHasOneElementAndPushOrPopInProgress_a.exchange(true));
-
-				theFirst = first_a.load(memory_order_seq_cst);
-				theNext = theFirst ? theFirst->next_a.load(memory_order_seq_cst) : nullptr;
-				if (theFirst != nullptr && first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst))
-					break;
-				else
-					queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst); //release the lock and retry
-			} while (true);
-
-			if (theNext == nullptr)
-				last_a.store(nullptr, memory_order_seq_cst);
-
-			bool holdLock = theNext == nullptr;
-			if (!holdLock)
-				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
-
-			outVal = std::move(theFirst->value_);
+				//theFirst = first_.next_a.load(memory_order_seq_cst);
+				//If the line#2 (see below) is executed here, then theFirst can have old value of first_.next_a, not the modified value
+				theNext = first_.next_a.load(memory_order_seq_cst)->next_a.exchange(nullptr, memory_order_seq_cst);
+				
+			} while(theNext == nullptr);     // queue is being used by other consumer thread
 			
+			theFirst = first_.next_a.load(memory_order_seq_cst); //Only one consumer thread is guaranteed at this and next line i.e. until first_.next_a is changed
+			first_.next_a.store(theNext, memory_order_seq_cst); //line#2: Allow another thread to acquire next node
+			
+			//multiple consumers can access the code after this line
+			outVal = std::move(theFirst->value_);
 			delete theFirst;
 
-			if (holdLock)
-				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
-
-			return true;
+			return true;      // and report success
 		}
 
 		size_t size()
 		{
 			//TODO: Use synchronization
 			size_t size = 0;
-			for (Node* curr = first_a.load(); curr != nullptr; curr = curr->next_a)      // release the list
+			for (Node* curr = first_.next_a.load()->next_a; curr != nullptr; curr = curr->next_a)      // release the list
 			{
 				++size;
 			}
@@ -151,34 +113,27 @@ namespace mm {
 		{
 			//TODO: Use synchronization
 			//return first_a == nullptr || (first_a != nullptr && first_a->next_a == nullptr);
-			bool firstNull = first_a.load() == nullptr;
-			bool lastNull = last_a.load() == nullptr;
-			if (firstNull != lastNull)
-			{
-				int v = 0;
-			}
-			return firstNull;
+			return first_.next_a.load()->next_a == nullptr;
 		}
 
 	private:
 		char pad0[CACHE_LINE_SIZE];
 
-		atomic<Node*> first_a;
-		char pad1[CACHE_LINE_SIZE - sizeof(Node*)];
+		// for one consumer at a time
+		//atomic<Node*> first_a;
+		Node first_;
+		char pad1[CACHE_LINE_SIZE > sizeof(Node) ? CACHE_LINE_SIZE - sizeof(Node) : 2 * CACHE_LINE_SIZE - sizeof(Node)];
 
+		// shared among consumers
+		//atomic<bool> consumerLock_a;
+		//char pad2[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
+
+		// for one producer at a time
 		atomic<Node*> last_a;
-		char pad2[CACHE_LINE_SIZE - sizeof(Node*)];
+		char pad3[CACHE_LINE_SIZE - sizeof(Node*)];
 
-		//atomic<size_t> size_a;
-		//char pad3[CACHE_LINE_SIZE - sizeof(atomic<size_t>)];
-
-		atomic<bool> queueHasOneElementAndPushOrPopInProgress_a;
-		char pad4[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
-
-		atomic<bool> consumerLock_a;
-		char pad5[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
-
-		atomic<bool> producerLock_a;
-		char pad6[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
+		// shared among producers
+		//atomic<bool> producerLock_a;
+		//char pad4[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
 	};
 }
