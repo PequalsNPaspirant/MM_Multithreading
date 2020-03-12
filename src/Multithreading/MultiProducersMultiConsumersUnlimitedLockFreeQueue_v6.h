@@ -81,14 +81,28 @@ namespace mm {
 				if (duration >= timeout)
 					return false;
 
+				theFirst = first_.next_a.exchange(nullptr, memory_order_seq_cst);
+
+			} while (theFirst == nullptr);
+
+			//Only one thread is guaranteed after this line until line#1 below
+			//Also theFirst is never same for different concurrent threads accessing code after line#1, so delete theFirst is always safe
+			do
+			{
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
+
 				//theFirst = first_.next_a.load(memory_order_seq_cst);
-				//If the line#2 (see below) is executed here, then theFirst can have old value of first_.next_a, not the modified value
-				theNext = first_.next_a.load(memory_order_seq_cst)->next_a.exchange(nullptr, memory_order_seq_cst);
-				
+				//If the line#1 (see below) is executed here, then theFirst can have old value of first_.next_a, not the modified value
+				//theNext = first_.next_a.load(memory_order_seq_cst)->next_a.exchange(nullptr, memory_order_seq_cst);
+				theNext = theFirst->next_a.load(memory_order_seq_cst);
+
 			} while(theNext == nullptr);     // queue is being used by other consumer thread
 			
-			theFirst = first_.next_a.load(memory_order_seq_cst); //Only one consumer thread is guaranteed at this and next line i.e. until first_.next_a is changed
-			first_.next_a.store(theNext, memory_order_seq_cst); //line#2: Allow another thread to acquire next node
+			//theFirst = first_.next_a.load(memory_order_seq_cst); //Only one consumer thread is guaranteed at this and next line i.e. until first_.next_a is changed
+			first_.next_a.store(theNext, memory_order_seq_cst); //line#1: Allow another thread to acquire next node
 			
 			//multiple consumers can access the code after this line
 			outVal = std::move(theFirst->value_);
