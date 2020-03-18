@@ -35,14 +35,14 @@ namespace mm {
 			Node() : value_{}, next_a { nullptr } { }
 			Node(T&& val) : value_{ std::move(val) }, next_a{ nullptr } { }
 			T value_;
-			atomic<Node*> next_a; //TODO: Check if we can use non-atomic variable next_ here
-			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) > 0 ? CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) : 1];
+			atomic<Node*> next_a; //TODO: Check if we can use non-atomic variable next_ here. Note: we have to use atomic variable here.
+			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) > 0 ? CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>) : 2 * CACHE_LINE_SIZE - sizeof(T) - sizeof(atomic<Node*>)];
 		};
 
 	public:
 		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3()
 		{
-			first_a = last_a = new Node{};
+			first_a = last_a = new Node{}; //first_a is guaranteed to be non-nullptr
 		}
 		~MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3()
 		{
@@ -60,7 +60,7 @@ namespace mm {
 			Node* tmp = new Node{};
 			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
 			oldLast->value_ = std::move(obj);
-			oldLast->next_a.store(tmp, memory_order_seq_cst);         // publish to consumers
+			oldLast->next_a.store(tmp, memory_order_release);         // publish to consumers
 		}
 
 		//exception SAFE pop() version. Returns false if timeout occurs.
@@ -68,6 +68,7 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
+			//Node* theFirst = first_a.load(memory_order_acquire); //Do not load value of first_a here, it should happen only in cmpxch below so that value of next is consistent with theFirst
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
 
@@ -78,9 +79,9 @@ namespace mm {
 				if (duration >= timeout)
 					return false;
 
-				theFirst = first_a.load(memory_order_seq_cst);
-				//theNext = theFirst->next_a; //theFirst can be deleted by another consumer thread at line#1 below
-				theNext = first_a.load(memory_order_seq_cst)->next_a.load(memory_order_seq_cst);
+				//theFirst = first_a.load(memory_order_seq_cst);
+				//theNext = theFirst->next_a.load(memory_order_seq_cst); //theFirst can be deleted by another consumer thread at line#1 below
+				theNext = first_a.load(memory_order_acquire)->next_a.load(memory_order_acquire);
 
 			} while (
 				theNext == nullptr                                                             // if the queue is empty

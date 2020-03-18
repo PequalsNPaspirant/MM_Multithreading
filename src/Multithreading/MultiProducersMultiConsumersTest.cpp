@@ -427,12 +427,12 @@ namespace mm {
 
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<T>, T>(QueueType::MPMC_U_LF_v1, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2<T>, T>(QueueType::MPMC_U_LF_v2, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		//-working but still need fix-test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3<T>, T>(QueueType::MPMC_U_LF_v3, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		//-not working-test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4<T>, T>(QueueType::MPMC_U_LF_v4, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		/*working but still need fix*/ test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3<T>, T>(QueueType::MPMC_U_LF_v3, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		/*not working*/ test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4<T>, T>(QueueType::MPMC_U_LF_v4, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v5<T>, T>(QueueType::MPMC_U_LF_v5, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v6<T>, T>(QueueType::MPMC_U_LF_v6, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		//-not working-test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v7<T>, T>(QueueType::MPMC_U_LF_v7, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		//-not working-test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v8<T>, T>(QueueType::MPMC_U_LF_v8, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v6<T>, T>(QueueType::MPMC_U_LF_v6, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		/*not working*/ //test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v7<T>, T>(QueueType::MPMC_U_LF_v7, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		/*not working*/ //test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedLockFreeQueue_v8<T>, T>(QueueType::MPMC_U_LF_v8, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
 		///***** Fixed Size Queues ****/
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeQueue_v1<T>, T>(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
@@ -522,7 +522,7 @@ namespace mm {
 
 		int numOperations = 84000 * 4 * 4;
 		int resultIndex = -1;
-		int divFactor = 40 * 4 * 2;
+		int divFactor = 40 * 4;
 
 		runAllTestCasesPerType<Object>(numOperations, false, resultIndex);
 		runAllTestCasesPerType<int>(numOperations, false, resultIndex);

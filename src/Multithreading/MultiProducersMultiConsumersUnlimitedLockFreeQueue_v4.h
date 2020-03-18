@@ -44,7 +44,7 @@ namespace mm {
 		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4()
 		{
 			Node* node = new Node{};
-			first_.next_a.store(node, memory_order_release);
+			first_.next_a.store(node, memory_order_release); //first_.next_a is guaranteed to be non-nullptr
 			last_a.store(node, memory_order_release);
 		}
 		~MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4()
@@ -71,6 +71,7 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
+			//Node* theFirst = first_.next_a.load(memory_order_acquire); //Do not load value of first_a here, it should happen only in cmpxch below so that value of next is consistent with theFirst
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
 
@@ -81,7 +82,7 @@ namespace mm {
 				if (duration >= timeout)
 					return false;
 
-				theFirst = first_.next_a.load(memory_order_seq_cst);
+				//theFirst = first_.next_a.load(memory_order_seq_cst);
 				//theNext = theFirst->next_a; //theFirst can be deleted by another consumer thread at line#2 below
 				theNext = first_.next_a.load(memory_order_relaxed)->next_a.load(memory_order_acquire); //next_ can be read here while it is being updated at line#1 above
 
@@ -133,7 +134,7 @@ namespace mm {
 		char pad3[CACHE_LINE_SIZE - sizeof(Node*)];
 
 		// shared among producers
-		//atomic<bool> producerLock_a;
-		//char pad4[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
+		//atomic<Node*> tailUnused_a;
+		//char pad4[CACHE_LINE_SIZE - sizeof(atomic<Node*>)];
 	};
 }
