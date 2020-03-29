@@ -88,6 +88,7 @@ namespace mm {
 				|| !first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst)     // or if the queue is being used by another consumer thread
 				);
 
+			theFirst->next_a.store(nullptr, memory_order_release);
 			// now copy it back. If the exception is thrown at this statement, the object will be lost! 
 			outVal = std::move(theFirst->value_);
 			delete theFirst;      // This is line#1

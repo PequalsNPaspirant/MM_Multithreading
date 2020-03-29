@@ -84,13 +84,14 @@ namespace mm {
 
 				//theFirst = first_.next_a.load(memory_order_seq_cst);
 				//theNext = theFirst->next_a; //theFirst can be deleted by another consumer thread at line#2 below
-				theNext = first_.next_a.load(memory_order_relaxed)->next_a.load(memory_order_acquire); //next_ can be read here while it is being updated at line#1 above
+				theNext = first_.next_a.load(memory_order_acquire)->next_a.load(memory_order_acquire); //next_ can be read here while it is being updated at line#1 above
 
 			} while (
 				theNext == nullptr                                                             // if the queue is empty
 				|| !first_.next_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst)     // or if the queue is being used by another consumer thread
 				);
 
+			theFirst->next_a.store(nullptr, memory_order_release);
 			// now copy it back. If the exception is thrown at this statement, the object will be lost! 
 			outVal = std::move(theFirst->value_);
 			delete theFirst;      // This is line#2
