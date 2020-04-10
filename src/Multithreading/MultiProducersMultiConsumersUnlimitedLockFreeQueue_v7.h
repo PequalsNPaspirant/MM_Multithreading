@@ -50,7 +50,7 @@ Modified version of v5. This version uses only two atomic variables: next and la
 It makes use of first_.next_a to point to actual first element of queue.
 
 -- MultiProducersMultiConsumersUnlimitedLockFreeQueue_v7:
-This version initializes first and last to null. It does not use any dummy element which is allocated at start 
+This version initializes first and last to null. It does not use any dummy element which is allocated at start
 like all above versions.
 */
 
