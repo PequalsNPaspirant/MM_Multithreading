@@ -14,12 +14,36 @@
 using namespace std;
 
 /*
-This is a modified version of Herb Sutter's queue (reference below).
-It does not implement spin locks using producerLock_a and producerLock_a. Instead it uses first and last as atomic variables and gives the sole ownership of
-next available node to current thread.
+This is Multi Producers Multi Consumers Unlimited Size Lock Free Queue.
 
 Reference: Herb Sutter's blog:
 https://www.drdobbs.com/parallel/writing-a-generalized-concurrent-queue/211601363?pgno=1
+
+This is implemented using two atomic boolean flags to create spin locks for producers and consumers.
+It uses its own forward list implementation having atomic next ptr in each node.
+The list stores T* and uses two dynamic allocations to allocate memory for node and also for data.
+Producers never need to wait because its unlimited queue and will never be full.
+Consumers have to wait and retry on their own because it returns false if the queue is empty.
+
+-- MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1:
+Modifications to original implementation (original code is commented):
+Consumers wait if the queue is empty i.e. function pop() waits if the queue is empty,
+instead of returning false.
+
+-- MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2:
+The list stores T (instead of T*) and uses ONLY ONE dynamic allocation to allocate memory for node.
+
+-- MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3:
+It does not implement spin locks using producerLock_a and producerLock_a. Instead it uses first and last as atomic variables and gives the sole ownership of
+next available node to current thread. This algo uses total 3 atomic variables: first, last and next
+
+-- MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4:
+Modified version of v3. This version uses only two atomic variables: next and last. The first is non-atomic variable.
+It makes use of first_.next_a to point to actual first element of queue.
+
+-- MultiProducersMultiConsumersUnlimitedLockFreeQueue_v5:
+Modified version of v3. It blocks all other consumer threads until one consumer thread gets
+the ownership of first node in queue and makes first point to the next element in queue.
 */
 
 #define CACHE_LINE_SIZE 64
@@ -135,22 +159,18 @@ namespace mm {
 
 		// for one consumer at a time
 		atomic<Node*> first_a;
-
 		char pad1[CACHE_LINE_SIZE - sizeof(Node*)];
 
 		// shared among consumers
 		//atomic<bool> consumerLock_a;
-
 		//char pad2[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
 
 		// for one producer at a time
 		atomic<Node*> last_a;
-
 		char pad3[CACHE_LINE_SIZE - sizeof(Node*)];
 
 		// shared among producers
 		//atomic<bool> producerLock_a;
-
 		//char pad4[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
 	};
 }

@@ -14,18 +14,20 @@ using namespace std;
 
 /*
 This is Multi Producers Multi Consumers Unlimited Size Lock Free Queue.
-This is implemented using two atomic boolean flags to create spin locks for producers and consumers.
-It uses its own forward list implementation having atomic next ptr in each node. 
-The list stores T* and uses two dynamic allocations to allocate memory for node and also for data.
-Producers never need to wait because its unlimited queue and will never be full.
-//Consumers have to wait and retry on their own because it returns false if the queue is empty.
-Consumers wait if the queue is empty.
 
 Reference: Herb Sutter's blog:
 https://www.drdobbs.com/parallel/writing-a-generalized-concurrent-queue/211601363?pgno=1
 
+This is implemented using two atomic boolean flags to create spin locks for producers and consumers.
+It uses its own forward list implementation having atomic next ptr in each node.
+The list stores T* and uses two dynamic allocations to allocate memory for node and also for data.
+Producers never need to wait because its unlimited queue and will never be full.
+Consumers have to wait and retry on their own because it returns false if the queue is empty.
+
+-- MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1:
 Modifications to original implementation (original code is commented):
-function pop() waits if the queue is empty, instead of returning false.
+Consumers wait if the queue is empty i.e. function pop() waits if the queue is empty, 
+instead of returning false.
 */
 
 #define CACHE_LINE_SIZE 64
@@ -135,22 +137,18 @@ namespace mm {
 
 		// for one consumer at a time
 		Node* first_;
-
 		char pad1[CACHE_LINE_SIZE - sizeof(Node*)];
 
 		// shared among consumers
 		atomic<bool> consumerLock_a;
-
 		char pad2[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
 
 		// for one producer at a time
 		Node* last_;
-
 		char pad3[CACHE_LINE_SIZE - sizeof(Node*)];
 
 		// shared among producers
 		atomic<bool> producerLock_a;
-
 		char pad4[CACHE_LINE_SIZE - sizeof(atomic<bool>)];
 	};
 }
