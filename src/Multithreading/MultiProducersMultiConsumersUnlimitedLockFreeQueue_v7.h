@@ -158,7 +158,6 @@ namespace mm {
 				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 
 			outVal = std::move(theFirst->value_);
-			
 			delete theFirst;
 
 			if (holdLock)

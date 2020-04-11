@@ -80,7 +80,8 @@ namespace mm {
 		MultiProducersMultiConsumersUnlimitedLockFreeQueue_v8()
 			: 
 			//size_a{ 0 },
-			queueHasOneElementAndPushOrPopInProgress_a{ false }
+			queueHasOneElementAndPushOrPopInProgress_a{ false },
+			consumerLock_a{ false }
 		{
 			first_a = last_a = nullptr;
 		}
@@ -109,7 +110,7 @@ namespace mm {
 			first = first_a.load(memory_order_seq_cst);
 			last = last_a.load(memory_order_seq_cst);
 
-			bool holdLock = first != nullptr && first == last;
+			bool holdLock = first == last;
 			if (!holdLock)
 				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 
@@ -129,44 +130,60 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-			//When queue has just one element, allow only one producer or only one consumer
-			while (queueHasOneElementAndPushOrPopInProgress_a.exchange(true))
-			{
-				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-				if (duration >= timeout)
-					return false;
-			}
-
-			Node* first = nullptr;
-			Node* last = nullptr;
-			first = first_a.load(memory_order_seq_cst);
-			last = last_a.load(memory_order_seq_cst);
-
-			bool holdLock = first != nullptr && first == last;
-			if (!holdLock)
-				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
-
 			Node* theFirst = nullptr;
 			Node* theNext = nullptr;
+			bool locked = false;
+			bool holdLock = false;
 			do
 			{
-				do
+				if(locked == true)
+					queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+
+				//do
+				//{
+				//	std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				//	const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				//	if (duration >= timeout)
+				//		return false;
+
+				//	theFirst = first_a.load(memory_order_seq_cst);
+
+				//} while (theFirst == nullptr);
+
+				//When queue has just one element, allow only one producer or only one consumer
+				while (queueHasOneElementAndPushOrPopInProgress_a.exchange(true))
 				{
 					std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 					const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 					if (duration >= timeout)
 						return false;
+				}
 
-					theFirst = first_a.load(memory_order_seq_cst);
+				locked = true;
+				theFirst = first_a.load(memory_order_seq_cst);
+				theNext = theFirst ? theFirst->next_a.load(memory_order_seq_cst) : nullptr;
+				Node* last = last_a.load(memory_order_seq_cst);
+				//holdLock = theFirst != nullptr && theFirst == last;
+				holdLock = theFirst == last;
+				if (!holdLock)
+				{
+					locked = false;
+					queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+				}
 
-				} while (theFirst == nullptr);
-
-				theNext = theFirst->next_a.load(memory_order_seq_cst);
-			} while (!first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
+				//theNext = theFirst->next_a.load(memory_order_seq_cst);
+			} while (theFirst == nullptr || !first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
 
 			if (theNext == nullptr)
-				last_a.store(nullptr, memory_order_seq_cst);
+			{
+				if (!holdLock)
+				{
+					int i = 0;
+					int x = i + 1;
+				}
+				//last_a.store(nullptr, memory_order_seq_cst);
+				last_a.compare_exchange_weak(theFirst, nullptr, memory_order_seq_cst);
+			}
 			outVal = std::move(theFirst->value_);
 			delete theFirst;
 

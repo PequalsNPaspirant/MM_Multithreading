@@ -111,7 +111,7 @@ namespace mm {
 
 			T obj_;
 			std::atomic<Status> status_;
-			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(std::atomic<bool>)];
+			char pad[CACHE_LINE_SIZE - sizeof(T) - sizeof(std::atomic<Status>)];
 		};
 		std::vector<Data> vec_; //This will be used as ring buffer / circular queue
 		std::atomic<size_t> head_; //stores the index where next element will be pushed/produced
