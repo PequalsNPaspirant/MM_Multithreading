@@ -62,6 +62,15 @@ It makes use of first_.next_a to point to actual first element of queue.
 
 namespace mm {
 
+	void myAssert(bool expression)
+	{
+		if (!expression)
+		{
+			int *p = nullptr;
+			*p = 10;
+		}
+	}
+
 	template <typename T>
 	class MultiProducersMultiConsumersUnlimitedLockFreeQueue_v8
 	{
@@ -151,7 +160,7 @@ namespace mm {
 			} while (theFirst == nullptr);
 
 			Node* theNext = nullptr;
-			bool locked = false;
+			//bool locked = false;
 			bool holdLock = false;
 			//do
 			//{
@@ -178,15 +187,16 @@ namespace mm {
 						return false;
 				}
 
-				locked = true;
+				//locked = true;
 				//theFirst = first_a.load(memory_order_seq_cst);
-				theNext = theFirst ? theFirst->next_a.load(memory_order_seq_cst) : nullptr;
+				//theNext = theFirst ? theFirst->next_a.load(memory_order_seq_cst) : nullptr;
+				theNext = theFirst->next_a.load(memory_order_seq_cst);
 				Node* last = last_a.load(memory_order_seq_cst);
 				//holdLock = theFirst != nullptr && theFirst == last;
 				holdLock = theFirst == last;
 				if (!holdLock)
 				{
-					locked = false;
+					//locked = false;
 					queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 				}
 
@@ -197,13 +207,9 @@ namespace mm {
 
 			if (theNext == nullptr)
 			{
-				if (!holdLock)
-				{
-					int i = 0;
-					int x = i + 1;
-				}
-				//last_a.store(nullptr, memory_order_seq_cst);
-				last_a.compare_exchange_weak(theFirst, nullptr, memory_order_seq_cst);
+				myAssert(holdLock);
+				last_a.store(nullptr, memory_order_seq_cst);
+				//last_a.compare_exchange_weak(theFirst, nullptr, memory_order_seq_cst);
 			}
 			outVal = std::move(theFirst->value_);
 			delete theFirst;
