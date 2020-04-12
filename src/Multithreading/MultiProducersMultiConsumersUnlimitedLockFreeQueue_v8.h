@@ -130,12 +130,31 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
+			while (consumerLock_a.exchange(true))
+			{
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
+			}
+
 			Node* theFirst = nullptr;
+			do
+			{
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+				const std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				if (duration >= timeout)
+					return false;
+
+				theFirst = first_a.load(memory_order_seq_cst);
+
+			} while (theFirst == nullptr);
+
 			Node* theNext = nullptr;
 			bool locked = false;
 			bool holdLock = false;
-			do
-			{
+			//do
+			//{
 				if(locked == true)
 					queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 
@@ -160,7 +179,7 @@ namespace mm {
 				}
 
 				locked = true;
-				theFirst = first_a.load(memory_order_seq_cst);
+				//theFirst = first_a.load(memory_order_seq_cst);
 				theNext = theFirst ? theFirst->next_a.load(memory_order_seq_cst) : nullptr;
 				Node* last = last_a.load(memory_order_seq_cst);
 				//holdLock = theFirst != nullptr && theFirst == last;
@@ -172,7 +191,9 @@ namespace mm {
 				}
 
 				//theNext = theFirst->next_a.load(memory_order_seq_cst);
-			} while (theFirst == nullptr || !first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
+			//} while (theFirst == nullptr || !first_a.compare_exchange_weak(theFirst, theNext, memory_order_seq_cst));
+
+				first_a.store(theNext);
 
 			if (theNext == nullptr)
 			{
@@ -189,6 +210,8 @@ namespace mm {
 
 			if (holdLock)
 				queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+
+			consumerLock_a.store(false);
 
 			return true;
 		}
