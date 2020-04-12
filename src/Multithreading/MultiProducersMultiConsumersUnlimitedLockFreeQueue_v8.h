@@ -164,8 +164,8 @@ namespace mm {
 			bool holdLock = false;
 			//do
 			//{
-				if(locked == true)
-					queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
+				//if(locked == true)
+				//	queueHasOneElementAndPushOrPopInProgress_a.store(false, memory_order_seq_cst);
 
 				//do
 				//{
