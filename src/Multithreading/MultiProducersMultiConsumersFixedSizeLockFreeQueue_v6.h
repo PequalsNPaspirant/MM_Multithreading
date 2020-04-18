@@ -9,15 +9,35 @@
 #include <cmath>
 using namespace std;
 
-//#include "Multithreading\Multithreading_SingleProducerMultipleConsumers_v1.h"
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
 /*
-This is Multi Producers Multi Consumers Fixed Size Queue.
-This is very common and basic implemention using one mutex and two condition variables (one each for producers and consumers).
-It uses std::vector of fixed length to store data.
-Producers have to wait if the queue is full.
-Consumers have to wait if the queue is empty.
+This is Multi Producers Multi Consumers Fixed Size Lock Free Queue.
+
+-- MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1:
+This is implemented using two atomic boolean flags to create spin locks for producers and consumers.
+It uses another atomic variable size_a to keep track of whether queue is empty or full.
+Producers and Consumers wait if the queue is empty i.e. functions push() and pop() waits if the queue is empty,
+instead of returning false.
+
+-- MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2
+Modifications to v1: It does not use spin locks and size_a. Instead it uses atomic integers head_a and tail_a to
+keep track of next ready element which producers and consumers can access.
+Also every element has atomic bool status_a to notify producers and consumers has done processing it.
+
+-- MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3
+Modifications to v2: Instead of status_a it keeps std::atomic<T*> pObj_a and assigns it to null/valid pointer
+to notify producers and consumers has done processing it.
+
+-- MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4
+It does not use anything in every element. Each element is simply T, nothing else.
+It uses two copies of pair of atomic counters head and tail for producers and consumers.
+
+-- MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5
+Modifications to v4: The object T and the members of class are padded by required size to fill out cache line.
+
+-- MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6
+Modifications to v5: simplified implementation of v5.
 */
 
 namespace mm {
@@ -31,10 +51,10 @@ namespace mm {
 		MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6(size_t maxSize)
 			: maxSize_(maxSize),
 			vec_(maxSize),
-			headProducers_{ 0 },
-			headConsumers_{ 0 },
-			tailProducers_{ 0 },
-			tailConsumers_{ 0 }
+			headProducers_a{ 0 },
+			headConsumers_a{ 0 },
+			tailProducers_a{ 0 },
+			tailConsumers_a{ 0 }
 		{
 		}
 
@@ -42,7 +62,7 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-			size_t localHead = headProducers_.fetch_add(1, memory_order_seq_cst);
+			size_t localHead = headProducers_a.fetch_add(1, memory_order_seq_cst);
 			size_t localTail = 0;
 			do
 			{
@@ -51,7 +71,7 @@ namespace mm {
 				if (duration >= timeout)
 					return false;
 
-				localTail = tailProducers_.load(memory_order_seq_cst);
+				localTail = tailProducers_a.load(memory_order_seq_cst);
 
 			} while (!(localTail <= localHead && localHead - localTail < maxSize_));     // while the queue is full
 
@@ -61,7 +81,7 @@ namespace mm {
 			do 
 			{
 				expected = localHead;
-			} while (!headConsumers_.compare_exchange_weak(expected, localHead + 1, memory_order_seq_cst));
+			} while (!headConsumers_a.compare_exchange_weak(expected, localHead + 1, memory_order_seq_cst));
 
 			//cout << "\nThread " << this_thread::get_id() << " pushed " << obj << " into queue. Queue size: " << size_;
 			return true;
@@ -72,7 +92,7 @@ namespace mm {
 		{
 			std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-			size_t localTail = tailConsumers_.fetch_add(1, memory_order_seq_cst);
+			size_t localTail = tailConsumers_a.fetch_add(1, memory_order_seq_cst);
 			size_t localHead = 0;
 			do
 			{
@@ -81,7 +101,7 @@ namespace mm {
 				if (duration >= timeout)
 					return false;
 
-				localHead = headConsumers_.load(memory_order_seq_cst);
+				localHead = headConsumers_a.load(memory_order_seq_cst);
 
 			} while (!(localTail < localHead));        // Make sure the queue is not empty
 
@@ -91,7 +111,7 @@ namespace mm {
 			do 
 			{
 				expected = localTail;
-			} while (!tailProducers_.compare_exchange_weak(expected, localTail + 1, memory_order_seq_cst));
+			} while (!tailProducers_a.compare_exchange_weak(expected, localTail + 1, memory_order_seq_cst));
 
 			//cout << "\nThread " << this_thread::get_id() << " popped " << obj << " from queue. Queue size: " << size_;
 			return true;
@@ -99,37 +119,39 @@ namespace mm {
 
 		size_t size()
 		{
-			size_t size = headConsumers_.load() - tailProducers_.load();
+			size_t size = headConsumers_a.load() - tailProducers_a.load();
 			return size;
 		}
 
 		bool empty()
 		{
-			size_t size = headConsumers_.load() - tailProducers_.load();
+			size_t size = headConsumers_a.load() - tailProducers_a.load();
 			return size == 0;
 		}
 
 	private:
-		size_t maxSize_;
+		const size_t maxSize_;
+		char pad1[CACHE_LINE_SIZE - sizeof(size_t)];
+
 		struct Data
 		{
 			T obj_;
 			char pad[CACHE_LINE_SIZE - sizeof(T)];
 		};
 		std::vector<Data> vec_; //This will be used as ring buffer / circular queue
-		char pad1[CACHE_LINE_SIZE - sizeof(std::vector<Data>)];
+		char pad2[CACHE_LINE_SIZE - sizeof(std::vector<Data>)];
 
-		std::atomic<size_t> headProducers_; //stores the index where next element will be pushed/produced
-		char pad2[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
-
-		std::atomic<size_t> headConsumers_; //stores the index where next element will be pushed/produced - published to consumers
+		std::atomic<size_t> headProducers_a; //stores the index where next element will be pushed/produced
 		char pad3[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
 
-		std::atomic<size_t> tailProducers_; //stores the index of object which will be popped/consumed - published to producers
+		std::atomic<size_t> headConsumers_a; //stores the index where next element will be pushed/produced - published to consumers
 		char pad4[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
 
-		std::atomic<size_t> tailConsumers_; //stores the index of object which will be popped/consumed
+		std::atomic<size_t> tailProducers_a; //stores the index of object which will be popped/consumed - published to producers	
 		char pad5[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
+
+		std::atomic<size_t> tailConsumers_a; //stores the index of object which will be popped/consumed
+		char pad6[CACHE_LINE_SIZE - sizeof(std::atomic<size_t>)];
 	};
 
 }

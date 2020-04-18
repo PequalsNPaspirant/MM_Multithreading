@@ -9,15 +9,16 @@
 #include <cmath>
 using namespace std;
 
-//#include "Multithreading\Multithreading_SingleProducerMultipleConsumers_v1.h"
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
 /*
-This is Multi Producers Multi Consumers Fixed Size Queue.
-This is very common and basic implemention using one mutex and two condition variables (one each for producers and consumers).
-It uses std::vector of fixed length to store data.
-Producers have to wait if the queue is full.
-Consumers have to wait if the queue is empty.
+This is Multi Producers Multi Consumers Fixed Size Lock Free Queue.
+
+-- MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1:
+This is implemented using two atomic boolean flags to create spin locks for producers and consumers.
+It uses another atomic variable size_a to keep track of whether queue is empty or full.
+Producers and Consumers wait if the queue is empty i.e. functions push() and pop() waits if the queue is empty,
+instead of returning false.
 */
 
 namespace mm {
@@ -91,7 +92,7 @@ namespace mm {
 		}
 
 	private:
-		size_t maxSize_;
+		const size_t maxSize_;
 		std::atomic<size_t> size_a;
 		std::vector<T> vec_; //This will be used as ring buffer / circular queue
 		std::atomic<bool> producerLock_a;

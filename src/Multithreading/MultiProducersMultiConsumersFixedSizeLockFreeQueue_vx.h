@@ -10,7 +10,6 @@
 #include <limits>
 using namespace std;
 
-//#include "Multithreading\Multithreading_SingleProducerMultipleConsumers_v1.h"
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
 #ifdef __GNUC__

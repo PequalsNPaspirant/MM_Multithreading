@@ -48,7 +48,7 @@ namespace mm {
 	private:
 		struct Node
 		{
-			Node() : value_{}, next_a { nullptr } { }
+			Node() : value_{}, next_a{ nullptr } { }
 			Node(T&& val) : value_{ std::move(val) }, next_a{ nullptr } { }
 			T value_;
 			atomic<Node*> next_a; //TODO: Check if we can use non-atomic variable next_ here. Note: we have to use atomic variable here.
@@ -66,7 +66,7 @@ namespace mm {
 			while(curr != nullptr)      // release the list
 			{
 				Node* tmp = curr;
-				curr = curr->next_a;
+				curr = curr->next_a.load(memory_order_acquire);
 				delete tmp;
 			}
 		}

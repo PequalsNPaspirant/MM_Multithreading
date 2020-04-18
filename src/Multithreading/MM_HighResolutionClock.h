@@ -1,5 +1,6 @@
 #pragma once
 
+#ifdef _WIN32
 #include <windows.h>
 #include <chrono>
 #include <iostream>
@@ -39,3 +40,5 @@ namespace mm
 		}
 	};
 }
+
+#endif

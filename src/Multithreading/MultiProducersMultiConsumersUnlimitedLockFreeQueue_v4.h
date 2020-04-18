@@ -83,7 +83,7 @@ namespace mm {
 			Node* tmp = new Node{};
 			Node* oldLast = last_a.exchange(tmp, memory_order_seq_cst);
 			oldLast->value_ = std::move(obj);
-			oldLast->next_a.store(tmp, memory_order_release);         // line#1
+			oldLast->next_a.store(tmp, memory_order_release);         // publish to consumers
 		}
 
 		//exception SAFE pop() version. Returns false if timeout occurs.
@@ -103,8 +103,8 @@ namespace mm {
 					return false;
 
 				//theFirst = first_.next_a.load(memory_order_seq_cst);
-				//theNext = theFirst->next_a; //theFirst can be deleted by another consumer thread at line#2 below
-				theNext = first_.next_a.load(memory_order_acquire)->next_a.load(memory_order_acquire); //next_ can be read here while it is being updated at line#1 above
+				//theNext = theFirst->next_a.load(memory_order_seq_cst); //theFirst can be deleted by another consumer thread at line#1 below
+				theNext = first_.next_a.load(memory_order_acquire)->next_a.load(memory_order_acquire); //next_ can be read here while it is being updated at  above
 
 			} while (
 				theNext == nullptr                                                             // if the queue is empty
@@ -114,7 +114,7 @@ namespace mm {
 			theFirst->next_a.store(nullptr, memory_order_release);
 			// now copy it back. If the exception is thrown at this statement, the object will be lost! 
 			outVal = std::move(theFirst->value_);
-			delete theFirst;      // This is line#2
+			delete theFirst;      // This is line#1
 
 			return true;      // and report success
 		}
