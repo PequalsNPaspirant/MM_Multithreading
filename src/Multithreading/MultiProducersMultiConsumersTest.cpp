@@ -226,7 +226,6 @@ namespace mm {
 		supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v2, int>>());
 		supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v3, int>>()); //working but still need fix
 		supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v4, int>>()); //not working
-		supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_deque, int>>());
 		supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v5, int>>());
 		supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v6, int>>());
 		supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v7, int>>());
