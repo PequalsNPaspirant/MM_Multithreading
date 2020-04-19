@@ -234,9 +234,9 @@ namespace mm {
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v2, void>>());
 			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v3, void>>());
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v4, void>>()); //not working
-			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v5, void>>());	//not working
-			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v6, void>>());	//not working
-			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v7, void>>());	//not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v5, void>>()); //not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v6, void>>()); //not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v7, void>>()); //not working
 		}
 
 		return supportedTypes;
