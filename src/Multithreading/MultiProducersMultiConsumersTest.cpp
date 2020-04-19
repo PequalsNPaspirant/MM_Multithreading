@@ -209,7 +209,7 @@ namespace mm {
 		if (supportedTypes.empty())
 		{
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_vector, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_deque, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_deque, void>>());
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_list, void>>());
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_fwlist, void>>());
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v2_list, void>>());
@@ -218,7 +218,7 @@ namespace mm {
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v3_myfwlist, void>>());
 
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v1, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v2, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v2, void>>());
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v3, void>>()); //not working
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v4, void>>()); //not working
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v5, void>>());
@@ -227,14 +227,14 @@ namespace mm {
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v8, void>>());
 
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_v1, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_v2, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_v2, void>>());
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_v3, void>>());
 
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v1, void>>());
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v2, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v3, void>>());
-			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v4, void>>()); //not working
-			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v5, void>>()); //not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v3, void>>());
+			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v4, void>>()); //not working
+			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v5, void>>()); //not working
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v6, void>>()); //not working
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v7, void>>()); //not working
 		}
