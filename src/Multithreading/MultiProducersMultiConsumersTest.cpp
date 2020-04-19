@@ -63,6 +63,7 @@ namespace mm {
 
 	enum class QueueType
 	{
+		MPMC_U_v1_vector,
 		MPMC_U_v1_deque,
 		MPMC_U_v1_list,
 		MPMC_U_v1_fwlist,
@@ -97,6 +98,7 @@ namespace mm {
 	};
 
 	vector<string> QueueTypeNames{
+		"MPMC_U_v1_vector",
 		"MPMC_U_v1_deque",
 		"MPMC_U_v1_list",
 		"MPMC_U_v1_fwlist",
@@ -158,9 +160,8 @@ namespace mm {
 	{
 	};
 
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_v1_deque, T> : public typeInfoBase<true, MPMC_U_v1_deque, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::vector<T>>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_v1_deque, T> : public typeInfoBase<true, QueueType::MPMC_U_v1_deque, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::vector>> {};
-
+	//template<typename T> struct typeInfo<QueueType::MPMC_U_v1_deque, T> : public typeInfoImpl<true, MPMC_U_v1_deque, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::vector<T>>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_v1_vector, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_vector, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::vector>> {};
 	template<typename T> struct typeInfo<QueueType::MPMC_U_v1_deque, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_deque, MultiProducersMultiConsumersUnlimitedQueue_v1<T>> {};
 	//template<typename T> struct typeInfo<QueueType::MPMC_U_v1_list, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_list, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::list>> {};
 	//template<typename T> struct typeInfo<QueueType::MPMC_U_v1_fwlist, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_fwlist, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::forward_list>> {};
@@ -205,6 +206,7 @@ namespace mm {
 
 		if (supportedTypes.empty())
 		{
+			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_vector, void>>());
 			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_deque, void>>());
 			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_list, void>>());
 			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_fwlist, void>>());
