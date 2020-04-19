@@ -63,7 +63,7 @@ namespace mm {
 
 	enum class QueueType
 	{
-		MPMC_U_v1_vector,
+		//MPMC_U_v1_vector,
 		MPMC_U_v1_deque,
 		MPMC_U_v1_list,
 		MPMC_U_v1_fwlist,
@@ -98,7 +98,7 @@ namespace mm {
 	};
 
 	vector<string> QueueTypeNames{
-		"MPMC_U_v1_vector",
+		//"MPMC_U_v1_vector",
 		"MPMC_U_v1_deque",
 		"MPMC_U_v1_list",
 		"MPMC_U_v1_fwlist",
@@ -140,6 +140,7 @@ namespace mm {
 
 		virtual bool exists() = 0;
 		virtual const string& typeName() = 0;
+		virtual QueueType getQueueType() = 0;
 	};
 
 	template<bool flag, QueueType q, typename T>
@@ -152,6 +153,7 @@ namespace mm {
 
 		bool exists() override { return flag; }
 		const string& typeName() override { return QueueTypeNames[static_cast<int>(q)]; }
+		QueueType getQueueType() override { return q; }
 	};
 
 	constexpr const char emptyStr[] = "";
@@ -160,36 +162,36 @@ namespace mm {
 	{
 	};
 
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_v1_deque, T> : public typeInfoImpl<true, MPMC_U_v1_deque, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::vector<T>>> {};
-	template<typename T> struct typeInfo<QueueType::MPMC_U_v1_vector, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_vector, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::vector>> {};
+	//template<typename T> struct typeInfo<QueueType::MPMC_U_v1_vector, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_vector, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::vector<T>>> {};
+	//template<typename T> struct typeInfo<QueueType::MPMC_U_v1_vector, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_vector, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::vector>> {};
 	template<typename T> struct typeInfo<QueueType::MPMC_U_v1_deque, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_deque, MultiProducersMultiConsumersUnlimitedQueue_v1<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_v1_list, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_list, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::list>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_v1_fwlist, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_fwlist, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::forward_list>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_v2_list, T> : public typeInfoImpl<true, QueueType::MPMC_U_v2_list, MultiProducersMultiConsumersUnlimitedQueue_v2<T, std::list>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_v1_list, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_list, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::list>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_v1_fwlist, T> : public typeInfoImpl<true, QueueType::MPMC_U_v1_fwlist, MultiProducersMultiConsumersUnlimitedQueue_v1<T, std::forward_list>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_v2_list, T> : public typeInfoImpl<true, QueueType::MPMC_U_v2_list, MultiProducersMultiConsumersUnlimitedQueue_v2<T, std::list>> {};
 	template<typename T> struct typeInfo<QueueType::MPMC_U_v2_fwlist, T> : public typeInfoImpl<true, QueueType::MPMC_U_v2_fwlist, MultiProducersMultiConsumersUnlimitedQueue_v2<T, std::forward_list>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_v2_myfwlist, T> : public typeInfoImpl<true, QueueType::MPMC_U_v2_myfwlist, MultiProducersMultiConsumersUnlimitedQueue_v2<T, Undefined>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_v3_myfwlist, T> : public typeInfoImpl<true, QueueType::MPMC_U_v3_myfwlist, MultiProducersMultiConsumersUnlimitedQueue_v3<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_v2_myfwlist, T> : public typeInfoImpl<true, QueueType::MPMC_U_v2_myfwlist, MultiProducersMultiConsumersUnlimitedQueue_v2<T, Undefined>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_v3_myfwlist, T> : public typeInfoImpl<true, QueueType::MPMC_U_v3_myfwlist, MultiProducersMultiConsumersUnlimitedQueue_v3<T>> {};
 
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v1, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v1, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v1, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v1, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1<T>> {};
 	template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v2, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v2, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v3, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v3, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v4, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v4, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v5, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v5, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v5<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v6, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v6, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v6<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v7, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v7, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v7<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v8, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v8, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v8<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v3, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v3, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v4, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v4, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v5, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v5, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v5<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v6, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v6, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v6<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v7, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v7, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v7<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_U_LF_v8, T> : public typeInfoImpl<true, QueueType::MPMC_U_LF_v8, MultiProducersMultiConsumersUnlimitedLockFreeQueue_v8<T>> {};
 
-	//template<typename T> struct typeInfo<QueueType::MPMC_FS_v1, T> : public typeInfoImpl<true, QueueType::MPMC_FS_v1, MultiProducersMultiConsumersFixedSizeQueue_v1<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_FS_v1, T> : public typeInfoImpl<true, QueueType::MPMC_FS_v1, MultiProducersMultiConsumersFixedSizeQueue_v1<T>> {};
 	template<typename T> struct typeInfo<QueueType::MPMC_FS_v2, T> : public typeInfoImpl<true, QueueType::MPMC_FS_v2, MultiProducersMultiConsumersFixedSizeQueue_v2<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_FS_v3, T> : public typeInfoImpl<true, QueueType::MPMC_FS_v3, MultiProducersMultiConsumersFixedSizeQueue_v3<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_FS_v3, T> : public typeInfoImpl<true, QueueType::MPMC_FS_v3, MultiProducersMultiConsumersFixedSizeQueue_v3<T>> {};
 
-	//template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v1, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v1, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v2, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v2, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v1, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v1, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v2, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v2, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2<T>> {};
 	template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v3, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v3, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v4, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v4, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v5, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v5, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v6, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v6, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6<T>> {};
-	//template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v7, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v7, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v7<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v4, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v4, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v5, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v5, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v6, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v6, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6<T>> {};
+	template<typename T> struct typeInfo<QueueType::MPMC_FS_LF_v7, T> : public typeInfoImpl<true, QueueType::MPMC_FS_LF_v7, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v7<T>> {};
 
 	template<typename T>
 	unique_ptr<typeInfoBase> getObjectPointer()
@@ -206,35 +208,35 @@ namespace mm {
 
 		if (supportedTypes.empty())
 		{
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_vector, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_vector, void>>());
 			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_deque, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_list, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_fwlist, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v2_list, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v2_fwlist, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v2_myfwlist, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v3_myfwlist, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_list, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v1_fwlist, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v2_list, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v2_fwlist, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v2_myfwlist, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_v3_myfwlist, void>>());
 
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v1, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v1, void>>());
 			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v2, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v3, void>>()); //not working
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v4, void>>()); //not working
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v5, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v6, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v7, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v8, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v3, void>>()); //not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v4, void>>()); //not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v5, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v6, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v7, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_U_LF_v8, void>>());
 
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_v1, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_v1, void>>());
 			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_v2, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_v3, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_v3, void>>());
 
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v1, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v2, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v1, void>>());
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v2, void>>());
 			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v3, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v4, void>>()); //not working
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v5, void>>());	//not working
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v6, void>>());	//not working
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v7, void>>());	//not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v4, void>>()); //not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v5, void>>());	//not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v6, void>>());	//not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v7, void>>());	//not working
 		}
 
 		return supportedTypes;
@@ -565,34 +567,44 @@ namespace mm {
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector<int>>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
-		callWrapper<QueueType::MPMC_U_v1_deque, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_v1_list, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_v1_fwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_v2_list, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_v2_fwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_v2_myfwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_v3_myfwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		vector<unique_ptr<typeInfoBase>>& supportedTypes = getSupportedTypes();
+		for (int i = 0; i < supportedTypes.size(); ++i)
+		{
+			QueueType q = supportedTypes[i]->getQueueType();
+			//callWrapper<q, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+			switch (q)
+			{
+			//case QueueType::MPMC_U_v1_vector: callWrapper<QueueType::MPMC_U_v1_vector, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_v1_deque: callWrapper<QueueType::MPMC_U_v1_deque, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_v1_list: callWrapper<QueueType::MPMC_U_v1_list, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_v1_fwlist: callWrapper<QueueType::MPMC_U_v1_fwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_v2_list: callWrapper<QueueType::MPMC_U_v2_list, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_v2_fwlist: callWrapper<QueueType::MPMC_U_v2_fwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_v2_myfwlist: callWrapper<QueueType::MPMC_U_v2_myfwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_v3_myfwlist: callWrapper<QueueType::MPMC_U_v3_myfwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
 
-		callWrapper<QueueType::MPMC_U_LF_v1, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_LF_v2, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_LF_v3, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_LF_v4, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_LF_v5, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_LF_v6, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_LF_v7, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		callWrapper<QueueType::MPMC_U_LF_v8, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+			case QueueType::MPMC_U_LF_v1: callWrapper<QueueType::MPMC_U_LF_v1, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_LF_v2: callWrapper<QueueType::MPMC_U_LF_v2, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_LF_v3: callWrapper<QueueType::MPMC_U_LF_v3, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_LF_v4: callWrapper<QueueType::MPMC_U_LF_v4, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_LF_v5: callWrapper<QueueType::MPMC_U_LF_v5, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_LF_v6: callWrapper<QueueType::MPMC_U_LF_v6, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_LF_v7: callWrapper<QueueType::MPMC_U_LF_v7, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
+			case QueueType::MPMC_U_LF_v8: callWrapper<QueueType::MPMC_U_LF_v8, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); break;
 
-		callWrapper<QueueType::MPMC_FS_v1, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		callWrapper<QueueType::MPMC_FS_v2, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		callWrapper<QueueType::MPMC_FS_v3, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+			case QueueType::MPMC_FS_v1: callWrapper<QueueType::MPMC_FS_v1, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex); break;
+			case QueueType::MPMC_FS_v2: callWrapper<QueueType::MPMC_FS_v2, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex); break;
+			case QueueType::MPMC_FS_v3: callWrapper<QueueType::MPMC_FS_v3, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex); break;
 
-		callWrapper<QueueType::MPMC_FS_LF_v1, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		callWrapper<QueueType::MPMC_FS_LF_v2, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		callWrapper<QueueType::MPMC_FS_LF_v3, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		callWrapper<QueueType::MPMC_FS_LF_v4, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		callWrapper<QueueType::MPMC_FS_LF_v5, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		callWrapper<QueueType::MPMC_FS_LF_v6, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		callWrapper<QueueType::MPMC_FS_LF_v7, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+			case QueueType::MPMC_FS_LF_v1: callWrapper<QueueType::MPMC_FS_LF_v1, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex); break;
+			case QueueType::MPMC_FS_LF_v2: callWrapper<QueueType::MPMC_FS_LF_v2, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex); break;
+			case QueueType::MPMC_FS_LF_v3: callWrapper<QueueType::MPMC_FS_LF_v3, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex); break;
+			case QueueType::MPMC_FS_LF_v4: callWrapper<QueueType::MPMC_FS_LF_v4, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex); break;
+			case QueueType::MPMC_FS_LF_v5: callWrapper<QueueType::MPMC_FS_LF_v5, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex); break;
+			case QueueType::MPMC_FS_LF_v6: callWrapper<QueueType::MPMC_FS_LF_v6, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex); break;
+			case QueueType::MPMC_FS_LF_v7: callWrapper<QueueType::MPMC_FS_LF_v7, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex); break;
+			}
+		}
 
 		//The below queue does not work
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(QueueType::MPMC_FS_LF_vx, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
