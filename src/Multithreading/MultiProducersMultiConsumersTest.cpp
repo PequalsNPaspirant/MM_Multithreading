@@ -530,6 +530,12 @@ namespace mm {
 		}
 	};
 
+	template<QueueType queueType, typename T>
+	void callWrapper(size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
+	{
+		test_mpmcu_queue_sfinae<typeInfo<queueType, T>::type, T>::call(queueType, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+	}
+
 	template<typename T>
 	void runTestCase(int numProducerThreads, int numConsumerThreads, int numOperations, int queueSize, int resultIndex)
 	{
@@ -551,40 +557,40 @@ namespace mm {
 
 		columnNames.clear(); //Not a good fix! Make sure the columnNames are not pushed again and again for all test cases
 
-							 /***** Unlimited Queues ****/
-							 //The below queue crashes the program due to lack of synchronization
-							 //test_mpmcu_queue_sfinae<UnsafeQueue_v1<int>>("UNSAFE queue", numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); 
-							 //test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector<int>>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-							 //test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		/***** Unlimited Queues ****/
+		//The below queue crashes the program due to lack of synchronization
+		//test_mpmcu_queue_sfinae<UnsafeQueue_v1<int>>("UNSAFE queue", numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex); 
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector<int>>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersUnlimitedQueue_v1<int, std::vector>>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_v1_deque, T>::type, T>::call(QueueType::MPMC_U_v1_deque, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_v1_list, T>::type, T>::call(QueueType::MPMC_U_v1_list, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_v1_fwlist, T>::type, T>::call(QueueType::MPMC_U_v1_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_v2_list, T>::type, T>::call(QueueType::MPMC_U_v2_list, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_v2_fwlist, T>::type, T>::call(QueueType::MPMC_U_v2_fwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_v2_myfwlist, T>::type, T>::call(QueueType::MPMC_U_v2_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_v3_myfwlist, T>::type, T>::call(QueueType::MPMC_U_v3_myfwlist, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_v1_deque, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_v1_list, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_v1_fwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_v2_list, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_v2_fwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_v2_myfwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_v3_myfwlist, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_LF_v1, T>::type, T>::call(QueueType::MPMC_U_LF_v1, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_LF_v2, T>::type, T>::call(QueueType::MPMC_U_LF_v2, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_LF_v3, T>::type, T>::call(QueueType::MPMC_U_LF_v3, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_LF_v4, T>::type, T>::call(QueueType::MPMC_U_LF_v4, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_LF_v5, T>::type, T>::call(QueueType::MPMC_U_LF_v5, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_LF_v6, T>::type, T>::call(QueueType::MPMC_U_LF_v6, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_LF_v7, T>::type, T>::call(QueueType::MPMC_U_LF_v7, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_U_LF_v8, T>::type, T>::call(QueueType::MPMC_U_LF_v8, numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_LF_v1, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_LF_v2, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_LF_v3, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_LF_v4, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_LF_v5, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_LF_v6, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_LF_v7, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
+		callWrapper<QueueType::MPMC_U_LF_v8, T>(numProducerThreads, numConsumerThreads, numOperations, 0, resultIndex);
 
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_FS_v1, T>::type, T>::call(QueueType::MPMC_FS_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_FS_v2, T>::type, T>::call(QueueType::MPMC_FS_v2, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_FS_v3, T>::type, T>::call(QueueType::MPMC_FS_v3, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		callWrapper<QueueType::MPMC_FS_v1, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		callWrapper<QueueType::MPMC_FS_v2, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		callWrapper<QueueType::MPMC_FS_v3, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_FS_LF_v1, T>::type, T>::call(QueueType::MPMC_FS_LF_v1, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_FS_LF_v2, T>::type, T>::call(QueueType::MPMC_FS_LF_v2, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_FS_LF_v3, T>::type, T>::call(QueueType::MPMC_FS_LF_v3, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_FS_LF_v4, T>::type, T>::call(QueueType::MPMC_FS_LF_v4, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_FS_LF_v5, T>::type, T>::call(QueueType::MPMC_FS_LF_v5, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_FS_LF_v6, T>::type, T>::call(QueueType::MPMC_FS_LF_v6, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
-		test_mpmcu_queue_sfinae<typeInfo<QueueType::MPMC_FS_LF_v7, T>::type, T>::call(QueueType::MPMC_FS_LF_v7, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		callWrapper<QueueType::MPMC_FS_LF_v1, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		callWrapper<QueueType::MPMC_FS_LF_v2, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		callWrapper<QueueType::MPMC_FS_LF_v3, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		callWrapper<QueueType::MPMC_FS_LF_v4, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		callWrapper<QueueType::MPMC_FS_LF_v5, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		callWrapper<QueueType::MPMC_FS_LF_v6, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		callWrapper<QueueType::MPMC_FS_LF_v7, T>(numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 
 		//The below queue does not work
 		//test_mpmcu_queue_sfinae<MultiProducersMultiConsumersFixedSizeLockFreeQueue_vx<int>>(QueueType::MPMC_FS_LF_vx, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
