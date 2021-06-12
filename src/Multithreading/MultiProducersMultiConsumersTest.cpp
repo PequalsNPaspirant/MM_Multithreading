@@ -233,9 +233,9 @@ namespace mm {
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v1, void>>());
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v2, void>>());
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v3, void>>());
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v4, void>>()); //not working
-			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v5, void>>()); //not working
-			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v6, void>>()); //not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v4, void>>()); //not working
+			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v5, void>>()); //not working
+			supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v6, void>>()); //not working
 			//supportedTypes.push_back(getObjectPointer<typeInfo<QueueType::MPMC_FS_LF_v7, void>>()); //not working
 		}
 
@@ -618,24 +618,24 @@ namespace mm {
 		std::vector<TestCase> tests =
 		{
 			{ 1, 1,     numOperations, 10 },
-		{ 2, 2,     numOperations, 10 },
-		{ 3, 3,     numOperations, 10 },
-		{ 4, 4,     numOperations, 10 },
-		{ 5, 5,     numOperations, 10 },
-		{ 6, 6,     numOperations, 10 },
-		{ 7, 7,     numOperations, 10 },
-		{ 8, 8,     numOperations, 10 },
-		{ 9, 9,     numOperations, 10 },
-		{ 10, 10,   numOperations, 10 },
-		{ 15, 15,   numOperations, 10 },
-		{ 20, 20,   numOperations, 10 },
-		{ 25, 25,   numOperations, 10 },
-		{ 30, 30,   numOperations, 10 },
-		{ 40, 40,   numOperations, 10 },
-		{ 50, 50,   numOperations, 10 },
-		{ 60, 60,   numOperations, 10 },
-		{ 80, 80,   numOperations, 10 },
-		{ 100, 100, numOperations, 10 },
+			{ 2, 2,     numOperations, 10 },
+			{ 3, 3,     numOperations, 10 },
+			{ 4, 4,     numOperations, 10 },
+			{ 5, 5,     numOperations, 10 },
+			{ 6, 6,     numOperations, 10 },
+			{ 7, 7,     numOperations, 10 },
+			{ 8, 8,     numOperations, 10 },
+			{ 9, 9,     numOperations, 10 },
+			{ 10, 10,   numOperations, 10 },
+			{ 15, 15,   numOperations, 10 },
+			{ 20, 20,   numOperations, 10 },
+			{ 25, 25,   numOperations, 10 },
+			{ 30, 30,   numOperations, 10 },
+			{ 40, 40,   numOperations, 10 },
+			{ 50, 50,   numOperations, 10 },
+			{ 60, 60,   numOperations, 10 },
+			{ 80, 80,   numOperations, 10 },
+			{ 100, 100, numOperations, 10 },
 		};
 
 		results.insert(results.end(), tests.begin(), tests.end());
