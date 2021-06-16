@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 #include <mutex>
+#include <shared_mutex>
 #include <condition_variable>
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
@@ -17,7 +18,61 @@ namespace mm {
 
 	namespace readWriteLock_std_v1 {
 
-		
+		class stdMutex
+		{
+		public:
+			void acquireReadLock()
+			{
+				//std::unique_lock<std::mutex> lock{ m_ };
+				m_.lock();
+			}
+
+			void releaseReadLock()
+			{
+				m_.unlock();
+			}
+
+			void acquireWriteLock()
+			{
+				m_.lock();
+			}
+
+			void releaseWriteLock()
+			{
+				m_.unlock();
+			}
+
+		private:
+			std::mutex m_;
+		};
+
+		class stdReadWriteLock
+		{
+		public:
+			void acquireReadLock()
+			{
+				//std::unique_lock<std::mutex> lock{ m_ };
+				m_.lock_shared();
+			}
+
+			void releaseReadLock()
+			{
+				m_.unlock_shared();
+			}
+
+			void acquireWriteLock()
+			{
+				m_.lock();
+			}
+
+			void releaseWriteLock()
+			{
+				m_.unlock();
+			}
+
+		private:
+			std::shared_mutex m_;
+		};
 
 	}
 
