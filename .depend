@@ -1,7 +1,84 @@
 
-obj/windows_gcc/MM_MultithreadingLibrary_main.o: src/MM_MultithreadingLibrary_main.cpp \
- ../MM_CommonUtils/src/WindowsUtils/WindowsUtils.h \
- ../MM_CommonUtils/src/Timer/Timer.h \
- ../MM_UnitTestFramework/src/MM_UnitTestFramework/MM_UnitTestFramework.h
+obj/windows_gcc/Multithreading/Atomic_vs_Nonatomic.o: src/Multithreading/Atomic_vs_Nonatomic.cpp
 
-obj/windows_gcc/Multithreading/Multithreading_basics.o: src/Multithreading/Multithreading_basics.cpp
+obj/windows_gcc/Multithreading/Basics.o: src/Multithreading/Basics.cpp \
+ src/MM_UnitTestFramework/MM_UnitTestFramework.h
+
+obj/windows_gcc/Multithreading/CacheStatusManager_v1.o: src/Multithreading/CacheStatusManager_v1.cpp \
+ src/MM_UnitTestFramework/MM_UnitTestFramework.h \
+ src/Multithreading/CacheStatusManager_v1.h
+
+obj/windows_gcc/Multithreading/CigaretteSmokers_v1.o: src/Multithreading/CigaretteSmokers_v1.cpp
+
+obj/windows_gcc/Multithreading/Deadlock.o: src/Multithreading/Deadlock.cpp \
+ src/MM_UnitTestFramework/MM_UnitTestFramework.h
+
+obj/windows_gcc/Multithreading/Deque_Atomic.o: src/Multithreading/Deque_Atomic.cpp
+
+obj/windows_gcc/Multithreading/Deque_Mutex.o: src/Multithreading/Deque_Mutex.cpp
+
+obj/windows_gcc/Multithreading/DiningPhilosophers_v1.o: src/Multithreading/DiningPhilosophers_v1.cpp
+
+obj/windows_gcc/Multithreading/LockFreeQueue_v1.o: src/Multithreading/LockFreeQueue_v1.cpp
+
+obj/windows_gcc/Multithreading/MemoryOrder.o: src/Multithreading/MemoryOrder.cpp
+
+obj/windows_gcc/Multithreading/MultiProducersMultiConsumersTest.o: src/Multithreading/MultiProducersMultiConsumersTest.cpp \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedQueue_v1.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedQueue_v2.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedQueue_v3.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedLockFreeQueue_v1.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedLockFreeQueue_v2.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedLockFreeQueue_v3.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedLockFreeQueue_v4.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedLockFreeQueue_v5.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedLockFreeQueue_v6.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedLockFreeQueue_v7.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedLockFreeQueue_v8.h \
+ src/Multithreading/MultiProducersMultiConsumersFixedSizeQueue_v1.h \
+ src/MM_UnitTestFramework/MM_UnitTestFramework.h \
+ src/Multithreading/MultiProducersMultiConsumersFixedSizeQueue_v2.h \
+ src/Multithreading/MultiProducersMultiConsumersFixedSizeQueue_v3.h \
+ src/Multithreading/MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1.h \
+ src/Multithreading/MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2.h \
+ src/Multithreading/MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3.h \
+ src/Multithreading/MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4.h \
+ src/Multithreading/MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5.h \
+ src/Multithreading/MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6.h \
+ src/Multithreading/MultiProducersMultiConsumersFixedSizeLockFreeQueue_v7.h \
+ src/Multithreading/MultiProducersMultiConsumersUnlimitedUnsafeQueue_v1.h \
+ src/Multithreading/MM_HighResolutionClock.h
+
+obj/windows_gcc/Multithreading/Queue_Atomic.o: src/Multithreading/Queue_Atomic.cpp
+
+obj/windows_gcc/Multithreading/ReadersWriters_v1.o: src/Multithreading/ReadersWriters_v1.cpp
+
+obj/windows_gcc/Multithreading/ReadWriteLockTesting.o: src/Multithreading/ReadWriteLockTesting.cpp \
+ src/MM_UnitTestFramework/MM_UnitTestFramework.h \
+ src/Multithreading/ReadWriteLock_std_v1.h
+
+obj/windows_gcc/Multithreading/ReentrantLock.o: src/Multithreading/ReentrantLock.cpp \
+ src/MM_UnitTestFramework/MM_UnitTestFramework.h
+
+obj/windows_gcc/Multithreading/ReplaceMutexByAtomic.o: src/Multithreading/ReplaceMutexByAtomic.cpp \
+ src/MM_UnitTestFramework/MM_UnitTestFramework.h
+
+obj/windows_gcc/Multithreading/SingleLinkList_Atomic.o: src/Multithreading/SingleLinkList_Atomic.cpp
+
+obj/windows_gcc/Multithreading/SingleLinkList_Mutex.o: src/Multithreading/SingleLinkList_Mutex.cpp
+
+obj/windows_gcc/Multithreading/SingleProducerMultiConsumers_v1.o: src/Multithreading/SingleProducerMultiConsumers_v1.cpp \
+ src/MM_UnitTestFramework/MM_UnitTestFramework.h
+
+obj/windows_gcc/Multithreading/SleepingBarber_v1.o: src/Multithreading/SleepingBarber_v1.cpp
+
+obj/windows_gcc/Multithreading/Spinlock.o: src/Multithreading/Spinlock.cpp
+
+obj/windows_gcc/Multithreading/ThreadSafeQueue_v1.o: src/Multithreading/ThreadSafeQueue_v1.cpp
+
+obj/windows_gcc/Multithreading/Vector_Atomic.o: src/Multithreading/Vector_Atomic.cpp
+
+obj/windows_gcc/Multithreading/Vector_Mutex.o: src/Multithreading/Vector_Mutex.cpp
+
+obj/windows_gcc/_MM_Multithreading_main.o: src/_MM_Multithreading_main.cpp \
+ src/MM_UnitTestFramework/MM_UnitTestFramework.h

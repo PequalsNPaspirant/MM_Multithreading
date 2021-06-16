@@ -12,8 +12,9 @@ namespace mm {
 	MM_DEFINE_FLAG(false, Multithreading_Deadlock_1);
 	MM_DEFINE_FLAG(false, Multithreading_ReentrantLock_1);
 	MM_DEFINE_FLAG(false, Multithreading_spmc_fifo_queue);
-	MM_DEFINE_FLAG(false, Multithreading_mpmcu_queue);
-	MM_DEFINE_FLAG(true, CacheStatusManager_v1);
+	MM_DEFINE_FLAG(false, Multithreading_mpmcu_queue); //TODO: test new algo
+	MM_DEFINE_FLAG(false, CacheStatusManager_v1);
+	MM_DEFINE_FLAG(true, ReadWriteLock);
 }
 
 int main(int argc, char* argv[])

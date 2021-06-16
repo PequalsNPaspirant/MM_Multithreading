@@ -433,8 +433,12 @@ namespace mm {
 	template<typename Tqueue, typename Tobj>
 	void test_mpmcu_queue(QueueType queueType, Tqueue& queue, size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, int resultIndex)
 	{
-		//std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+#ifdef _WIN32
 		mm::MM_HighResolutionClock::time_point start = mm::MM_HighResolutionClock::now();
+#else
+		std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+#endif
+		
 
 		//Tqueue queue = createQueue_sfinae<Tqueue>(queueSize);
 		const size_t threadsCount = numProducerThreads > numConsumerThreads ? numProducerThreads : numConsumerThreads;
@@ -458,8 +462,11 @@ namespace mm {
 		for (size_t i = 0; i < numConsumerThreads; ++i)
 			consumerThreads[i].join();
 
-		//std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+#ifdef _WIN32
 		mm::MM_HighResolutionClock::time_point end = mm::MM_HighResolutionClock::now();
+#else
+		std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+#endif
 		unsigned long long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
 		//cout << "      Queue is empty ? : " << (queue.empty() ? "Yes" : "No") << " Queue Size : " << queue.size();
@@ -482,16 +489,17 @@ namespace mm {
 	template<typename Tqueue, typename Tobj>
 	struct is_fixed_size_queue
 	{
-		static const bool value = typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeQueue_v1<Tobj>>::value
-			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeQueue_v2<Tobj>>::value
-			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeQueue_v3<Tobj>>::value
-			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<Tobj>>::value
-			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2<Tobj>>::value
-			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3<Tobj>>::value
-			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4<Tobj>>::value
-			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5<Tobj>>::value
-			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6<Tobj>>::value
-			|| typename std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v7<Tobj>>::value
+		//constexpr static const bool v1 = std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeQueue_v1<Tobj>>::value;
+		static const bool value = (std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeQueue_v1<Tobj>>::value
+			|| std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeQueue_v2<Tobj>>::value
+			|| std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeQueue_v3<Tobj>>::value
+			|| std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v1<Tobj>>::value
+			|| std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v2<Tobj>>::value
+			|| std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v3<Tobj>>::value
+			|| std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v4<Tobj>>::value
+			|| std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v5<Tobj>>::value
+			|| std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6<Tobj>>::value
+			|| std::is_same<Tqueue, MultiProducersMultiConsumersFixedSizeLockFreeQueue_v7<Tobj>>::value)
 			;
 	};
 
@@ -537,7 +545,7 @@ namespace mm {
 	template<QueueType queueType, typename T>
 	void callWrapper(size_t numProducerThreads, size_t numConsumerThreads, size_t numOperations, size_t queueSize, int resultIndex)
 	{
-		test_mpmcu_queue_sfinae<typeInfo<queueType, T>::type, T>::call(queueType, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
+		test_mpmcu_queue_sfinae<typename typeInfo<queueType, T>::type, T>::call(queueType, numProducerThreads, numConsumerThreads, numOperations, queueSize, resultIndex);
 	}
 
 	template<typename T>

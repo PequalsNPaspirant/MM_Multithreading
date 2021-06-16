@@ -87,6 +87,9 @@
     <ClCompile Include="..\..\..\..\src\Multithreading\CacheStatusManager_v1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\Multithreading\ReadWriteLockTesting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\src\MM_UnitTestFramework\MM_UnitTestFramework.h">
@@ -177,6 +180,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\CacheStatusManager_v1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_std_v1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

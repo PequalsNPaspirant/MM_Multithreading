@@ -6,31 +6,36 @@ APP := $(shell echo `pwd` | sed 's/^.*\///g')
 APP_NAME := $(OUTDIR)/$(APP)_gcc.exe
 THIRD_PARTY_INCLUDE := -I../MM_CommonUtils/src -I../MM_UnitTestFramework/src
 
-LIBPATH := ../MM_CommonUtils/bin/windows_gcc
-LIBNAME := libMM_CommonUtils.a
-LDLIBS := MM_CommonUtils
+#LIBPATH := ../MM_CommonUtils/bin/windows_gcc
+#LIBNAME := libMM_CommonUtils.a
+#LDLIBS := MM_CommonUtils
 LDFLAGS := -static -L$(LIBPATH) -l$(LDLIBS)
 
-CXX := g++-7.1.0
-CXXFLAGS_DEBUG := -Wall -g -m64 -std=c++1y
-CXXFLAGS_WARN := -Wall -m64 -std=c++1y
-CXXFLAGS_NO_WARN := -m64 -std=c++1y
+CXX := g++
+CXXFLAGS_DEBUG := -std=c++1y -m64 -g -Wall
+CXXFLAGS_WARN := -std=c++1y -m64 -Wall
+CXXFLAGS_NO_WARN := -std=c++1y -m64 
 CXXFLAGS := $(CXXFLAGS_NO_WARN)
 
 SRCFILES := $(shell find $(SRCDIR) -name "*.cpp")
 OBJECTS := $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCFILES))
 
-.PHONY: all clean distclean
+.PHONY: dependall clean distclean
 
 all: $(APP_NAME)
 
-.depend: $(SRCFILES)
-	rm -rf $@
-	$(CXX) $(CXXFLAGS) -I$(INCLUDEDIR) $(THIRD_PARTY_INCLUDE) -MM $^ > $@ \
-	&& sed -zi 's/o: \\\n/o:/g' $@ \
-	&& sed -Ei 's#^(.*\.o: *)$(SRCDIR)/(.*/)?(.*\.cpp)#\n$(OBJDIR)/\2\1$(SRCDIR)/\2\3#g' $@
+#.depend: $(SRCFILES)
+#	rm -rf $@
+#	$(CXX) $(CXXFLAGS) -I$(INCLUDEDIR) $(THIRD_PARTY_INCLUDE) -MM $^ > $@ \
+#	&& sed -zi 's/o: \\\n/o:/g' $@ \
+#	&& sed -Ei 's#^(.*\.o: *)$(SRCDIR)/(.*/)?(.*\.cpp)#\n$(OBJDIR)/\2\1$(SRCDIR)/\2\3#g' $@
+#include .depend
 
-include .depend
+depend: $(SRCFILES)
+	rm -rf .depend
+	$(CXX) $(CXXFLAGS) -I$(INCLUDEDIR) $(THIRD_PARTY_INCLUDE) -MM $^ > .depend \
+	&& sed -zi 's/o: \\\n/o:/g' .depend \
+	&& sed -Ei 's#^(.*\.o: *)$(SRCDIR)/(.*/)?(.*\.cpp)#\n$(OBJDIR)/\2\1$(SRCDIR)/\2\3#g' .depend
 
 $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@echo ""
@@ -41,7 +46,7 @@ $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 $(LIBPATH)/$(LIBNAME):
 	cd ../MM_CommonUtils && make
 
-$(APP_NAME): $(OBJECTS) $(LIBPATH)/$(LIBNAME)
+$(APP_NAME): .depend $(OBJECTS) $(LIBPATH)/$(LIBNAME)
 	@echo ""
 	@echo "========== Linking =========="
 	$(CXX) -o $@ $(OBJECTS) $(LDFLAGS)
