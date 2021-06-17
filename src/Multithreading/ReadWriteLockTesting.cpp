@@ -11,6 +11,7 @@
 #include <thread>
 #include <random>
 #include <queue>
+#include <atomic>
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 #include "ReadWriteLock_std_v1.h"
@@ -124,14 +125,14 @@ namespace mm {
 				}
 			};
 
-			auto threadFunTop = [](T& tsq, int iterations, int& totalSum, int& emptyCount) {
+			auto threadFunTop = [](T& tsq, int iterations, std::atomic<int>& totalSum) {
 				for (int i = 0; i < iterations; ++i)
 				{
-					if (tsq.empty())
-					{
-						++emptyCount;
-						continue;
-					}
+					//if (tsq.empty())
+					//{
+					//	++emptyCount;
+					//	continue;
+					//}
 
 					Object obj = tsq.top();
 					int sum = obj.getSum();
@@ -163,20 +164,40 @@ namespace mm {
 			//		throw std::runtime_error{ "Unknown operation: " + std::to_string(static_cast<int>(ops[i])) };
 			//	}
 			//}
+			int numWriters = 50;
 			std::vector<std::thread> writers;
-			std::thread t1 = std::thread{ threadFunPushPop, std::ref(tsq), 100000 };
+			writers.reserve(numWriters);
+			for (int i = 0; i < numWriters; ++i)
+			{
+				writers.push_back(std::thread{ threadFunPushPop, std::ref(tsq), 100000 });
+			}
+
+			int numReaders = 50;
 			std::vector<std::thread> readers;
-			int totalSum = 0, emptyCount = 0;
-			std::thread t2 = std::thread{ threadFunTop, std::ref(tsq), 100000, std::ref(totalSum), std::ref(emptyCount) };
-			t1.join();
-			t2.join();
+			readers.reserve(numReaders);
+			std::atomic<int> totalSum = 0;
+			for (int i = 0; i < numReaders; ++i)
+			{
+				readers.push_back(std::thread{ threadFunTop, std::ref(tsq), 100000, std::ref(totalSum) });
+			}
+
+			for (int i = 0; i < writers.size(); ++i)
+			{
+				if (writers[i].joinable())
+					writers[i].join();
+			}
+			for (int i = 0; i < readers.size(); ++i)
+			{
+				if (readers[i].joinable())
+					readers[i].join();
+			}
 			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 			
 			long long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 			std::cout << "\n" << std::setw(20) << msg
 				<< " duration: " << std::setw(12) << duration << " ns"
 				<< " totalSum: " << std::setw(6) << totalSum
-				<< " emptyCount: " << std::setw(6) << emptyCount
+				//<< " emptyCount: " << std::setw(6) << emptyCount
 				;
 
 			return totalSum;
