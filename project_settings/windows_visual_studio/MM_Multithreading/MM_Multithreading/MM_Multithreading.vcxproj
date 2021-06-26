@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\Multithreading\SemaphoreUsingConditionVariable.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\ReadWriteLockTesting.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\CacheStatusManager_v1.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersTest.cpp" />
@@ -46,6 +47,10 @@
     <ClCompile Include="..\..\..\..\src\_MM_Multithreading_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ConditionVariableUsingMutex.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ConditionVariableUsingSemaphore.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_v1.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\SemaphoreUsingConditionVariable.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_std_v1.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\CacheStatusManager_v1.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\MultiProducersMultiConsumersFixedSizeLockFreeQueue_v6.h" />

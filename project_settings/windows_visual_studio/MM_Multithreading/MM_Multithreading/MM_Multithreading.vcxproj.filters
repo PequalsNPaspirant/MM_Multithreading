@@ -90,6 +90,9 @@
     <ClCompile Include="..\..\..\..\src\Multithreading\ReadWriteLockTesting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\Multithreading\SemaphoreUsingConditionVariable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\src\MM_UnitTestFramework\MM_UnitTestFramework.h">
@@ -183,6 +186,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_std_v1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_v1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ConditionVariableUsingMutex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\SemaphoreUsingConditionVariable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ConditionVariableUsingSemaphore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

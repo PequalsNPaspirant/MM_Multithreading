@@ -164,21 +164,24 @@ namespace mm {
 			//		throw std::runtime_error{ "Unknown operation: " + std::to_string(static_cast<int>(ops[i])) };
 			//	}
 			//}
+
+			int iterations = 1000000;
 			int numWriters = 50;
 			std::vector<std::thread> writers;
 			writers.reserve(numWriters);
 			for (int i = 0; i < numWriters; ++i)
 			{
-				writers.push_back(std::thread{ threadFunPushPop, std::ref(tsq), 100000 });
+				writers.push_back(std::thread{ threadFunPushPop, std::ref(tsq), iterations });
 			}
 
 			int numReaders = 50;
 			std::vector<std::thread> readers;
 			readers.reserve(numReaders);
 			std::atomic<int> totalSum = 0;
+			tsq.push(Object{ 0 }); //Push one object to be on safer side in case writers lag behind and reader threads start executing first
 			for (int i = 0; i < numReaders; ++i)
 			{
-				readers.push_back(std::thread{ threadFunTop, std::ref(tsq), 100000, std::ref(totalSum) });
+				readers.push_back(std::thread{ threadFunTop, std::ref(tsq), iterations, std::ref(totalSum) });
 			}
 
 			for (int i = 0; i < writers.size(); ++i)
