@@ -7,9 +7,9 @@ namespace mm {
 
 	}
 
-	MM_DECLARE_FLAG(SemaphoreUsingConditionVariable_v1);
+	MM_DECLARE_FLAG(SemaphoreUsingConditionVariable);
 
-	MM_UNIT_TEST(SemaphoreUsingConditionVariable_v1_Test, SemaphoreUsingConditionVariable_v1)
+	MM_UNIT_TEST(SemaphoreUsingConditionVariable_Test, SemaphoreUsingConditionVariable)
 	{
 		SemaphoreUsingConditionVariable::FixedSizeThreadSafeQueue fixedSizeQueue{ 100 };
 		SemaphoreUsingConditionVariable::usage(fixedSizeQueue);

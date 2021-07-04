@@ -1,5 +1,4 @@
-//Goal
-//Create a task container and executor identified by string/enum
+#pragma once
 
 #include <iostream>
 #include <typeinfo>
@@ -21,6 +20,10 @@
 Implement condition_variable using semaphore:
 https://www.microsoft.com/en-us/research/wp-content/uploads/2004/12/ImplementingCVs.pdf
 
+Documents on drive:
+...\@_Programming\@_Multi-threading\ImplementingConditionVariables.pdf
+...\@_Programming\@_Multi-threading\Semaphores.pdf
+
 */
 
 namespace mm {
@@ -35,12 +38,15 @@ namespace mm {
 		class SemaphoreUsingConditionVariable
 		{
 		public:
-			SemaphoreUsingConditionVariable()
+			SemaphoreUsingConditionVariable(unsigned long count = 0)
+				: count_{ count }
 			{}
 
 			void release() {
-				std::lock_guard<decltype(mutex_)> lock(mutex_);
+				std::unique_lock<decltype(mutex_)> lock(mutex_);
 				++count_;
+				lock.unlock();
+
 				condition_.notify_one();
 			}
 
@@ -69,91 +75,189 @@ namespace mm {
 
 
 
-		//Our implementation based on basic OS premitives
+		//Our implementation of ConditionVariable based on basic OS premitives
+
+		class MutexUsingSemaphore
+		{
+		public:
+			void lock()
+			{
+				s_.acquire();
+			}
+
+			void unlock()
+			{
+				s_.release();
+			}
+
+		private:
+			SemaphoreUsingConditionVariable s_{ 1 }; //initialize with 1
+		};
+
+		struct ThreadInfo
+		{
+			SemaphoreUsingConditionVariable s_{ 0 };
+		};
+
+		//This class stores mappings for all threads irrespective of whether they
+		//are using same cv or not
+		class GlobalThreadInfoMappng
+		{
+		public:
+			static std::shared_ptr<ThreadInfo> getThreadInfo()
+			{
+				GlobalThreadInfoMappng& inst = GlobalThreadInfoMappng::getInstance();
+				inst.m_.lock();
+				std::thread::id threadId = std::this_thread::get_id();
+				std::shared_ptr<ThreadInfo>& retVal = inst.data_[threadId];
+				if (!retVal)
+					retVal = std::make_shared<ThreadInfo>();
+				inst.m_.unlock();
+
+				return retVal;
+			}
+
+		private:
+			GlobalThreadInfoMappng() = default;
+			static GlobalThreadInfoMappng& getInstance()
+			{
+				static GlobalThreadInfoMappng inst;
+				return inst;
+			}
+
+			std::unordered_map< std::thread::id, std::shared_ptr<ThreadInfo> > data_;
+			MutexUsingSemaphore m_;
+		};
 
 		class ConditionVariableUsingSemaphore
 		{
 		public:
 			ConditionVariableUsingSemaphore()
 			{
-				m_.lock();
 			}
 
-			void wait(std::unique_lock<std::mutex>& lock)
+			void wait(MutexUsingSemaphore& pMutex)
 			{
-				lock.unlock();
-				//block this thread
+				std::shared_ptr<ThreadInfo> ti = GlobalThreadInfoMappng::getThreadInfo();
+				
 				m_.lock();
+				q_.push(ti);
+				m_.unlock();
+
+				pMutex.unlock();
+				//block this thread
+				ti->s_.acquire();
+				pMutex.lock();
 			}
 
 			void notify_one()
 			{
+				m_.lock();
 				//release blocked thread
+				if (!q_.empty())
+				{
+					std::shared_ptr<ThreadInfo> ti = q_.front();
+					q_.pop();
+					ti->s_.release();
+				}
 				m_.unlock();
 			}
 
 			void notify_all()
 			{
-				//release all blocked threads
+				m_.lock();
+				//release all blocked thread
+				while (!q_.empty())
+				{
+					std::shared_ptr<ThreadInfo> ti = q_.front();
+					q_.pop();
+					ti->s_.release();
+				}
+				m_.unlock();
 			}
 
 		private:
-			std::mutex m_;
-			
+			std::queue< std::shared_ptr<ThreadInfo> > q_;
+			MutexUsingSemaphore m_;
 		};
 
-		class ThreadSafeQueue
+		class UnlimitedSizeThreadSafeQueue
 		{
 		public:
 			void push(int n)
 			{
-				std::unique_lock<std::mutex> lock{ m_ };
+				m_.lock();
 				q_.push(n);
-				lock.unlock();
+				m_.unlock();
 
 				cv_.notify_one();
 			}
 
 			int pop()
 			{
-				std::unique_lock<std::mutex> lock{ m_ };
+				m_.lock();
 
 				while (q_.empty())
-					cv_.wait(lock);
+					cv_.wait(m_);
 
 				int retVal = q_.front();
 				q_.pop();
+
+				m_.unlock();
+
 				return retVal;
 			}
 
 		private:
 			std::queue<int> q_;
-			std::mutex m_;
+			MutexUsingSemaphore m_;
 			ConditionVariableUsingSemaphore cv_;
 		};
 
 		void usage()
 		{
-			ThreadSafeQueue myQueue;
-			std::atomic<bool> stop = false;
+			UnlimitedSizeThreadSafeQueue myQueue;
+			std::atomic<bool> stopPush{ false };
+			std::atomic<bool> stopPop{ false };
 			auto threadFunPush = [&]() {
-				while(!stop.load(std::memory_order_acquire))
+				while(!stopPush.load(std::memory_order_acquire))
 					myQueue.push(10);
 			};
 			
 			auto threadFunPop = [&]() {
-				while (!stop.load(std::memory_order_acquire))
+				while (!stopPop.load(std::memory_order_acquire))
 					int n = myQueue.pop();
 			};
 			
+			cout << "\n" << "creating threads...";
 			int numThreads = 100;
 			std::vector<std::thread> threadPool;
 			threadPool.reserve(numThreads);
+			cout << "\n";
 			for (int i = 0; i < numThreads; ++i)
 			{
+				if ((i + 1) % 5 == 0)
+					cout << "\r" << "created " << 2 * (i + 1) << " threads";
 				threadPool.push_back(std::thread{ threadFunPush });
 				threadPool.push_back(std::thread{ threadFunPop });
 			}
+
+			cout << "\n" << "created all threads!";
+
+			cout << "\n" << "sleeping for 10 sec...";
+			std::this_thread::sleep_for(std::chrono::seconds(10));
+
+			cout << "\n" << "stopping pop threads...";
+			stopPop.store(true, std::memory_order_release);
+
+			//Do not stop push threads immediately, there may be race
+			//and some pop threads go into wait state and may never be 
+			//notified because all push threads are stopped
+			cout << "\n" << "sleeping for 5 sec...";
+			std::this_thread::sleep_for(std::chrono::seconds(5));
+
+			cout << "\n" << "stopping push threads...";
+			stopPush.store(true, std::memory_order_release);
 
 			for (int i = 0; i < 2 * numThreads; ++i)
 			{
@@ -161,8 +265,7 @@ namespace mm {
 					threadPool[i].join();
 			}
 
-			std::this_thread::sleep_for(std::chrono::seconds(10));
-			stop.store(false, std::memory_order_release);
+			cout << "\n" << "All done!";
 		}
 	}
 

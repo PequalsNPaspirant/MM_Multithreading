@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\Multithreading\ConditionVariableUsingSemaphore.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\SemaphoreUsingConditionVariable.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\ReadWriteLockTesting.cpp" />
     <ClCompile Include="..\..\..\..\src\Multithreading\CacheStatusManager_v1.cpp" />

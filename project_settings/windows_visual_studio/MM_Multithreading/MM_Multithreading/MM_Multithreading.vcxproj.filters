@@ -93,6 +93,9 @@
     <ClCompile Include="..\..\..\..\src\Multithreading\SemaphoreUsingConditionVariable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\Multithreading\ConditionVariableUsingSemaphore.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\src\MM_UnitTestFramework\MM_UnitTestFramework.h">

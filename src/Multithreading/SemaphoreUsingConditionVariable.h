@@ -1,6 +1,3 @@
-//Goal
-//Create a task container and executor identified by string/enum
-
 #pragma once
 
 #include <iostream>
@@ -214,14 +211,15 @@ namespace mm {
 		template<typename T>
 		void usage(T& myQueue)
 		{
-			std::atomic<bool> stop = false;
+			std::atomic<bool> stopPush{ false };
+			std::atomic<bool> stopPop{ false };
 			auto threadFunProducer = [&]() {
-				while (!stop.load(std::memory_order_acquire))
+				while (!stopPush.load(std::memory_order_acquire))
 					myQueue.push(10);
 			};
 
 			auto threadFunConsumer = [&]() {
-				while (!stop.load(std::memory_order_acquire))
+				while (!stopPop.load(std::memory_order_acquire))
 					int n = myQueue.pop();
 			};
 
@@ -242,8 +240,17 @@ namespace mm {
 			cout << "\n" << "sleeping for 10 sec...";
 			std::this_thread::sleep_for(std::chrono::seconds(10));
 
-			cout << "\n" << "stopping all threads...";
-			stop.store(true, std::memory_order_release);
+			cout << "\n" << "stopping pop threads...";
+			stopPop.store(true, std::memory_order_release);
+
+			//Do not stop push threads immediately, there may be race
+			//and some pop threads go into wait state and may never be 
+			//notified because all push threads are stopped
+			cout << "\n" << "sleeping for 5 sec...";
+			std::this_thread::sleep_for(std::chrono::seconds(5));
+
+			cout << "\n" << "stopping push threads...";
+			stopPush.store(true, std::memory_order_release);
 
 			cout << "\n" << "joining all threads...";
 			for (int i = 0; i < 2 * numThreads; ++i)
@@ -257,7 +264,7 @@ namespace mm {
 
 
 
-		class ProprityControllerUsingSemaphore
+		class PriorityControllerUsingSemaphore
 		{
 		public:
 			void waitForHighPriorityTask()
@@ -274,9 +281,9 @@ namespace mm {
 			SemaphoreUsingConditionVariable s_{ 0 }; //initialize with 0
 		};
 
-		void usageProprityControllerUsingSemaphore()
+		void usagePriorityControllerUsingSemaphore()
 		{
-			ProprityControllerUsingSemaphore p;
+			PriorityControllerUsingSemaphore p;
 
 			auto highPriorityTask = [&]() {
 				//Step 1: Do high priority task
