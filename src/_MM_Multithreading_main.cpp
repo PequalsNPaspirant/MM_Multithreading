@@ -15,9 +15,9 @@ namespace mm {
 	MM_DEFINE_FLAG(false, Multithreading_mpmcu_queue); //TODO: test new algo
 	MM_DEFINE_FLAG(false, CacheStatusManager_v1);
 	MM_DEFINE_FLAG(false, SemaphoreUsingConditionVariable);
-	MM_DEFINE_FLAG(true, ConditionVariableUsingSemaphore);
+	MM_DEFINE_FLAG(false, ConditionVariableUsingSemaphore);
 	//MM_DEFINE_FLAG(true, ConditionVariableUsingMutex);
-	MM_DEFINE_FLAG(false, ReadWriteLock);
+	MM_DEFINE_FLAG(true, ReadWriteLock);
 }
 
 int main(int argc, char* argv[])

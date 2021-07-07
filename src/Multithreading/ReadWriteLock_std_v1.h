@@ -16,9 +16,9 @@
 
 namespace mm {
 
-	namespace readWriteLock_std_v1 {
+	namespace readWriteLock_stdMutex_v1 {
 
-		class stdMutex
+		class ReadWriteLock
 		{
 		public:
 			void acquireReadLock()
@@ -46,7 +46,11 @@ namespace mm {
 			std::mutex m_;
 		};
 
-		class stdReadWriteLock
+	}
+
+	namespace readWriteLock_stdSharedMutex_v1 {
+
+		class ReadWriteLock
 		{
 		public:
 			void acquireReadLock()

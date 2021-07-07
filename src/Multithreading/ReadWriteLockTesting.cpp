@@ -15,6 +15,7 @@
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 #include "ReadWriteLock_std_v1.h"
+#include "ReadWriteLock_ReadPref_v1.h"
 
 namespace mm {
 
@@ -109,13 +110,13 @@ namespace mm {
 		};
 
 		template<typename T>
-		int testReadWriteLock(const std::string& msg, T& tsq, const std::vector<Operations>& ops)
+		int testReadWriteLock(const std::string& msg, const std::vector<Operations>& ops)
 		{
 			std::random_device rd;
 			std::mt19937 mt(rd());
 			std::uniform_int_distribution<int> dist(1, 100);
 
-			auto threadFunPushPop = [](T& tsq, int iterations) {
+			auto threadFunPushPop = [](ThreadSafeQueue<Object, T>& tsq, int iterations) {
 				for (int i = 1; i <= iterations; ++i)
 				{
 					if (i % 3 == 0)
@@ -125,7 +126,7 @@ namespace mm {
 				}
 			};
 
-			auto threadFunTop = [](T& tsq, int iterations, std::atomic<int>& totalSum) {
+			auto threadFunTop = [](ThreadSafeQueue<Object, T>& tsq, int iterations, std::atomic<int>& totalSum) {
 				for (int i = 0; i < iterations; ++i)
 				{
 					//if (tsq.empty())
@@ -167,6 +168,8 @@ namespace mm {
 
 			int iterations = 1000000;
 			int numWriters = 50;
+			ThreadSafeQueue<Object, T> tsq;
+
 			std::vector<std::thread> writers;
 			writers.reserve(numWriters);
 			for (int i = 0; i < numWriters; ++i)
@@ -235,19 +238,246 @@ namespace mm {
 			//	}
 			//}
 
-			std::cout.imbue(std::locale{ "" });
-			ThreadSafeQueue<Object, readWriteLock_std_v1::stdMutex> tsq1; testReadWriteLock("stdMutex", tsq1, ops);
-			ThreadSafeQueue<Object, readWriteLock_std_v1::stdReadWriteLock> tsq2; testReadWriteLock("stdReadWriteLock", tsq2, ops);
+			testReadWriteLock<readWriteLock_stdMutex_v1::ReadWriteLock>("stdMutex", ops);
+			testReadWriteLock<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("stdReadWriteLock", ops);
+			testReadWriteLock<readWriteLock_ReadPref_v1::ReadWriteLock>("stdReadWriteLock", ops);
+		}
+
+
+
+
+
+
+
+		class ThreadInfo
+		{
+		public:
+			ThreadInfo() = default;
+			~ThreadInfo() = default;
+			ThreadInfo(const ThreadInfo&) = delete;
+			//ThreadInfo(ThreadInfo&& rhs) = default;
+			ThreadInfo(ThreadInfo&& rhs) :
+				//mu_{ std::move(rhs.mu_) },
+				pause_{ std::move(rhs.pause_) }
+				//cv_{ std::move(rhs.cv_) }
+			{
+			}
+			ThreadInfo& operator=(const ThreadInfo&) = delete;
+			ThreadInfo& operator=(ThreadInfo&&) = delete;
+
+			void pause()
+			{
+				std::unique_lock<std::mutex> lock{ mu_ };
+				while (pause_)
+					cv_.wait(lock);
+			}
+
+			void resume()
+			{
+				std::unique_lock<std::mutex> lock{ mu_ };
+				pause_ = false;
+				lock.unlock();
+
+				cv_.notify_all();
+			}
+
+			void resetFlag()
+			{
+				std::unique_lock<std::mutex> lock{ mu_ };
+				pause_ = true;
+			}
+
+		private:
+			std::mutex mu_;
+			bool pause_{ true };
+			std::condition_variable cv_;
+		};
+
+
+		template<typename ReadWriteLockType>
+		class ThreadsafeHashMap
+		{
+		public:
+			ThreadsafeHashMap() = default;
+			~ThreadsafeHashMap() = default;
+			ThreadsafeHashMap(const ThreadsafeHashMap&) = delete;
+			ThreadsafeHashMap(ThreadsafeHashMap&& rhs) :
+				//readWriteLock_{ std::move(rhs.readWriteLock_) },
+				data_{ std::move(rhs.data_) }
+			{
+			}
+			ThreadsafeHashMap& operator=(const ThreadsafeHashMap&) = delete;
+			ThreadsafeHashMap& operator=(ThreadsafeHashMap&&) = delete;
+
+			int get(const std::string& str, ThreadInfo& ti)
+			{
+				readWriteLock_.acquireReadLock();
+				
+				auto it = data_.find(str);
+				int retVal = -1;
+				if (it != data_.end())
+					retVal = it->second;
+				
+				//wait on cv
+				ti.pause();
+
+				readWriteLock_.releaseReadLock();
+
+				return retVal;
+			}
+
+			void set(const std::string& str, int n, ThreadInfo& ti)
+			{
+				readWriteLock_.acquireWriteLock();
+				data_[str] = n;
+
+				//wait on cv
+				ti.pause();
+
+				readWriteLock_.releaseWriteLock();
+			}
+
+		private:
+			ReadWriteLockType readWriteLock_;
+			std::unordered_map<std::string, int> data_;
+		};
+
+		template<typename ReadWriteLockType>
+		class Thread
+		{
+		public:
+			Thread(bool isReader)
+			{
+				auto threadFun = [this](bool isReader) {
+					this->threadInfo_.pause();
+					this->threadInfo_.resetFlag(); //reset flag so that it will pause again in get() and set() below
+
+					if (isReader)
+					{
+						this->map_.get("ten", threadInfo_);
+					}
+					else
+					{
+						this->map_.set("ten", 10, threadInfo_);
+					}
+				};
+
+				thread_ = std::thread{ threadFun, isReader };
+			}
+			Thread(const Thread&) = delete;
+			Thread(Thread&& rhs) :
+				threadInfo_{ std::move(rhs.threadInfo_) },
+				thread_{ std::move(rhs.thread_) },
+				map_{ std::move(rhs.map_) }
+			{
+			}
+			Thread& operator=(const Thread&) = delete;
+			Thread& operator=(Thread&&) = delete;
+
+			~Thread()
+			{
+				if (thread_.joinable())
+					thread_.join();
+			}
+
+			void start()
+			{
+				threadInfo_.resume();
+			}
+
+			void end()
+			{
+				threadInfo_.resume();
+			}
+
+		private:
+			ThreadInfo threadInfo_;
+			std::thread thread_;
+			ThreadsafeHashMap<ReadWriteLockType> map_;
+		};
+
+		enum class OP
+		{
+			SR, //Start Reading
+			ER, //Env   Reading
+			SW, //Start Writing
+			EW  //Env   Writing
+		};
+
+		struct Operation
+		{
+			int threadId_;
+			OP op_;
+		};
+
+		template<typename ReadWriteLockType>
+		void testSingleOperationsSet(size_t numReaders, size_t numWriters, const std::vector<Operation>& ops)
+		{
+			ThreadsafeHashMap<ReadWriteLockType> map;
+			std::vector< Thread<ReadWriteLockType> > readers;
+			readers.reserve(numReaders);
+			for(int i = 0; i < numReaders; ++i)
+				readers.emplace_back(true);
+			std::vector< Thread<ReadWriteLockType> > writers;
+			writers.reserve(numWriters);
+			for (int i = 0; i < numWriters; ++i)
+				writers.emplace_back(false);
+
+			for (const Operation& op : ops)
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+				switch (op.op_)
+				{
+				case OP::SR:
+					readers[op.threadId_].start();
+					break;
+				case OP::ER:
+					readers[op.threadId_].end();
+					break;
+				case OP::SW:
+					writers[op.threadId_].start();
+					break;
+				case OP::EW:
+					writers[op.threadId_].end();
+					break;
+				}
+			}
+		}
+
+		template<typename ReadWriteLockType>
+		void testAllPermutationsOfOperations(const std::string& msg)
+		{
+			OP SR = OP::SR; //Start Reading
+			OP ER = OP::ER; //Env   Reading
+			OP SW = OP::SW; //Start Writing
+			OP EW = OP::EW; //Env   Writing
+			std::vector< std::vector<Operation> > ops{
+				{ {0, SR}, {0, ER}, {1, SR}, {1, ER}, {0, SW}, {0, EW}, {1, SW}, {1, EW}  }
+			};
+
+			for (int i = 0; i < ops.size(); ++i)
+			{
+				testSingleOperationsSet<ReadWriteLockType>(2, 2, ops[i]);
+			}
+		}
+
+		void testAllReadWriteLocksInSteps()
+		{
+			testAllPermutationsOfOperations<readWriteLock_stdMutex_v1::ReadWriteLock>("stdMutex");
+			testAllPermutationsOfOperations<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("stdReadWriteLock");
+			testAllPermutationsOfOperations<readWriteLock_ReadPref_v1::ReadWriteLock>("stdReadWriteLock");
 		}
 
 	}
-
 
 	MM_DECLARE_FLAG(ReadWriteLock);
 
 	MM_UNIT_TEST(ReadWriteLock_Test, ReadWriteLock)
 	{
-		readWriteLockTesting::testAllReadWriteLocks();
+		std::cout.imbue(std::locale{ "" });
+		//readWriteLockTesting::testAllReadWriteLocks();
+		readWriteLockTesting::testAllReadWriteLocksInSteps();
 	}
 }
 
