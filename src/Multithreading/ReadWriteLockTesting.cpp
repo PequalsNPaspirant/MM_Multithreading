@@ -12,6 +12,7 @@
 #include <random>
 #include <queue>
 #include <atomic>
+#include <utility>
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 #include "ReadWriteLock_std_v1.h"
@@ -406,6 +407,48 @@ namespace mm {
 
 		struct Operation
 		{
+			Operation(int threadId, OP op) :
+				threadId_{ threadId }, op_{ op }
+			{}
+
+			Operation(const Operation&) = default;
+			Operation(Operation&&) = default;
+			Operation& operator=(const Operation&) = default;
+			Operation& operator=(Operation&&) = default;
+
+			bool operator==(const Operation& rhs) const
+			{
+				return op_ == rhs.op_;
+			}
+
+			std::string toString()
+			{
+				std::string retVal;
+
+				retVal += "{";
+				retVal += std::to_string(threadId_);
+				retVal += ", ";
+
+				switch (op_)
+				{
+				case OP::SR:
+					retVal += "SR";
+					break;
+				case OP::ER:
+					retVal += "ER";
+					break;
+				case OP::SW:
+					retVal += "SW";
+					break;
+				case OP::EW:
+					retVal += "EW";
+					break;
+				}
+				retVal += "}";
+
+				return retVal;
+			}
+
 			int threadId_;
 			OP op_;
 		};
@@ -425,7 +468,7 @@ namespace mm {
 
 			for (const Operation& op : ops)
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				std::this_thread::sleep_for(std::chrono::microseconds(1));
 
 				switch (op.op_)
 				{
@@ -445,6 +488,95 @@ namespace mm {
 			}
 		}
 
+		//Generates all n! permutations
+		void generateAllPermutationsUniqueItems(std::vector<Operation>&& op, const int indexOfElementToSwap, std::vector< std::vector<Operation> >& retVal)
+		{
+			if (op.size() == indexOfElementToSwap)
+			{
+				retVal.push_back(std::move(op));
+				return;
+			}
+
+			for (int i = indexOfElementToSwap; i < op.size(); ++i)
+			{
+				std::vector<Operation> copy = op;
+				if (indexOfElementToSwap != i) 
+					std::swap(copy[indexOfElementToSwap], copy[i]);
+
+				generateAllPermutationsUniqueItems(std::move(copy), indexOfElementToSwap + 1, retVal);
+			}
+		}
+
+		//Generates all n! permutations
+		void generateAllPermutationsRepeatedItems(std::vector<Operation>&& op, const int indexOfElementToSwap, std::vector< std::vector<Operation> >& retVal)
+		{
+			if (op.size() == indexOfElementToSwap)
+			{
+				retVal.push_back(std::move(op));
+				return;
+			}
+
+			for (int i = indexOfElementToSwap; i < op.size(); ++i)
+			{
+				if (indexOfElementToSwap != i && op[indexOfElementToSwap] == op[i])
+					continue;
+
+				std::vector<Operation> copy = op;
+				if (indexOfElementToSwap != i)
+					std::swap(copy[indexOfElementToSwap], copy[i]);
+
+				generateAllPermutationsRepeatedItems(std::move(copy), indexOfElementToSwap + 1, retVal);
+			}
+		}
+
+		//Generates all valid permutations = (n/2)! / ((n/4)!*(n/4)!)  *  ((n/4)/(n/4))! / ((n/4)!*(n/4)!)
+		//n/2 read threads and n/2 write threads
+		//n/2 start operations (n/4 start read thread op and n/4 start write thread op) can be arranged in (n/2)! / ((n/4)!*(n/4)!) since there are n/4 similar items
+		//n/2 end operations (n/4 end read thread op and n/4 end write thread op)can be arranged in n/2 possible places after their respective start operations
+		//for n = 8, 4! / (2!*2!) * 4! / (2!*2!) = 3*2 * 3*2 = 36
+		void generateAllValidPermutations(const size_t expectedSize, std::vector<Operation>&& op, const int indexOfElementToSwap, std::vector< std::vector<Operation> >& retVal)
+		{
+			if (op.size() == expectedSize && op.size() == indexOfElementToSwap)
+			{
+				retVal.push_back(std::move(op));
+				return;
+			}
+
+			if (indexOfElementToSwap > 0)
+			{
+				switch (op[indexOfElementToSwap - 1].op_)
+				{
+				case OP::SR: op.push_back(Operation{ op[indexOfElementToSwap - 1].threadId_, OP::ER });
+					break;
+				case OP::SW: op.push_back(Operation{ op[indexOfElementToSwap - 1].threadId_, OP::EW });
+					break;
+				default:
+					break;
+				}
+			}
+
+			for (int i = indexOfElementToSwap; i < op.size(); ++i)
+			{
+				if (indexOfElementToSwap != i && op[indexOfElementToSwap].op_ == op[i].op_)
+					continue;
+
+				std::vector<Operation> copy = op;
+				if (indexOfElementToSwap != i)
+					std::swap(copy[indexOfElementToSwap], copy[i]);
+
+				generateAllValidPermutations(expectedSize, std::move(copy), indexOfElementToSwap + 1, retVal);
+			}
+		}
+
+		size_t getFactorial(size_t n)
+		{
+			size_t retVal = 1;
+			for (size_t i = n; i > 0; --i)
+				retVal *= i;
+
+			return retVal;
+		}
+
 		template<typename ReadWriteLockType>
 		void testAllPermutationsOfOperations(const std::string& msg)
 		{
@@ -452,12 +584,46 @@ namespace mm {
 			OP ER = OP::ER; //Env   Reading
 			OP SW = OP::SW; //Start Writing
 			OP EW = OP::EW; //Env   Writing
-			std::vector< std::vector<Operation> > ops{
-				{ {0, SR}, {0, ER}, {1, SR}, {1, ER}, {0, SW}, {0, EW}, {1, SW}, {1, EW}  }
-			};
 
+			//std::vector<Operation> op{ { {0, SR}, { 0, ER } } };
+			std::vector<Operation> op{ { {0, SR}, { 1, SR }, { 0, SW }, { 1, SW }  } };
+			//std::vector<Operation> op{ { {0, SR}, { 0, ER }, { 1, SR }, { 1, ER }, { 0, SW }, { 0, EW }, { 1, SW }, { 1, EW }  } };
+			std::vector< std::vector<Operation> > ops;
+			size_t size = getFactorial(op.size());
+			ops.reserve(size);
+			
+			generateAllValidPermutations(2 * op.size(), std::move(op), 0, ops);
+
+			//{
+			//	{ {0, SR}, {0, ER}, {1, SR}, {1, ER}, {0, SW}, {0, EW}, {1, SW}, {1, EW}  },
+			//	{ {0, SR}, {1, SR}, {0, ER}, {1, ER}, {0, SW}, {0, EW}, {1, SW}, {1, EW}  },
+			//	{ {0, SR}, {1, SR}, {1, ER}, {0, ER}, {0, SW}, {0, EW}, {1, SW}, {1, EW}  },
+			//	{ {0, SR}, {1, SR}, {1, ER}, {0, SW}, {0, ER}, {0, EW}, {1, SW}, {1, EW}  },
+			//	{ {0, SR}, {1, SR}, {1, ER}, {0, SW}, {0, EW}, {0, ER}, {1, SW}, {1, EW}  },
+			//	{ {0, SR}, {1, SR}, {1, ER}, {0, SW}, {0, EW}, {1, SW}, {0, ER}, {1, EW}  },
+			//	{ {0, SR}, {1, SR}, {1, ER}, {0, SW}, {0, EW}, {1, SW}, {1, EW}, {0, ER}  },
+			//	{ {0, SR}, {0, ER}, {1, SR}, {0, SW}, {1, ER}, {0, EW}, {1, SW}, {1, EW}  },
+			//	{ {0, SR}, {0, ER}, {1, SR}, {0, SW}, {0, EW}, {1, ER}, {1, SW}, {1, EW}  },
+			//	{ {0, SR}, {0, ER}, {1, SR}, {0, SW}, {0, EW}, {1, SW}, {1, ER}, {1, EW}  },
+			//	{ {0, SR}, {0, ER}, {1, SR}, {0, SW}, {0, EW}, {1, SW}, {1, EW}, {1, ER}  },
+			//	{ {0, SR}, {0, ER}, {1, SR}, {1, ER}, {0, SW}, {0, EW}, {1, SW}, {1, EW}  },
+			//};
+
+			//for (int i = 0; i < ops.size(); ++i)
+			//{
+			//	std::cout << "\n";
+			//	for (int j = 0; j < ops[i].size(); ++j)
+			//	{
+			//		std::cout << ops[i][j].toString() << ", ";
+			//	}
+			//}
+
+			std::cout << "\n";
 			for (int i = 0; i < ops.size(); ++i)
 			{
+				if (i % 10 == 0)
+					std::cout << "\rDone testSingleOperationsSet() for: " << i;
+
 				testSingleOperationsSet<ReadWriteLockType>(2, 2, ops[i]);
 			}
 		}
