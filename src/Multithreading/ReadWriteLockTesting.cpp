@@ -17,6 +17,8 @@
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 #include "ReadWriteLock_std_v1.h"
 #include "ReadWriteLock_ReadPref_v1.h"
+#include "ReadWriteLock_WritePref_v1.h"
+#include "ReadWriteLock_NoPref_v1.h"
 
 namespace mm {
 
@@ -77,7 +79,7 @@ namespace mm {
 				lock_.releaseWriteLock();
 			}
 
-			const T& top()
+			const T& front()
 			{
 				if (empty())
 					throw std::runtime_error{ "Queue underflow" };
@@ -127,7 +129,7 @@ namespace mm {
 				}
 			};
 
-			auto threadFunTop = [](ThreadSafeQueue<Object, T>& tsq, int iterations, std::atomic<int>& totalSum) {
+			auto threadFunFront = [](ThreadSafeQueue<Object, T>& tsq, int iterations, std::atomic<int>& totalSum) {
 				for (int i = 0; i < iterations; ++i)
 				{
 					//if (tsq.empty())
@@ -136,7 +138,7 @@ namespace mm {
 					//	continue;
 					//}
 
-					Object obj = tsq.top();
+					Object obj = tsq.front();
 					int sum = obj.getSum();
 					totalSum += sum;
 					break;
@@ -185,7 +187,7 @@ namespace mm {
 			tsq.push(Object{ 0 }); //Push one object to be on safer side in case writers lag behind and reader threads start executing first
 			for (int i = 0; i < numReaders; ++i)
 			{
-				readers.push_back(std::thread{ threadFunTop, std::ref(tsq), iterations, std::ref(totalSum) });
+				readers.push_back(std::thread{ threadFunFront, std::ref(tsq), iterations, std::ref(totalSum) });
 			}
 
 			for (int i = 0; i < writers.size(); ++i)
@@ -238,10 +240,11 @@ namespace mm {
 			//		++queueSize;
 			//	}
 			//}
+			std::cout << "\n\n----testAllReadWriteLocks----\n";
 
 			testReadWriteLock<readWriteLock_stdMutex_v1::ReadWriteLock>("stdMutex", ops);
 			testReadWriteLock<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("stdReadWriteLock", ops);
-			testReadWriteLock<readWriteLock_ReadPref_v1::ReadWriteLock>("stdReadWriteLock", ops);
+			testReadWriteLock<readWriteLock_NoPref_v1::ReadWriteLock>("stdReadWriteLock", ops);
 		}
 
 
@@ -618,7 +621,6 @@ namespace mm {
 			//	}
 			//}
 
-			std::cout << "\n";
 			for (int i = 0; i < ops.size(); ++i)
 			{
 				if (i % 10 == 0)
@@ -630,6 +632,8 @@ namespace mm {
 
 		void testAllReadWriteLocksInSteps()
 		{
+			std::cout << "\n\n----testAllReadWriteLocksInSteps----\n";
+
 			testAllPermutationsOfOperations<readWriteLock_stdMutex_v1::ReadWriteLock>("stdMutex");
 			testAllPermutationsOfOperations<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("stdReadWriteLock");
 			testAllPermutationsOfOperations<readWriteLock_ReadPref_v1::ReadWriteLock>("stdReadWriteLock");
@@ -642,7 +646,7 @@ namespace mm {
 	MM_UNIT_TEST(ReadWriteLock_Test, ReadWriteLock)
 	{
 		std::cout.imbue(std::locale{ "" });
-		//readWriteLockTesting::testAllReadWriteLocks();
+		readWriteLockTesting::testAllReadWriteLocks();
 		readWriteLockTesting::testAllReadWriteLocksInSteps();
 	}
 }
