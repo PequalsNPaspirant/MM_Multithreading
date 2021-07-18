@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v1.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v2.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v1.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ConditionVariableUsingMutex.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ConditionVariableUsingSemaphore.h" />

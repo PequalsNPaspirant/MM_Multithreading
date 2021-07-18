@@ -19,6 +19,7 @@
 #include "ReadWriteLock_ReadPref_v1.h"
 #include "ReadWriteLock_WritePref_v1.h"
 #include "ReadWriteLock_NoPref_v1.h"
+#include "ReadWriteLock_NoPref_v2.h"
 
 namespace mm {
 
@@ -245,6 +246,7 @@ namespace mm {
 			testReadWriteLock<readWriteLock_stdMutex_v1::ReadWriteLock>("stdMutex", ops);
 			testReadWriteLock<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("stdReadWriteLock", ops);
 			testReadWriteLock<readWriteLock_NoPref_v1::ReadWriteLock>("stdReadWriteLock", ops);
+			testReadWriteLock<readWriteLock_NoPref_v2::ReadWriteLock>("stdReadWriteLock", ops);
 		}
 
 
