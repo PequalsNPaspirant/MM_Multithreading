@@ -311,28 +311,37 @@ namespace mm {
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
 				while (pause_)
-					cv_.wait(lock);
+					cvPause_.wait(lock);
+
+				pause_ = true; //reset it to notify thread waiting on cvResume_ and for all next threads to wait on cvPause_
+				lock.unlock();
+
+				cvResume_.notify_one();
 			}
 
 			void resume()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-				pause_ = false;
+				while (!pause_)
+					cvResume_.wait(lock);
+
+				pause_ = false; //reset it to notify thread waiting on cvPause_ and for all next threads to wait on cvResume_
 				lock.unlock();
 
-				cv_.notify_all();
+				cvPause_.notify_one();
 			}
 
-			void resetFlag()
-			{
-				std::unique_lock<std::mutex> lock{ mu_ };
-				pause_ = true;
-			}
+			//void resetFlag()
+			//{
+			//	std::unique_lock<std::mutex> lock{ mu_ };
+			//	pause_ = true;
+			//}
 
 		private:
 			std::mutex mu_;
 			bool pause_{ true };
-			std::condition_variable cv_;
+			std::condition_variable cvPause_;
+			std::condition_variable cvResume_;
 		};
 
 
@@ -381,11 +390,12 @@ namespace mm {
 			{
 				readWriteLock_.acquireWriteLock();
 				size_.reset();
-				data_[str] = n;
+				//data_.clear();
 
 				//wait on cv
 				ti.pause();
 
+				data_[str] = n;
 				size_ = std::make_unique<size_t>(data_.size());
 				readWriteLock_.releaseWriteLock();
 			}
@@ -393,7 +403,7 @@ namespace mm {
 		private:
 			ReadWriteLockType readWriteLock_;
 			std::unordered_map<std::string, int> data_;
-			std::unique_ptr<size_t> size_; //Intentionally keeping unique_ptr so that write op will change the memory location
+			std::unique_ptr<size_t> size_{ std::make_unique<size_t>(data_.size()) }; //Intentionally keeping unique_ptr so that write op will change the memory location
 		};
 
 		template<typename ReadWriteLockType>
@@ -404,7 +414,7 @@ namespace mm {
 			{
 				auto threadFun = [this](bool isReader) {
 					this->threadInfo_.pause();
-					this->threadInfo_.resetFlag(); //reset flag so that it will pause again in get() and set() below
+					//this->threadInfo_.resetFlag(); //reset flag so that it will pause again in get() and set() below
 
 					if (isReader)
 					{
@@ -434,12 +444,7 @@ namespace mm {
 					thread_.join();
 			}
 
-			void start()
-			{
-				threadInfo_.resume();
-			}
-
-			void end()
+			void resume()
 			{
 				threadInfo_.resume();
 			}
@@ -453,9 +458,9 @@ namespace mm {
 		enum class OP
 		{
 			SR, //Start Reading
-			ER, //Env   Reading
+			ER, //End   Reading
 			SW, //Start Writing
-			EW  //Env   Writing
+			EW  //End   Writing
 		};
 
 		struct Operation
@@ -526,16 +531,16 @@ namespace mm {
 				switch (op.op_)
 				{
 				case OP::SR:
-					readers[op.threadId_].start();
+					readers[op.threadId_].resume();
 					break;
 				case OP::ER:
-					readers[op.threadId_].end();
+					readers[op.threadId_].resume();
 					break;
 				case OP::SW:
-					writers[op.threadId_].start();
+					writers[op.threadId_].resume();
 					break;
 				case OP::EW:
-					writers[op.threadId_].end();
+					writers[op.threadId_].resume();
 					break;
 				}
 			}
@@ -673,8 +678,8 @@ namespace mm {
 
 			for (int i = 0; i < ops.size(); ++i)
 			{
-				if (i % 10 == 0)
-					std::cout << "\rtestSingleOperationsSet(): " << msg << ": " << i << " operations done";
+				if (i % 2 == 0)
+					std::cout << "\r" << std::setw(36) << msg << ": " << i << " operations done";
 
 				testSingleOperationsSet<ReadWriteLockType>(2, 2, ops[i]);
 			}
@@ -710,7 +715,7 @@ namespace mm {
 	MM_UNIT_TEST(ReadWriteLock_Test, ReadWriteLock)
 	{
 		std::cout.imbue(std::locale{ "" });
-		readWriteLockTesting::testAllReadWriteLocks();
+		//readWriteLockTesting::testAllReadWriteLocks();
 		readWriteLockTesting::testAllReadWriteLocksInSteps();
 	}
 }
