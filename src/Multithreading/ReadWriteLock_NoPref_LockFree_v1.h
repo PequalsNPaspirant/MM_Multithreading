@@ -11,68 +11,51 @@
 #include <mutex>
 #include <shared_mutex>
 #include <condition_variable>
-
-#include "SemaphoreUsingConditionVariable.h"
+#include <atomic>
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
-//Reference: https://en.wikipedia.org/wiki/Readers%E2%80%93writers_problem
-
 namespace mm {
 
-	namespace readWriteLock_NoPref_v1 {
+	namespace readWriteLock_NoPref_LockFree_v1 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				serviceQueue_.P();
+				++numReaders_; //equivalent to numReaders_.fetch_add(1)
 
-				std::unique_lock<std::mutex> lock{ mu_ };
-
-				++numReadersActive_;
-
-				if (numReadersActive_ == 1)
-					resource_.P();
-
-				serviceQueue_.V();
-
-				lock.unlock();
+				while (numWriters_.load(std::memory_order_acquire) > 0)
+					std::this_thread::yield();
 			}
 
 			void unlock_shared()
 			{
-				std::unique_lock<std::mutex> lock{ mu_ };
-
-				--numReadersActive_;
-
-				if(numReadersActive_ == 0)
-					resource_.V();
-
-				lock.unlock();
+				--numReaders_; //equivalent to numReaders_.fetch_sub(1)
 			}
 
 			void lock()
 			{
-				serviceQueue_.P();
+				++numWriters_; //equivalent to numWriters_.fetch_add(1)
 
-				resource_.P();
-				
-				serviceQueue_.V();
+				while (numReaders_.load(std::memory_order_acquire) > 0
+					|| writterActive_.load(std::memory_order_acquire) == true)
+					std::this_thread::yield();
+
+				writterActive_.store(true, std::memory_order_release);
 			}
 
 			void unlock()
 			{
-				resource_.V();
+				--numWriters_; //equivalent to numWriters_.fetch_sub(1)
+				writterActive_.store(false, std::memory_order_release);
 			}
 
 		private:
-			std::mutex mu_;
-			SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable resource_{ 1 };
-			SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable serviceQueue_{ 1 };
-
-			int numReadersActive_{ 0 };
+			std::atomic<int> numReaders_{ 0 };
+			std::atomic<int> numWriters_{ 0 };
+			std::atomic<bool> writterActive_{ false };
 		};
 
 		/*

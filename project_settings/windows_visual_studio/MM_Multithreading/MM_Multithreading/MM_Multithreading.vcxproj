@@ -48,12 +48,18 @@
     <ClCompile Include="..\..\..\..\src\_MM_Multithreading_main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v1.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v2.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_v2.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v3.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v1.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_LockFree_v1.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v2.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v1.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v1.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_v1.h" />
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v2.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ConditionVariableUsingMutex.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ConditionVariableUsingSemaphore.h" />
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_v1.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\SemaphoreUsingConditionVariable.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_std_v1.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\CacheStatusManager_v1.h" />

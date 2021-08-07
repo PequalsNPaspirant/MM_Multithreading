@@ -119,16 +119,16 @@ namespace mm {
 			~CacheStatusManager() = default;
 
 			template<typename Fun, typename... Args>
-			ValueType setOrGet(const KeyType& key, int numRetries, bool wait, size_t timeoutMilliSec, Fun funToCreateValue, Args... args)
+			ValueType setAndGet(const KeyType& key, int numRetries, bool wait, size_t timeoutMilliSec, Fun funToCreateValue, Args... args)
 			{
 				ValueType value;
-				for (int tries = 0; !value && tries < numRetries; ++tries) //if this thread timed out, try again for numRetries times
+				for (int tries = 0; !value && tries <= numRetries; ++tries) //if this thread timed out, try again for numRetries times
 				{
 					log("DEBG", "CacheStatusManager: setOrGet: tries: ", tries);
 					WriteAccess wa = getWriteAccess(key);
 					if (wa.accessGranted())
 					{
-						value = funToCreateValue(forward<Args>(args)...); //this function may throw
+						value = funToCreateValue(std::forward<Args>(args)...); //this function may throw
 						wa.set(value);
 					}
 					else //wait for cache to be updated

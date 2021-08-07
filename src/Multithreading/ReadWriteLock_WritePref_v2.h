@@ -12,31 +12,25 @@
 #include <shared_mutex>
 #include <condition_variable>
 
-#include "SemaphoreUsingConditionVariable.h"
-
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
-//Reference: https://en.wikipedia.org/wiki/Readers%E2%80%93writers_problem
+//Reference: https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock
 
 namespace mm {
 
-	namespace readWriteLock_NoPref_v1 {
+	namespace readWriteLock_WritePref_v2 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				serviceQueue_.P();
-
 				std::unique_lock<std::mutex> lock{ mu_ };
 
+				while (numWritersWaiting_ > 0 || writterActive_)
+					cv_.wait(lock);
+
 				++numReadersActive_;
-
-				if (numReadersActive_ == 1)
-					resource_.P();
-
-				serviceQueue_.V();
 
 				lock.unlock();
 			}
@@ -44,35 +38,42 @@ namespace mm {
 			void unlock_shared()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-
 				--numReadersActive_;
+				lock.unlock();
 
 				if(numReadersActive_ == 0)
-					resource_.V();
-
-				lock.unlock();
+					cv_.notify_all();
 			}
 
 			void lock()
 			{
-				serviceQueue_.P();
+				std::unique_lock<std::mutex> lock{ mu_ };
+				++numWritersWaiting_;
 
-				resource_.P();
-				
-				serviceQueue_.V();
+				while (numReadersActive_ > 0 || writterActive_)
+					cv_.wait(lock);
+
+				--numWritersWaiting_;
+				writterActive_ = true;
+				lock.unlock();
 			}
 
 			void unlock()
 			{
-				resource_.V();
+				std::unique_lock<std::mutex> lock{ mu_ };
+				writterActive_ = false;
+				lock.unlock();
+
+				cv_.notify_all();
 			}
 
 		private:
 			std::mutex mu_;
-			SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable resource_{ 1 };
-			SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable serviceQueue_{ 1 };
+			std::condition_variable cv_;
 
 			int numReadersActive_{ 0 };
+			int numWritersWaiting_{ 0 };
+			bool writterActive_{ false };
 		};
 
 		/*
@@ -80,12 +81,12 @@ namespace mm {
 		0 -                                                                        start
 
 
-		1 -                                   R1                                                                          W1 
+		1 -                                   R1                                                                          W1
 
 
-		2 -               R2                                  W2                       	              R2                                  W2             
+		2 -               R2                                  W2                       	              R2                                  W2
 
-		3 -       R3               W3                 R3               W3                     R3               W3                 R3               W3     
+		3 -       R3               W3                 R3               W3                     R3               W3                 R3               W3
 		4 -    R4    W4         R4    W4		   R4    W4         R4    W4			   R4    W4         R4    W4		   R4    W4         R4    W4
 		*/
 

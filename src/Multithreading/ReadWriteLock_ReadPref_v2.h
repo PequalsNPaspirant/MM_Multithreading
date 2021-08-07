@@ -12,31 +12,23 @@
 #include <shared_mutex>
 #include <condition_variable>
 
-#include "SemaphoreUsingConditionVariable.h"
-
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
-
-//Reference: https://en.wikipedia.org/wiki/Readers%E2%80%93writers_problem
 
 namespace mm {
 
-	namespace readWriteLock_NoPref_v1 {
+	namespace readWriteLock_ReadPref_v2 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				serviceQueue_.P();
-
 				std::unique_lock<std::mutex> lock{ mu_ };
 
 				++numReadersActive_;
 
-				if (numReadersActive_ == 1)
-					resource_.P();
-
-				serviceQueue_.V();
+				while (writterActive_)
+					cv_.wait(lock);
 
 				lock.unlock();
 			}
@@ -44,35 +36,42 @@ namespace mm {
 			void unlock_shared()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-
 				--numReadersActive_;
-
-				if(numReadersActive_ == 0)
-					resource_.V();
-
 				lock.unlock();
+
+				if (numReadersActive_ == 0)
+					cv_.notify_all();
 			}
 
 			void lock()
 			{
-				serviceQueue_.P();
+				std::unique_lock<std::mutex> lock{ mu_ };
 
-				resource_.P();
-				
-				serviceQueue_.V();
+				while (numReadersActive_ > 0 || writterActive_)
+					cv_.wait(lock);
+
+				writterActive_ = true;
+				//++numWritersActive_;
+				lock.unlock();
 			}
 
 			void unlock()
 			{
-				resource_.V();
+				std::unique_lock<std::mutex> lock{ mu_ };
+				//--numWritersActive_;
+				writterActive_ = false;
+				lock.unlock();
+
+				cv_.notify_all();
 			}
 
 		private:
 			std::mutex mu_;
-			SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable resource_{ 1 };
-			SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable serviceQueue_{ 1 };
+			std::condition_variable cv_;
 
 			int numReadersActive_{ 0 };
+			//int numWritersActive_{ 0 };
+			bool writterActive_{ false };
 		};
 
 		/*

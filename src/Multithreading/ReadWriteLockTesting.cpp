@@ -16,10 +16,19 @@
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 #include "ReadWriteLock_std_v1.h"
-#include "ReadWriteLock_ReadPref_v1.h"
-#include "ReadWriteLock_WritePref_v1.h"
+
 #include "ReadWriteLock_NoPref_v1.h"
 #include "ReadWriteLock_NoPref_v2.h"
+#include "ReadWriteLock_NoPref_LockFree_v1.h"
+#include "ReadWriteLock_NoPref_LockFree_v2.h"
+
+#include "ReadWriteLock_ReadPref_v1.h"
+#include "ReadWriteLock_ReadPref_v2.h"
+#include "ReadWriteLock_ReadPref_LockFree_v1.h"
+
+#include "ReadWriteLock_WritePref_v1.h"
+#include "ReadWriteLock_WritePref_v2.h"
+#include "ReadWriteLock_WritePref_v3.h"
 
 namespace mm {
 
@@ -59,14 +68,18 @@ namespace mm {
 			int data_;
 		};
 
-		template<typename T, typename Lock>
+		template<typename ObjectType, typename LockType>
 		class ThreadSafeQueue
 		{
 		public:
-			void push(T&& obj)
+			void push(ObjectType&& obj)
 			{
-				lock_.acquireWriteLock();
+				lock_.acquireWriteLock();				
+				size_.reset();
+
 				buffer_.push(std::move(obj));
+
+				size_ = std::make_unique<size_t>(buffer_.size());
 				lock_.releaseWriteLock();
 			}
 
@@ -76,17 +89,28 @@ namespace mm {
 					throw std::runtime_error{ "Queue underflow" };
 
 				lock_.acquireWriteLock();
+				size_.reset();
+
 				buffer_.pop();
+
+				size_ = std::make_unique<size_t>(buffer_.size());
 				lock_.releaseWriteLock();
 			}
 
-			const T& front()
+			const ObjectType& front()
 			{
 				if (empty())
 					throw std::runtime_error{ "Queue underflow" };
 
 				lock_.acquireReadLock();
-				const T& retVal = buffer_.front();
+				size_t* sz = size_.get();
+				if (sz == nullptr || buffer_.size() != *sz)
+					throw std::runtime_error{ "Size is not equal to queue size" };
+
+				const ObjectType& retVal = buffer_.front();
+
+				if (sz == nullptr || buffer_.size() != *sz)
+					throw std::runtime_error{ "Size is not equal to queue size" };
 				lock_.releaseReadLock();
 
 				return retVal;
@@ -102,8 +126,9 @@ namespace mm {
 			}
 
 		private:
-			std::queue<T> buffer_;
-			Lock lock_;
+			std::queue<ObjectType> buffer_;
+			std::unique_ptr<size_t> size_; //Intentionally keeping unique_ptr so that write op will change the memory location
+			LockType lock_;
 		};
 
 		enum class Operations
@@ -113,14 +138,14 @@ namespace mm {
 			top
 		};
 
-		template<typename T>
+		template<typename LockType>
 		int testReadWriteLock(const std::string& msg, const std::vector<Operations>& ops)
 		{
 			std::random_device rd;
 			std::mt19937 mt(rd());
 			std::uniform_int_distribution<int> dist(1, 100);
 
-			auto threadFunPushPop = [](ThreadSafeQueue<Object, T>& tsq, int iterations) {
+			auto threadFunPushPop = [](ThreadSafeQueue<Object, LockType>& tsq, int iterations) {
 				for (int i = 1; i <= iterations; ++i)
 				{
 					if (i % 3 == 0)
@@ -130,7 +155,7 @@ namespace mm {
 				}
 			};
 
-			auto threadFunFront = [](ThreadSafeQueue<Object, T>& tsq, int iterations, std::atomic<int>& totalSum) {
+			auto threadFunFront = [](ThreadSafeQueue<Object, LockType>& tsq, int iterations, std::atomic<int>& totalSum) {
 				for (int i = 0; i < iterations; ++i)
 				{
 					//if (tsq.empty())
@@ -172,7 +197,7 @@ namespace mm {
 
 			int iterations = 1000000;
 			int numWriters = 50;
-			ThreadSafeQueue<Object, T> tsq;
+			ThreadSafeQueue<Object, LockType> tsq;
 
 			std::vector<std::thread> writers;
 			writers.reserve(numWriters);
@@ -204,9 +229,9 @@ namespace mm {
 			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 			
 			long long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-			std::cout << "\n" << std::setw(20) << msg
-				<< " duration: " << std::setw(12) << duration << " ns"
-				<< " totalSum: " << std::setw(6) << totalSum
+			std::cout << "\n" << std::setw(35) << msg
+				<< " duration: " << std::setw(18) << duration << " ns"
+				<< "   totalSum: " << std::setw(12) << totalSum
 				//<< " emptyCount: " << std::setw(6) << emptyCount
 				;
 
@@ -243,10 +268,21 @@ namespace mm {
 			//}
 			std::cout << "\n\n----testAllReadWriteLocks----\n";
 
-			testReadWriteLock<readWriteLock_stdMutex_v1::ReadWriteLock>("stdMutex", ops);
-			testReadWriteLock<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("stdReadWriteLock", ops);
-			testReadWriteLock<readWriteLock_NoPref_v1::ReadWriteLock>("stdReadWriteLock", ops);
-			testReadWriteLock<readWriteLock_NoPref_v2::ReadWriteLock>("stdReadWriteLock", ops);
+			testReadWriteLock<readWriteLock_stdMutex_v1::ReadWriteLock>("readWriteLock_stdMutex_v1", ops);
+			testReadWriteLock<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("readWriteLock_stdSharedMutex_v1", ops);
+			
+			testReadWriteLock<readWriteLock_NoPref_v1::ReadWriteLock>("readWriteLock_NoPref_v1", ops);
+			//testReadWriteLock<readWriteLock_NoPref_v2::ReadWriteLock>("readWriteLock_NoPref_v2", ops);
+			//testReadWriteLock<readWriteLock_NoPref_LockFree_v1::ReadWriteLock>("readWriteLock_NoPref_LockFree_v1", ops);
+			//testReadWriteLock<readWriteLock_NoPref_LockFree_v2::ReadWriteLock>("readWriteLock_NoPref_LockFree_v2", ops);
+
+			testReadWriteLock<readWriteLock_ReadPref_v1::ReadWriteLock>("readWriteLock_ReadPref_v1", ops);
+			testReadWriteLock<readWriteLock_ReadPref_v2::ReadWriteLock>("readWriteLock_ReadPref_v2", ops);
+			//testReadWriteLock<readWriteLock_ReadPref_LockFree_v1::ReadWriteLock>("ReadWriteLock_ReadPref_LockFree_v1", ops);
+
+			testReadWriteLock<readWriteLock_WritePref_v1::ReadWriteLock>("readWriteLock_WritePref_v1", ops);
+			testReadWriteLock<readWriteLock_WritePref_v2::ReadWriteLock>("readWriteLock_WritePref_v2", ops);
+			//testReadWriteLock<readWriteLock_WritePref_v3::ReadWriteLock>("readWriteLock_WritePref_v3", ops);
 		}
 
 
@@ -318,14 +354,23 @@ namespace mm {
 			int get(const std::string& str, ThreadInfo& ti)
 			{
 				readWriteLock_.acquireReadLock();
-				
+				size_t* sz = size_.get();
+				if (sz == nullptr || data_.size() != *sz)
+					throw std::runtime_error{ "Size is not equal to hash map size" };
+
 				auto it = data_.find(str);
 				int retVal = -1;
 				if (it != data_.end())
 					retVal = it->second;
 				
+				if (sz == nullptr || data_.size() != *sz)
+					throw std::runtime_error{ "Size is not equal to hash map size" };
+
 				//wait on cv
 				ti.pause();
+
+				if (sz == nullptr || data_.size() != *sz)
+					throw std::runtime_error{ "Size is not equal to hash map size" };
 
 				readWriteLock_.releaseReadLock();
 
@@ -335,17 +380,20 @@ namespace mm {
 			void set(const std::string& str, int n, ThreadInfo& ti)
 			{
 				readWriteLock_.acquireWriteLock();
+				size_.reset();
 				data_[str] = n;
 
 				//wait on cv
 				ti.pause();
 
+				size_ = std::make_unique<size_t>(data_.size());
 				readWriteLock_.releaseWriteLock();
 			}
 
 		private:
 			ReadWriteLockType readWriteLock_;
 			std::unordered_map<std::string, int> data_;
+			std::unique_ptr<size_t> size_; //Intentionally keeping unique_ptr so that write op will change the memory location
 		};
 
 		template<typename ReadWriteLockType>
@@ -626,19 +674,33 @@ namespace mm {
 			for (int i = 0; i < ops.size(); ++i)
 			{
 				if (i % 10 == 0)
-					std::cout << "\rDone testSingleOperationsSet() for: " << i;
+					std::cout << "\rtestSingleOperationsSet(): " << msg << ": " << i << " operations done";
 
 				testSingleOperationsSet<ReadWriteLockType>(2, 2, ops[i]);
 			}
+
+			std::cout << std::endl;
 		}
 
 		void testAllReadWriteLocksInSteps()
 		{
 			std::cout << "\n\n----testAllReadWriteLocksInSteps----\n";
 
-			testAllPermutationsOfOperations<readWriteLock_stdMutex_v1::ReadWriteLock>("stdMutex");
-			testAllPermutationsOfOperations<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("stdReadWriteLock");
-			testAllPermutationsOfOperations<readWriteLock_ReadPref_v1::ReadWriteLock>("stdReadWriteLock");
+			testAllPermutationsOfOperations<readWriteLock_stdMutex_v1::ReadWriteLock>("readWriteLock_stdMutex_v1");
+			testAllPermutationsOfOperations<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("readWriteLock_stdSharedMutex_v1");
+			
+			testAllPermutationsOfOperations<readWriteLock_NoPref_v1::ReadWriteLock>("readWriteLock_NoPref_v1");
+			//testAllPermutationsOfOperations<readWriteLock_NoPref_v2::ReadWriteLock>("readWriteLock_NoPref_v2");
+			//testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v1::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v1");
+			//testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v2::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v2");
+			
+			testAllPermutationsOfOperations<readWriteLock_ReadPref_v1::ReadWriteLock>("readWriteLock_ReadPref_v1");
+			testAllPermutationsOfOperations<readWriteLock_ReadPref_v2::ReadWriteLock>("readWriteLock_ReadPref_v2");
+			//testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v1::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v1");
+
+			testAllPermutationsOfOperations<readWriteLock_WritePref_v1::ReadWriteLock>("readWriteLock_WritePref_v1");
+			testAllPermutationsOfOperations<readWriteLock_WritePref_v2::ReadWriteLock>("readWriteLock_WritePref_v2");
+			//testAllPermutationsOfOperations<readWriteLock_WritePref_v3::ReadWriteLock>("readWriteLock_WritePref_v3");
 		}
 
 	}

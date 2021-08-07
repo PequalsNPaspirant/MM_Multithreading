@@ -11,68 +11,54 @@
 #include <mutex>
 #include <shared_mutex>
 #include <condition_variable>
-
-#include "SemaphoreUsingConditionVariable.h"
+#include <atomic>
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
-//Reference: https://en.wikipedia.org/wiki/Readers%E2%80%93writers_problem
-
 namespace mm {
 
-	namespace readWriteLock_NoPref_v1 {
+	namespace readWriteLock_NoPref_LockFree_v2 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				serviceQueue_.P();
+				//++numReaderWriters_; //equivalent to numReaderWriters_.fetch_add(1, std::memory_order_seq_cst)
 
-				std::unique_lock<std::mutex> lock{ mu_ };
-
-				++numReadersActive_;
-
-				if (numReadersActive_ == 1)
-					resource_.P();
-
-				serviceQueue_.V();
-
-				lock.unlock();
+				while (numReaderWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
+					std::this_thread::yield();
 			}
 
 			void unlock_shared()
 			{
-				std::unique_lock<std::mutex> lock{ mu_ };
-
-				--numReadersActive_;
-
-				if(numReadersActive_ == 0)
-					resource_.V();
-
-				lock.unlock();
+				--numReaderWriters_; //equivalent to numReaders_.fetch_sub(1, std::memory_order_seq_cst)
 			}
 
 			void lock()
 			{
-				serviceQueue_.P();
+				while (numReaderWriters_.fetch_add(writerMask, std::memory_order_seq_cst) > 0)
+					std::this_thread::yield();
 
-				resource_.P();
-				
-				serviceQueue_.V();
 			}
 
 			void unlock()
 			{
-				resource_.V();
+				numReaderWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
 			}
 
 		private:
-			std::mutex mu_;
-			SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable resource_{ 1 };
-			SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable serviceQueue_{ 1 };
+			/*
 
-			int numReadersActive_{ 0 };
+			|<--   writers  -->|  |<--  readers   -->|
+			1111 1111  1111 1111  1111 1111  1111 1111
+			
+			*/
+
+			//Info: This allows maximum concurrent readers equal to 'maxConcurrentReadersAllowed' to read the data
+			std::atomic<int> numReaderWriters_{ 0 };
+			static constexpr const int writerMask{ 1 << 16 };
+			static constexpr const int maxConcurrentReadersAllowed{ writerMask - 1 };
 		};
 
 		/*

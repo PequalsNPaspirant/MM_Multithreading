@@ -25,10 +25,14 @@ namespace mm {
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
 
-				while (numWriters_ > 0)
+				++numReadersWaiting_;
+
+				//Assuming cv honours the sequence in which the threads are waiting on queue, if writer was woken up, do not allow readers because some writer was waiting in sequence on cv
+				while (writterActive_ || writterWokenUp_)
 					cv_.wait(lock);
 
-				++numReaders_;
+				--numReadersWaiting_;
+				++numReadersActive_;
 
 				lock.unlock();
 			}
@@ -36,30 +40,35 @@ namespace mm {
 			void unlock_shared()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-				--numReaders_;
+				--numReadersActive_;
 				lock.unlock();
 
-				cv_.notify_all();
+				if(numReadersActive_ == 0)
+					cv_.notify_all();
 			}
 
 			void lock()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
 
-				//while (numReaders_ > 0 || writterActive_)
-				while (numReaders_ > 0 || numWriters_ > 0)
-					cv_.wait(lock);
+				++numWritersWaiting_;
 
-				//writterActive_ = true;
-				++numWriters_;
+				while (numReadersActive_ > 0 || writterActive_)
+				{
+					cv_.wait(lock);
+					writterWokenUp_ = true;
+				}
+
+				writterWokenUp_ = false;
+				--numWritersWaiting_;
+				writterActive_ = true;
 				lock.unlock();
 			}
 
 			void unlock()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-				--numWriters_;
-				//writterActive_ = false;
+				writterActive_ = false;
 				lock.unlock();
 
 				cv_.notify_all();
@@ -69,9 +78,11 @@ namespace mm {
 			std::mutex mu_;
 			std::condition_variable cv_;
 
-			int numReaders_{ 0 };
-			int numWriters_{ 0 };
-			//bool writterActive_{ false };
+			int numReadersWaiting_{ 0 };
+			int numReadersActive_{ 0 };
+			int numWritersWaiting_{ 0 };
+			bool writterActive_{ false };
+			bool writterWokenUp_{ false };
 		};
 
 		/*

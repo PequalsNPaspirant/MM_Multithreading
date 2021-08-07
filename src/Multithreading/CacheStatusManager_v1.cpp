@@ -138,7 +138,7 @@ namespace mm {
 						//val = cacheStatusMgr.get(key, false, 0);
 						//if(val)
 						//	log("CRIT", "=======================================================something wrong, value already in cache for key: ", key);
-						val = cacheStatusMgr.setOrGet(key, numRetries, wait, timeoutMilliSec,
+						val = cacheStatusMgr.setAndGet(key, numRetries, wait, timeoutMilliSec,
 							prepareDataToCache, key.val_, currentTimeout, behavior);
 					}
 					catch (std::exception& e)

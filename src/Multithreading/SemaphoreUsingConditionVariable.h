@@ -38,12 +38,14 @@ namespace mm {
 				: count_{ count }
 			{}
 
-			void release() {
-				std::unique_lock<decltype(mutex_)> lock(mutex_);
-				++count_;
-				lock.unlock();
+			void P()
+			{
+				acquire();
+			}
 
-				condition_.notify_one();
+			void V()
+			{
+				release();
 			}
 
 			void acquire() {
@@ -60,6 +62,14 @@ namespace mm {
 
 				--count_;
 				return true;
+			}
+
+			void release() {
+				std::unique_lock<decltype(mutex_)> lock(mutex_);
+				++count_;
+				lock.unlock();
+
+				condition_.notify_one();
 			}
 
 		private:
@@ -281,7 +291,7 @@ namespace mm {
 			SemaphoreUsingConditionVariable s_{ 0 }; //initialize with 0
 		};
 
-		void usagePriorityControllerUsingSemaphore()
+		inline void usagePriorityControllerUsingSemaphore()
 		{
 			PriorityControllerUsingSemaphore p;
 
