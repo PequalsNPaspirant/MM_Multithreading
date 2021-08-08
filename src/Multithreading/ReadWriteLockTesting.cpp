@@ -148,7 +148,7 @@ namespace mm {
 			auto threadFunPushPop = [](ThreadSafeQueue<Object, LockType>& tsq, int iterations) {
 				for (size_t i = 1; i <= iterations; ++i)
 				{
-					if (i % 3 == 0)
+					if (i % 2 == 0)
 						tsq.pop();
 					else
 						tsq.push(Object{ i });
@@ -278,7 +278,7 @@ namespace mm {
 			testReadWriteLock<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("readWriteLock_stdSharedMutex_v1", ops);
 			
 			testReadWriteLock<readWriteLock_NoPref_v1::ReadWriteLock>("readWriteLock_NoPref_v1", ops);
-			//testReadWriteLock<readWriteLock_NoPref_v2::ReadWriteLock>("readWriteLock_NoPref_v2", ops);
+			testReadWriteLock<readWriteLock_NoPref_v2::ReadWriteLock>("readWriteLock_NoPref_v2", ops);
 			//testReadWriteLock<readWriteLock_NoPref_LockFree_v1::ReadWriteLock>("readWriteLock_NoPref_LockFree_v1", ops);
 			//testReadWriteLock<readWriteLock_NoPref_LockFree_v2::ReadWriteLock>("readWriteLock_NoPref_LockFree_v2", ops);
 
@@ -701,7 +701,7 @@ namespace mm {
 			testAllPermutationsOfOperations<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("readWriteLock_stdSharedMutex_v1");
 			
 			testAllPermutationsOfOperations<readWriteLock_NoPref_v1::ReadWriteLock>("readWriteLock_NoPref_v1");
-			//testAllPermutationsOfOperations<readWriteLock_NoPref_v2::ReadWriteLock>("readWriteLock_NoPref_v2");
+			testAllPermutationsOfOperations<readWriteLock_NoPref_v2::ReadWriteLock>("readWriteLock_NoPref_v2");
 			//testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v1::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v1");
 			//testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v2::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v2");
 			
