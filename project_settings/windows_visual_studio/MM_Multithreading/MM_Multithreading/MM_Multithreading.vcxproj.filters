@@ -239,5 +239,8 @@
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v6.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -48,6 +48,7 @@
     <ClCompile Include="..\..\..\..\src\_MM_Multithreading_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v6.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v2.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v4.h" />
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v3.h" />
