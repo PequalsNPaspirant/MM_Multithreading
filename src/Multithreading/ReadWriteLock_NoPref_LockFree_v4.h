@@ -24,40 +24,35 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				//int oldNumReaders = numReaders_.fetch_add(1);
-				//if (oldNumReaders == 0)
+				int oldNumReaders = numReaders_.fetch_add(1);
+				if (oldNumReaders == 0)
 				{
-					bool expected = false;
-					bool newVal = true;
-					//while (!readersOrWritterActive_.compare_exchange_weak(expected, newVal, std::memory_order_seq_cst))
-					while(readersOrWritterActive_.exchange(true))
+					while (readersOrWritterActive_.exchange(true))
 					{
 						std::this_thread::yield();
 					}
-					//readersReadyToGo_.store(true, std::memory_order_release);
+					readersReadyToGo_.store(true, std::memory_order_release);
 				}
 
-				//while (readersReadyToGo_.load(std::memory_order_acquire) == false)
-				//	std::this_thread::yield();
+				while (readersReadyToGo_.load(std::memory_order_acquire) == false)
+					std::this_thread::yield();
 			}
 
 			void unlock_shared()
 			{
-				//int oldNumReaders = numReaders_.fetch_sub(1);
-				//if (oldNumReaders == 1)
+				int oldNumReaders = numReaders_.fetch_sub(1);
+				if (oldNumReaders == 1)
 				{
 					//reset the flags in reverse order they are set in lock_shared()
-					//readersReadyToGo_.store(false, std::memory_order_release);
+					readersReadyToGo_.store(false, std::memory_order_release);
 					readersOrWritterActive_.store(false, std::memory_order_release);
 				}
 			}
 
 			void lock()
 			{
-				bool expected = false;
-				bool newVal = true;
-				//while (!readersOrWritterActive_.compare_exchange_weak(expected, newVal, std::memory_order_seq_cst))
-				while (readersOrWritterActive_.exchange(true))
+				while (numReaders_.load(std::memory_order_acquire) > 0
+					|| readersOrWritterActive_.exchange(true))
 				{
 					std::this_thread::yield();
 				}
@@ -80,7 +75,7 @@ namespace mm {
 
 		private:
 			std::atomic<int> numReaders_{ 0 };
-			std::atomic<int> numWriters_{ 0 };
+			//std::atomic<int> numWriters_{ 0 };
 			std::atomic<bool> readersOrWritterActive_{ false };
 			std::atomic<bool> readersReadyToGo_{ false };
 		};
