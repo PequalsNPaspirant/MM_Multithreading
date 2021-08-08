@@ -24,38 +24,38 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				++numReaders_; //equivalent to numReaders_.fetch_add(1)
-
-				while (numWriters_.load(std::memory_order_acquire) > 0)
-					std::this_thread::yield();
+				bool expected = false;
+				bool newVal = true;
+				while (!readersOrWritterActive_.compare_exchange_strong(expected, newVal, std::memory_order_seq_cst))
+				{
+					expected = false;
+					//std::this_thread::yield();
+				}
 			}
 
 			void unlock_shared()
 			{
-				--numReaders_; //equivalent to numReaders_.fetch_sub(1)
+				readersOrWritterActive_.store(false, std::memory_order_release);
 			}
 
 			void lock()
 			{
-				++numWriters_; //equivalent to numWriters_.fetch_add(1)
-
-				while (numReaders_.load(std::memory_order_acquire) > 0
-					|| writterActive_.load(std::memory_order_acquire) == true)
-					std::this_thread::yield();
-
-				writterActive_.store(true, std::memory_order_release);
+				bool expected = false;
+				bool newVal = true;
+				while (!readersOrWritterActive_.compare_exchange_strong(expected, newVal, std::memory_order_seq_cst))
+				{
+					expected = false;
+					//std::this_thread::yield();
+				}
 			}
 
 			void unlock()
 			{
-				--numWriters_; //equivalent to numWriters_.fetch_sub(1)
-				writterActive_.store(false, std::memory_order_release);
+				readersOrWritterActive_.store(false, std::memory_order_release);
 			}
 
 		private:
-			std::atomic<int> numReaders_{ 0 };
-			std::atomic<int> numWriters_{ 0 };
-			std::atomic<bool> writterActive_{ false };
+			std::atomic<bool> readersOrWritterActive_{ false };
 		};
 
 		/*

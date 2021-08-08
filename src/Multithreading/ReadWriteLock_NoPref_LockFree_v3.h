@@ -17,18 +17,15 @@
 
 namespace mm {
 
-	namespace readWriteLock_NoPref_LockFree_v2 {
+	namespace readWriteLock_NoPref_LockFree_v3 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				bool expected = false;
-				bool newVal = true;
-				while (!readersOrWritterActive_.compare_exchange_weak(expected, newVal, std::memory_order_seq_cst))
+				while (readersOrWritterActive_.exchange(true))
 				{
-					expected = false;
 					std::this_thread::yield();
 				}
 			}
@@ -40,11 +37,8 @@ namespace mm {
 
 			void lock()
 			{
-				bool expected = false;
-				bool newVal = true;
-				while (!readersOrWritterActive_.compare_exchange_weak(expected, newVal, std::memory_order_seq_cst))
+				while (readersOrWritterActive_.exchange(true))
 				{
-					expected = false;
 					std::this_thread::yield();
 				}
 			}
@@ -63,12 +57,12 @@ namespace mm {
 		0 -                                                                        start
 
 
-		1 -                                   R1                                                                          W1 
+		1 -                                   R1                                                                          W1
 
 
-		2 -               R2                                  W2                       	              R2                                  W2             
+		2 -               R2                                  W2                       	              R2                                  W2
 
-		3 -       R3               W3                 R3               W3                     R3               W3                 R3               W3     
+		3 -       R3               W3                 R3               W3                     R3               W3                 R3               W3
 		4 -    R4    W4         R4    W4		   R4    W4         R4    W4			   R4    W4         R4    W4		   R4    W4         R4    W4
 		*/
 

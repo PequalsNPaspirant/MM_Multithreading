@@ -17,45 +17,48 @@
 
 namespace mm {
 
-	namespace readWriteLock_NoPref_LockFree_v2 {
+	namespace readWriteLock_NoPref_LockFree_v5 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				bool expected = false;
-				bool newVal = true;
-				while (!readersOrWritterActive_.compare_exchange_weak(expected, newVal, std::memory_order_seq_cst))
-				{
-					expected = false;
+				//++numReaderWriters_; //equivalent to numReaderWriters_.fetch_add(1, std::memory_order_seq_cst)
+
+				while (numReaderWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
 					std::this_thread::yield();
-				}
 			}
 
 			void unlock_shared()
 			{
-				readersOrWritterActive_.store(false, std::memory_order_release);
+				--numReaderWriters_; //equivalent to numReaders_.fetch_sub(1, std::memory_order_seq_cst)
 			}
 
 			void lock()
 			{
-				bool expected = false;
-				bool newVal = true;
-				while (!readersOrWritterActive_.compare_exchange_weak(expected, newVal, std::memory_order_seq_cst))
-				{
-					expected = false;
+				while (numReaderWriters_.fetch_add(writerMask, std::memory_order_seq_cst) > 0)
 					std::this_thread::yield();
-				}
+
 			}
 
 			void unlock()
 			{
-				readersOrWritterActive_.store(false, std::memory_order_release);
+				numReaderWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
 			}
 
 		private:
-			std::atomic<bool> readersOrWritterActive_{ false };
+			/*
+
+			|<--   writers  -->|  |<--  readers   -->|
+			1111 1111  1111 1111  1111 1111  1111 1111
+			
+			*/
+
+			//Info: This allows maximum concurrent readers equal to 'maxConcurrentReadersAllowed' to read the data
+			std::atomic<int> numReaderWriters_{ 0 };
+			static constexpr const int writerMask{ 1 << 16 };
+			static constexpr const int maxConcurrentReadersAllowed{ writerMask - 1 };
 		};
 
 		/*
