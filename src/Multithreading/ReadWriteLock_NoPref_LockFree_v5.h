@@ -24,27 +24,37 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				//++numReaderWriters_; //equivalent to numReaderWriters_.fetch_add(1, std::memory_order_seq_cst)
-
-				while (numReaderWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
+				int expected = numReadersWriters_.load(std::memory_order_acquire);
+				//while (numReadersWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
+				while (expected > maxConcurrentReadersAllowed ||
+					!numReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_seq_cst))
+				{
+					expected = numReadersWriters_.load(std::memory_order_acquire);
 					std::this_thread::yield();
+				}
 			}
 
 			void unlock_shared()
 			{
-				--numReaderWriters_; //equivalent to numReaders_.fetch_sub(1, std::memory_order_seq_cst)
+				--numReadersWriters_; //equivalent to numReaders_.fetch_sub(1, std::memory_order_seq_cst)
 			}
 
 			void lock()
 			{
-				while (numReaderWriters_.fetch_add(writerMask, std::memory_order_seq_cst) > 0)
+				int expected = numReadersWriters_.load(std::memory_order_acquire);
+				//while (numReadersWriters_.fetch_add(writerMask, std::memory_order_seq_cst) > 0)
+				while (expected > 0 ||
+					!numReadersWriters_.compare_exchange_weak(expected, expected + writerMask, std::memory_order_seq_cst))
+				{
+					expected = numReadersWriters_.load(std::memory_order_acquire);
 					std::this_thread::yield();
+				}
 
 			}
 
 			void unlock()
 			{
-				numReaderWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
+				numReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
 			}
 
 		private:
@@ -56,7 +66,7 @@ namespace mm {
 			*/
 
 			//Info: This allows maximum concurrent readers equal to 'maxConcurrentReadersAllowed' to read the data
-			std::atomic<int> numReaderWriters_{ 0 };
+			std::atomic<int> numReadersWriters_{ 0 };
 			static constexpr const int writerMask{ 1 << 16 };
 			static constexpr const int maxConcurrentReadersAllowed{ writerMask - 1 };
 		};

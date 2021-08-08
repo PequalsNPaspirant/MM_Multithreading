@@ -23,6 +23,7 @@
 #include "ReadWriteLock_NoPref_LockFree_v2.h"
 #include "ReadWriteLock_NoPref_LockFree_v3.h"
 #include "ReadWriteLock_NoPref_LockFree_v4.h"
+#include "ReadWriteLock_NoPref_LockFree_v5.h"
 
 #include "ReadWriteLock_ReadPref_v1.h"
 #include "ReadWriteLock_ReadPref_v2.h"
@@ -695,6 +696,7 @@ namespace mm {
 			testReadWriteLock<readWriteLock_NoPref_LockFree_v2::ReadWriteLock>("readWriteLock_NoPref_LockFree_v2", ops);
 			testReadWriteLock<readWriteLock_NoPref_LockFree_v3::ReadWriteLock>("readWriteLock_NoPref_LockFree_v3", ops);
 			testReadWriteLock<readWriteLock_NoPref_LockFree_v4::ReadWriteLock>("readWriteLock_NoPref_LockFree_v4", ops);
+			testReadWriteLock<readWriteLock_NoPref_LockFree_v5::ReadWriteLock>("readWriteLock_NoPref_LockFree_v5", ops);
 
 			//testReadWriteLock<readWriteLock_ReadPref_v1::ReadWriteLock>("readWriteLock_ReadPref_v1", ops);
 			//testReadWriteLock<readWriteLock_ReadPref_v2::ReadWriteLock>("readWriteLock_ReadPref_v2", ops);
@@ -717,7 +719,8 @@ namespace mm {
 			//testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v1::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v1");
 			//testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v2::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v2");
 			//testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v3::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v3");
-			testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v4::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v4");
+			//testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v4::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v4");
+			testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v5::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v5");
 			
 			//testAllPermutationsOfOperations<readWriteLock_ReadPref_v1::ReadWriteLock>("readWriteLock_ReadPref_v1");
 			//testAllPermutationsOfOperations<readWriteLock_ReadPref_v2::ReadWriteLock>("readWriteLock_ReadPref_v2");
