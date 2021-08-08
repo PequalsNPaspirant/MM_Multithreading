@@ -24,7 +24,7 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				int expected = numReadersWriters_.load(std::memory_order_acquire);
+				//int expected = numReadersWriters_.load(std::memory_order_acquire);
 				while (numReadersWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
 				//while (expected > maxConcurrentReadersAllowed ||
 				//	!numReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_relaxed))
@@ -42,7 +42,7 @@ namespace mm {
 
 			void lock()
 			{
-				int expected = numReadersWriters_.load(std::memory_order_acquire);
+				//int expected = numReadersWriters_.load(std::memory_order_acquire);
 				while (numReadersWriters_.fetch_add(writerMask, std::memory_order_seq_cst) > 0)
 				//while (expected > 0 ||
 				//	!numReadersWriters_.compare_exchange_weak(expected, expected + writerMask, std::memory_order_relaxed))
