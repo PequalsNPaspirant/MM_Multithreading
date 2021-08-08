@@ -17,6 +17,8 @@
 
 namespace mm {
 
+	//TODO: This is Reader preferring lock. Fix to make it NoPref.
+
 	namespace readWriteLock_NoPref_LockFree_v5 {
 
 		class SharedMutex
@@ -24,11 +26,13 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				int expected = numReadersWriters_.load(std::memory_order_acquire);
-				while (expected > maxConcurrentReadersAllowed ||
-					!numReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_seq_cst))
+				//int expected = numReadersWriters_.load(std::memory_order_acquire);
+				while (numReadersWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
+				//while (expected > maxConcurrentReadersAllowed ||
+				//	!numReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_relaxed))
 				{
-					expected = (expected > maxConcurrentReadersAllowed ? numReadersWriters_.load(std::memory_order_acquire) : expected);
+					--numReadersWriters_;
+					//expected = (expected > maxConcurrentReadersAllowed ? numReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
 			}
@@ -40,14 +44,15 @@ namespace mm {
 
 			void lock()
 			{
-				int expected = numReadersWriters_.load(std::memory_order_acquire);
-				while (expected > 0 ||
-					!numReadersWriters_.compare_exchange_weak(expected, expected + writerMask, std::memory_order_seq_cst))
+				//int expected = numReadersWriters_.load(std::memory_order_acquire);
+				while (numReadersWriters_.fetch_add(writerMask, std::memory_order_seq_cst) > 0)
+				//while (expected > 0 ||
+				//	!numReadersWriters_.compare_exchange_weak(expected, expected + writerMask, std::memory_order_relaxed))
 				{
-					expected = (expected > 0 ? numReadersWriters_.load(std::memory_order_acquire) : expected);
+					numReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
+					//expected = (expected > 0 ? numReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
-
 			}
 
 			void unlock()
@@ -60,7 +65,7 @@ namespace mm {
 
 			|<--   writers  -->|  |<--  readers   -->|
 			1111 1111  1111 1111  1111 1111  1111 1111
-			
+
 			*/
 
 			//Info: This allows maximum concurrent readers equal to 'maxConcurrentReadersAllowed' to read the data
@@ -74,12 +79,12 @@ namespace mm {
 		0 -                                                                        start
 
 
-		1 -                                   R1                                                                          W1 
+		1 -                                   R1                                                                          W1
 
 
-		2 -               R2                                  W2                       	              R2                                  W2             
+		2 -               R2                                  W2                       	              R2                                  W2
 
-		3 -       R3               W3                 R3               W3                     R3               W3                 R3               W3     
+		3 -       R3               W3                 R3               W3                     R3               W3                 R3               W3
 		4 -    R4    W4         R4    W4		   R4    W4         R4    W4			   R4    W4         R4    W4		   R4    W4         R4    W4
 		*/
 

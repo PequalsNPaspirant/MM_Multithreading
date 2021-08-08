@@ -17,16 +17,14 @@
 
 namespace mm {
 
-	//TODO: This is Reader preferring lock. Fix to make it NoPref.
-
-	namespace readWriteLock_NoPref_LockFree_v6 {
+	namespace readWriteLock_ReadPref_LockFree_v4 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				int expected = numReadersWriters_.load(std::memory_order_acquire);
+				FlagType expected = numReadersWriters_.load(std::memory_order_acquire);
 				while (expected > maxConcurrentReadersAllowed ||
 					!numReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_seq_cst))
 				{
@@ -37,14 +35,14 @@ namespace mm {
 
 			void unlock_shared()
 			{
-				--numReadersWriters_; //equivalent to numReaders_.fetch_sub(1, std::memory_order_seq_cst)
+				--numReadersWriters_; //equivalent to numReaderWriters_.fetch_sub(1, std::memory_order_seq_cst)
 			}
 
 			void lock()
 			{
-				int expected = numReadersWriters_.load(std::memory_order_acquire);
+				FlagType expected = numReadersWriters_.load(std::memory_order_acquire);
 				while (expected > 0 ||
-					!numReadersWriters_.compare_exchange_weak(expected, expected + writerMask, std::memory_order_seq_cst))
+					!numReadersWriters_.compare_exchange_weak(expected, expected | writerMask, std::memory_order_seq_cst))
 				{
 					expected = (expected > 0 ? numReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
@@ -53,21 +51,36 @@ namespace mm {
 
 			void unlock()
 			{
-				numReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
+				numReadersWriters_.fetch_and(writerMaskUnset, std::memory_order_seq_cst);
+				//equivalent to numReaderWriters_ &= writerMaskUnset;
+				//equivalent to numReaderWriters_ &= (~writerMask);
+				//equivalent to numReaderWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
 			}
 
 		private:
+			using FlagType = unsigned int;
+			std::atomic<FlagType> numReadersWriters_{ 0 };
+			
 			/*
 
-			|<--   writers  -->|  |<--  readers   -->|
+			 |<--    readers update this part     -->|
 			1111 1111  1111 1111  1111 1111  1111 1111
-			
+
+			Writers update just MSB
+
 			*/
 
-			//Info: This allows maximum concurrent readers equal to 'maxConcurrentReadersAllowed' to read the data
-			std::atomic<int> numReadersWriters_{ 0 };
-			static constexpr const int writerMask{ 1 << 16 };
+			//Info: This allows maximum concurrent readers equal to (writerMask - 1) to read the data
+			//static constexpr const FlagType writerMask{ 1 << 31 };
+			//OR
+			//static constexpr const FlagType writerMask{ 1 << ((sizeof(FlagType) * 8) - 1) };
+			//OR
+			static constexpr const FlagType writerMask{ ~(std::numeric_limits<FlagType>::max() >> 1) };
 			static constexpr const int maxConcurrentReadersAllowed{ writerMask - 1 };
+
+			static constexpr const FlagType writerMaskUnset{ ~writerMask };
+			//Note: maxConcurrentReadersAllowed and writerMaskUnset are same because writerMask is power of 2
+			
 		};
 
 		/*

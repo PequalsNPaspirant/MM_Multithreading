@@ -24,60 +24,60 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				//while (numReaderWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
-				while ((numReaderWriters_.fetch_add(1, std::memory_order_seq_cst) & writerMask) > 0)
-					std::this_thread::yield();
+				int oldNumReaders = numReaders_.fetch_add(1);
+				if (oldNumReaders == 0)
+				{
+					while (readersOrWritterActive_.exchange(true))
+					{
+						std::this_thread::yield();
+					}
+					readersReadyToGo_.store(true, std::memory_order_release);
+				}
 
-				//++numReaderWriters_; //equivalent to numReaderWriters_.fetch_add(1, std::memory_order_seq_cst)
+				while (readersReadyToGo_.load(std::memory_order_acquire) == false)
+					std::this_thread::yield();
 			}
 
 			void unlock_shared()
 			{
-				--numReaderWriters_; //equivalent to numReaderWriters_.fetch_sub(1, std::memory_order_seq_cst)
+				int oldNumReaders = numReaders_.fetch_sub(1);
+				if (oldNumReaders == 1)
+				{
+					//reset the flags in reverse order they are set in lock_shared()
+					readersReadyToGo_.store(false, std::memory_order_release);
+					readersOrWritterActive_.store(false, std::memory_order_release);
+				}
 			}
 
 			void lock()
 			{
-				while (numReaderWriters_.fetch_or(writerMask, std::memory_order_seq_cst) > 0)
+				while (numReaders_.load(std::memory_order_acquire) > 0
+					|| readersOrWritterActive_.exchange(true))
+				{
 					std::this_thread::yield();
+				}
 
-				//numReaderWriters_.fetch_or(writerMask, std::memory_order_seq_cst);
-				//equivalent to numReaderWriters_ |= writerMask;
-				//equivalent to numReaderWriters_.fetch_add(writerMask, std::memory_order_seq_cst);
+				//int oldNumWriters = numWriters_.fetch_add(1);
+
+				//while (numReaders_.load(std::memory_order_acquire) > 0
+				//	|| numWriters_.load(std::memory_order_acquire) > 1)
+				//	//|| writterActive_.load(std::memory_order_acquire) == true)
+				//	std::this_thread::yield();
+
+				//writterActive_.store(true, std::memory_order_release);
 			}
 
 			void unlock()
 			{
-				numReaderWriters_.fetch_and(writerMaskUnset, std::memory_order_seq_cst);
-				//equivalent to numReaderWriters_ &= writerMaskUnset;
-				//equivalent to numReaderWriters_ &= (~writerMask);
-				//equivalent to numReaderWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
+				//--numWriters_; //equivalent to numWriters_.fetch_sub(1)
+				readersOrWritterActive_.store(false, std::memory_order_release);
 			}
 
 		private:
-			using FlagType = unsigned int;
-			std::atomic<FlagType> numReaderWriters_{ 0 };
-			
-			/*
-
-			 |<--    readers update this part     -->|
-			1111 1111  1111 1111  1111 1111  1111 1111
-
-			Writers update just MSB
-
-			*/
-
-			//Info: This allows maximum concurrent readers equal to (writerMask - 1) to read the data
-			//static constexpr const FlagType writerMask{ 1 << 31 };
-			//OR
-			//static constexpr const FlagType writerMask{ 1 << ((sizeof(FlagType) * 8) - 1) };
-			//OR
-			static constexpr const FlagType writerMask{ ~(std::numeric_limits<FlagType>::max() >> 1) };
-			static constexpr const int maxConcurrentReadersAllowed{ writerMask - 1 };
-
-			static constexpr const FlagType writerMaskUnset{ ~writerMask };
-			//Note: maxConcurrentReadersAllowed and writerMaskUnset are same because writerMask is power of 2
-			
+			std::atomic<int> numReaders_{ 0 };
+			//std::atomic<int> numWriters_{ 0 };
+			std::atomic<bool> readersOrWritterActive_{ false };
+			std::atomic<bool> readersReadyToGo_{ false };
 		};
 
 		/*
