@@ -37,7 +37,7 @@ namespace mm {
 		class Object
 		{
 		public:
-			Object(int size)
+			Object(size_t size)
 				: data_{ size }
 			{
 				//data_.reserve(size);
@@ -53,7 +53,7 @@ namespace mm {
 			Object& operator=(const Object&) = default;
 			Object& operator=(Object&&) = default;
 
-			int getSum()
+			size_t getSum()
 			{
 				//int sum = 0;
 				//for (int i = 0; i < data_.size(); ++i)
@@ -64,8 +64,8 @@ namespace mm {
 			}
 
 		private:
-			//std::vector<int> data_;
-			int data_;
+			//std::vector<size_t> data_;
+			size_t data_;
 		};
 
 		template<typename ObjectType, typename LockType>
@@ -139,23 +139,29 @@ namespace mm {
 		};
 
 		template<typename LockType>
-		int testReadWriteLock(const std::string& msg, const std::vector<Operations>& ops)
+		size_t testReadWriteLock(const std::string& msg, const std::vector<Operations>& ops)
 		{
 			std::random_device rd;
 			std::mt19937 mt(rd());
 			std::uniform_int_distribution<int> dist(1, 100);
 
 			auto threadFunPushPop = [](ThreadSafeQueue<Object, LockType>& tsq, int iterations) {
-				for (int i = 1; i <= iterations; ++i)
+				for (size_t i = 1; i <= iterations; ++i)
 				{
 					if (i % 3 == 0)
 						tsq.pop();
 					else
 						tsq.push(Object{ i });
+					//Object obj = tsq.front();
+					//tsq.pop();
+					//if(obj.getSum() == 1)
+					//	tsq.push(Object{ 2 });
+					//else
+					//	tsq.push(Object{ 1 });
 				}
 			};
 
-			auto threadFunFront = [](ThreadSafeQueue<Object, LockType>& tsq, int iterations, std::atomic<int>& totalSum) {
+			auto threadFunFront = [](ThreadSafeQueue<Object, LockType>& tsq, int iterations, std::atomic<size_t>& totalSum) {
 				for (int i = 0; i < iterations; ++i)
 				{
 					//if (tsq.empty())
@@ -165,9 +171,8 @@ namespace mm {
 					//}
 
 					Object obj = tsq.front();
-					int sum = obj.getSum();
+					size_t sum = obj.getSum();
 					totalSum += sum;
-					break;
 				}
 			};
 
@@ -195,8 +200,9 @@ namespace mm {
 			//	}
 			//}
 
-			int iterations = 1000000;
-			int numWriters = 50;
+			//constexpr const int iterations = 1'000'000;
+			constexpr const int iterations = 100'000;
+			constexpr const int numWriters = 50;
 			ThreadSafeQueue<Object, LockType> tsq;
 
 			std::vector<std::thread> writers;
@@ -206,10 +212,10 @@ namespace mm {
 				writers.push_back(std::thread{ threadFunPushPop, std::ref(tsq), iterations });
 			}
 
-			int numReaders = 50;
+			constexpr const int numReaders = 50;
 			std::vector<std::thread> readers;
 			readers.reserve(numReaders);
-			std::atomic<int> totalSum = 0;
+			std::atomic<size_t> totalSum = 0;
 			tsq.push(Object{ 0 }); //Push one object to be on safer side in case writers lag behind and reader threads start executing first
 			for (int i = 0; i < numReaders; ++i)
 			{
@@ -231,7 +237,7 @@ namespace mm {
 			long long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 			std::cout << "\n" << std::setw(35) << msg
 				<< " duration: " << std::setw(18) << duration << " ns"
-				<< "   totalSum: " << std::setw(12) << totalSum
+				<< "   totalSum: " << std::setw(18) << totalSum
 				//<< " emptyCount: " << std::setw(6) << emptyCount
 				;
 
@@ -266,7 +272,7 @@ namespace mm {
 			//		++queueSize;
 			//	}
 			//}
-			std::cout << "\n\n----testAllReadWriteLocks----\n";
+			std::cout << "\n\n----testAllReadWriteLocks (faster the readers, sum will be minimum) ----\n";
 
 			testReadWriteLock<readWriteLock_stdMutex_v1::ReadWriteLock>("readWriteLock_stdMutex_v1", ops);
 			testReadWriteLock<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("readWriteLock_stdSharedMutex_v1", ops);
@@ -715,7 +721,7 @@ namespace mm {
 	MM_UNIT_TEST(ReadWriteLock_Test, ReadWriteLock)
 	{
 		std::cout.imbue(std::locale{ "" });
-		//readWriteLockTesting::testAllReadWriteLocks();
+		readWriteLockTesting::testAllReadWriteLocks();
 		readWriteLockTesting::testAllReadWriteLocksInSteps();
 	}
 }
