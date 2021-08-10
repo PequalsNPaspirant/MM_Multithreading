@@ -28,7 +28,8 @@ namespace mm {
 				++numReadersWaiting_;
 
 				//Assuming cv honours the sequence in which the threads are waiting on queue, if writer was woken up, do not allow readers because some writer was waiting in sequence on cv
-				while (writterActive_ || writterWokenUp_)
+				//while (writterActive_ || writterWokenUp_)
+				while (numWritersActive_ > 0 || writterWokenUp_)
 					cv_.wait(lock);
 
 				--numReadersWaiting_;
@@ -40,11 +41,14 @@ namespace mm {
 			void unlock_shared()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-				--numReadersActive_;
-				lock.unlock();
 
-				if(numReadersActive_ == 0)
+				--numReadersActive_;
+
+				if (numReadersActive_ == 0)
+				{
+					lock.unlock();
 					cv_.notify_all();
+				}
 			}
 
 			void lock()
@@ -53,25 +57,39 @@ namespace mm {
 
 				++numWritersWaiting_;
 
-				while (numReadersActive_ > 0 || writterActive_)
+				//while (numReadersActive_ > 0 || writterActive_)
+				while (numReadersActive_ > 0 || numWritersActive_ >= numConcurrentWritersAllowed)
 				{
 					cv_.wait(lock);
 					writterWokenUp_ = true;
 				}
 
 				writterWokenUp_ = false;
+
 				--numWritersWaiting_;
-				writterActive_ = true;
+				++numWritersActive_;
+				//writterActive_ = true;
+
 				lock.unlock();
 			}
 
 			void unlock()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-				writterActive_ = false;
-				lock.unlock();
 
-				cv_.notify_all();
+				--numWritersActive_;
+				//writterActive_ = false;
+
+				if (numReadersWaiting_ > 0)
+				{
+					lock.unlock();
+					cv_.notify_all(); //notify all readers
+				}
+				else
+				{
+					lock.unlock();
+					cv_.notify_one(); //notify next one writer waiting on cv
+				}
 			}
 
 		private:
@@ -81,7 +99,10 @@ namespace mm {
 			int numReadersWaiting_{ 0 };
 			int numReadersActive_{ 0 };
 			int numWritersWaiting_{ 0 };
-			bool writterActive_{ false };
+			int numWritersActive_{ 0 };
+			//bool writterActive_{ false };
+			static constexpr const int numConcurrentWritersAllowed{ 1 };
+
 			bool writterWokenUp_{ false };
 		};
 

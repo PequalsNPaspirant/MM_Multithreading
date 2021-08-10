@@ -44,9 +44,8 @@ namespace mm {
 				std::unique_lock<std::mutex> lock{ mu_ };
 
 				--numReadersActive_;
-				//lock.unlock();
 
-				if(numReadersActive_ == 0)
+				if (numReadersActive_ == 0)
 				{
 					lock.unlock();
 					cv_.notify_all();
