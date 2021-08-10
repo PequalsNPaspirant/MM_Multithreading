@@ -42,6 +42,7 @@ namespace mm {
 			void unlock_shared()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
+
 				--numReadersActive_;
 				//lock.unlock();
 
@@ -55,6 +56,7 @@ namespace mm {
 			void lock()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
+
 				++numWritersWaiting_;
 
 				//while (numReadersActive_ > 0 || writterActive_)
@@ -62,18 +64,22 @@ namespace mm {
 					cv_.wait(lock);
 
 				--numWritersWaiting_;
-				//writterActive_ = true;
 				++numWritersActive_;
+				//writterActive_ = true;
+				
 				lock.unlock();
 			}
 
 			void unlock()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
+
 				--numWritersActive_;
 				//writterActive_ = false;
-				//lock.unlock();
 
+				//if (numWritersWaiting_ == 0) //This condition wont work because while writing is going on, a reader may come and keep waiting and then one writer may come and 
+				// keep waiting. In this case, notify_one() will notify reader which will continue waiting becase there is one writer waiting and
+				// it will be a deadlock/wait forever situation.
 				if (numReadersWaiting_ > 0)
 				{
 					lock.unlock();
