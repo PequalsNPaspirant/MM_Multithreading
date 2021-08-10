@@ -17,6 +17,10 @@
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 #include "ReadWriteLock_std_v1.h"
 
+#include "ReadWriteLock_LockFree_v1.h"
+#include "ReadWriteLock_LockFree_v2.h"
+#include "ReadWriteLock_LockFree_v3.h"
+
 #include "ReadWriteLock_NoPref_v1.h"
 #include "ReadWriteLock_NoPref_v2.h"
 #include "ReadWriteLock_NoPref_v3.h"
@@ -24,9 +28,6 @@
 #include "ReadWriteLock_NoPref_LockFree_v1.h"
 #include "ReadWriteLock_NoPref_LockFree_v2.h"
 #include "ReadWriteLock_NoPref_LockFree_v3.h"
-#include "ReadWriteLock_NoPref_LockFree_v4.h"
-#include "ReadWriteLock_NoPref_LockFree_v5.h"
-#include "ReadWriteLock_NoPref_LockFree_v6.h"
 
 #include "ReadWriteLock_ReadPref_v1.h"
 #include "ReadWriteLock_ReadPref_v2.h"
@@ -740,33 +741,35 @@ namespace mm {
 			///testAllPermutationsOfOperations<readWriteLock_stdMutex_v1::ReadWriteLock>("readWriteLock_stdMutex_v1");
 			///testAllPermutationsOfOperations<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("readWriteLock_stdSharedMutex_v1");
 			
+			//THESE ARE NOT REALLY READ-WRITE LOCKs. It's added just to demonstrate the lock free synchronization.
+			///testAllPermutationsOfOperations<readWriteLock_LockFree_v1::ReadWriteLock>("ReadWriteLock_LockFree_v1");
+			///testAllPermutationsOfOperations<readWriteLock_LockFree_v2::ReadWriteLock>("ReadWriteLock_LockFree_v2");
+			///testAllPermutationsOfOperations<readWriteLock_LockFree_v3::ReadWriteLock>("ReadWriteLock_LockFree_v3");
+
 			//No peferrence
 			///testAllPermutationsOfOperations<readWriteLock_NoPref_v1::ReadWriteLock>("readWriteLock_NoPref_v1");
 			///testAllPermutationsOfOperations<readWriteLock_NoPref_v2::ReadWriteLock>("readWriteLock_NoPref_v2");
-			testAllPermutationsOfOperations<readWriteLock_NoPref_v3::ReadWriteLock>("readWriteLock_NoPref_v3");
-			testAllPermutationsOfOperations<readWriteLock_NoPref_v4::ReadWriteLock>("readWriteLock_NoPref_v4");
+			///testAllPermutationsOfOperations<readWriteLock_NoPref_v3::ReadWriteLock>("readWriteLock_NoPref_v3");
+			///testAllPermutationsOfOperations<readWriteLock_NoPref_v4::ReadWriteLock>("readWriteLock_NoPref_v4");
 
-			///testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v1::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v1");
-			///testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v2::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v2");
-			//testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v3::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v3");
-			// /*FIXME to make NoPref instead of readPref*/ testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v4::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v4");
-			// /*FIXME to make NoPref instead of readPref*/ testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v5::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v5");
-			// /*FIXME to make NoPref instead of readPref*/ testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v6::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v6");
+			 /*FIXME to make NoPref instead of readPref*/ testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v1::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v1");
+			 /*FIXME to make NoPref instead of readPref*/ testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v2::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v2");
+			 /*FIXME to make NoPref instead of readPref*/ testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v3::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v3");
 			
 			//Read Preferrence
 			///testAllPermutationsOfOperations<readWriteLock_ReadPref_v1::ReadWriteLock>("readWriteLock_ReadPref_v1");
 			///testAllPermutationsOfOperations<readWriteLock_ReadPref_v2::ReadWriteLock>("readWriteLock_ReadPref_v2");
-			testAllPermutationsOfOperations<readWriteLock_ReadPref_v3::ReadWriteLock>("readWriteLock_ReadPref_v3");
+			///testAllPermutationsOfOperations<readWriteLock_ReadPref_v3::ReadWriteLock>("readWriteLock_ReadPref_v3");
 
-			///testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v1::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v1");
-			///testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v2::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v2");
-			///testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v3::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v3");
-			///testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v4::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v4");
+			testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v1::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v1");
+			testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v2::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v2");
+			testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v3::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v3");
+			testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v4::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v4");
 
 			//Write Preferrence
 			///testAllPermutationsOfOperations<readWriteLock_WritePref_v1::ReadWriteLock>("readWriteLock_WritePref_v1");
 			///testAllPermutationsOfOperations<readWriteLock_WritePref_v2::ReadWriteLock>("readWriteLock_WritePref_v2");
-			testAllPermutationsOfOperations<readWriteLock_WritePref_v3::ReadWriteLock>("readWriteLock_WritePref_v3");
+			///testAllPermutationsOfOperations<readWriteLock_WritePref_v3::ReadWriteLock>("readWriteLock_WritePref_v3");
 		}
 
 	}

@@ -104,6 +104,17 @@ namespace mm {
 			static constexpr const int numConcurrentWritersAllowed{ 1 };
 
 			bool writterWokenUp_{ false };
+			/*
+			writterWokenUp_ is important to honour the order of read/write operations tried by user.
+			1. A writer thread w1 takes write lock and starts writing to data.
+			2. A reader thread r1 comes and keeps waiting for writing task to finish.
+			3. A writer thread w2 comes and keeps waiting.
+			4. A reader thread r2 comes and keeps waiting.
+			5. w1 finishes writing and then calls cv_.notify_all()
+			6. r1 wakes up and starts reading
+			7. w2 wakes up and keeps waiting again. BUT IT SETS writterWokenUp_ = true.
+			8. r2 wakes up, but writterWokenUp_ is true, so it keeps waiting, Otherwise it will also join r1 and start reading.
+			*/
 		};
 
 		/*

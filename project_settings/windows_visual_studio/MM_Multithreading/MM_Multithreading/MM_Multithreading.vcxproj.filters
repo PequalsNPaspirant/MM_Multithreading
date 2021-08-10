@@ -206,28 +206,10 @@
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_v1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v1.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v4.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_LockFree_v4.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v6.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_LockFree_v1.h">
@@ -258,6 +240,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_LockFree_v1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_LockFree_v2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_LockFree_v3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

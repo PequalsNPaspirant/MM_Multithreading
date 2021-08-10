@@ -15,71 +15,49 @@
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
+//THIS IS NOT REALLY A READ-WRITE LOCK. It's added just to demonstrate the lock free synchronization.
+
 namespace mm {
 
-	//TODO: This is Reader preferring lock. Fix to make it NoPref.
-
-	namespace readWriteLock_NoPref_LockFree_v4 {
+	namespace readWriteLock_LockFree_v2 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				int oldNumReaders = numReaders_.fetch_add(1);
-				if (oldNumReaders == 0)
+				bool expected = false;
+				bool newVal = true;
+				while (!readersOrWritterActive_.compare_exchange_weak(expected, newVal, std::memory_order_seq_cst))
 				{
-					while (readersOrWritterActive_.exchange(true))
-					{
-						std::this_thread::yield();
-					}
-					readersReadyToGo_.store(true, std::memory_order_release);
-				}
-
-				while (readersReadyToGo_.load(std::memory_order_acquire) == false)
+					expected = false;
 					std::this_thread::yield();
+				}
 			}
 
 			void unlock_shared()
 			{
-				int oldNumReaders = numReaders_.fetch_sub(1);
-				if (oldNumReaders == 1)
-				{
-					//reset the flags in reverse order they are set in lock_shared()
-					readersReadyToGo_.store(false, std::memory_order_release);
-					readersOrWritterActive_.store(false, std::memory_order_release);
-				}
+				readersOrWritterActive_.store(false, std::memory_order_release);
 			}
 
 			void lock()
 			{
-				while (numReaders_.load(std::memory_order_acquire) > 0
-					|| readersOrWritterActive_.exchange(true))
+				bool expected = false;
+				bool newVal = true;
+				while (!readersOrWritterActive_.compare_exchange_weak(expected, newVal, std::memory_order_seq_cst))
 				{
+					expected = false;
 					std::this_thread::yield();
 				}
-
-				//int oldNumWriters = numWriters_.fetch_add(1);
-
-				//while (numReaders_.load(std::memory_order_acquire) > 0
-				//	|| numWriters_.load(std::memory_order_acquire) > 1)
-				//	//|| writterActive_.load(std::memory_order_acquire) == true)
-				//	std::this_thread::yield();
-
-				//writterActive_.store(true, std::memory_order_release);
 			}
 
 			void unlock()
 			{
-				//--numWriters_; //equivalent to numWriters_.fetch_sub(1)
 				readersOrWritterActive_.store(false, std::memory_order_release);
 			}
 
 		private:
-			std::atomic<int> numReaders_{ 0 };
-			//std::atomic<int> numWriters_{ 0 };
 			std::atomic<bool> readersOrWritterActive_{ false };
-			std::atomic<bool> readersReadyToGo_{ false };
 		};
 
 		/*

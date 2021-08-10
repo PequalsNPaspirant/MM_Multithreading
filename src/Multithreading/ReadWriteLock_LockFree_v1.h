@@ -15,59 +15,49 @@
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
+//THIS IS NOT REALLY A READ-WRITE LOCK. It's added just to demonstrate the lock free synchronization.
+
 namespace mm {
 
-	//TODO: This is Reader preferring lock. Fix to make it NoPref.
-
-	namespace readWriteLock_NoPref_LockFree_v6 {
+	namespace readWriteLock_LockFree_v1 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				int expected = numReadersWriters_.load(std::memory_order_acquire);
-				while (expected > maxConcurrentReadersAllowed ||
-					!numReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_seq_cst))
+				bool expected = false;
+				bool newVal = true;
+				while (!readersOrWritterActive_.compare_exchange_strong(expected, newVal, std::memory_order_seq_cst))
 				{
-					expected = (expected > maxConcurrentReadersAllowed ? numReadersWriters_.load(std::memory_order_acquire) : expected);
-					std::this_thread::yield();
+					expected = false;
+					//std::this_thread::yield();
 				}
 			}
 
 			void unlock_shared()
 			{
-				--numReadersWriters_; //equivalent to numReaders_.fetch_sub(1, std::memory_order_seq_cst)
+				readersOrWritterActive_.store(false, std::memory_order_release);
 			}
 
 			void lock()
 			{
-				int expected = numReadersWriters_.load(std::memory_order_acquire);
-				while (expected > 0 ||
-					!numReadersWriters_.compare_exchange_weak(expected, expected + writerMask, std::memory_order_seq_cst))
+				bool expected = false;
+				bool newVal = true;
+				while (!readersOrWritterActive_.compare_exchange_strong(expected, newVal, std::memory_order_seq_cst))
 				{
-					expected = (expected > 0 ? numReadersWriters_.load(std::memory_order_acquire) : expected);
-					std::this_thread::yield();
+					expected = false;
+					//std::this_thread::yield();
 				}
 			}
 
 			void unlock()
 			{
-				numReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
+				readersOrWritterActive_.store(false, std::memory_order_release);
 			}
 
 		private:
-			/*
-
-			|<--   writers  -->|  |<--  readers   -->|
-			1111 1111  1111 1111  1111 1111  1111 1111
-			
-			*/
-
-			//Info: This allows maximum concurrent readers equal to 'maxConcurrentReadersAllowed' to read the data
-			std::atomic<int> numReadersWriters_{ 0 };
-			static constexpr const int writerMask{ 1 << 16 };
-			static constexpr const int maxConcurrentReadersAllowed{ writerMask - 1 };
+			std::atomic<bool> readersOrWritterActive_{ false };
 		};
 
 		/*

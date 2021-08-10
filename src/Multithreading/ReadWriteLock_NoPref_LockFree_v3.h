@@ -17,6 +17,8 @@
 
 namespace mm {
 
+	//TODO: This is Reader preferring lock. Fix to make it NoPref.
+
 	namespace readWriteLock_NoPref_LockFree_v3 {
 
 		class SharedMutex
@@ -24,32 +26,48 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				while (readersOrWritterActive_.exchange(true))
+				int expected = numReadersWriters_.load(std::memory_order_acquire);
+				while (expected > maxConcurrentReadersAllowed ||
+					!numReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_seq_cst))
 				{
+					expected = (expected > maxConcurrentReadersAllowed ? numReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
 			}
 
 			void unlock_shared()
 			{
-				readersOrWritterActive_.store(false, std::memory_order_release);
+				--numReadersWriters_; //equivalent to numReaders_.fetch_sub(1, std::memory_order_seq_cst)
 			}
 
 			void lock()
 			{
-				while (readersOrWritterActive_.exchange(true))
+				int expected = numReadersWriters_.load(std::memory_order_acquire);
+				while (expected > 0 ||
+					!numReadersWriters_.compare_exchange_weak(expected, expected + writerMask, std::memory_order_seq_cst))
 				{
+					expected = (expected > 0 ? numReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
 			}
 
 			void unlock()
 			{
-				readersOrWritterActive_.store(false, std::memory_order_release);
+				numReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
 			}
 
 		private:
-			std::atomic<bool> readersOrWritterActive_{ false };
+			/*
+
+			|<--   writers  -->|  |<--  readers   -->|
+			1111 1111  1111 1111  1111 1111  1111 1111
+			
+			*/
+
+			//Info: This allows maximum concurrent readers equal to 'maxConcurrentReadersAllowed' to read the data
+			std::atomic<int> numReadersWriters_{ 0 };
+			static constexpr const int writerMask{ 1 << 16 };
+			static constexpr const int maxConcurrentReadersAllowed{ writerMask - 1 };
 		};
 
 		/*
@@ -57,12 +75,12 @@ namespace mm {
 		0 -                                                                        start
 
 
-		1 -                                   R1                                                                          W1
+		1 -                                   R1                                                                          W1 
 
 
-		2 -               R2                                  W2                       	              R2                                  W2
+		2 -               R2                                  W2                       	              R2                                  W2             
 
-		3 -       R3               W3                 R3               W3                     R3               W3                 R3               W3
+		3 -       R3               W3                 R3               W3                     R3               W3                 R3               W3     
 		4 -    R4    W4         R4    W4		   R4    W4         R4    W4			   R4    W4         R4    W4		   R4    W4         R4    W4
 		*/
 
