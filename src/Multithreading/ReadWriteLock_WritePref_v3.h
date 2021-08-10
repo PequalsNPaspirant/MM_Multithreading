@@ -27,9 +27,13 @@ namespace mm {
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
 
-				while (numWritersWaiting_ > 0 || writterActive_)
+				++numReadersWaiting_;
+
+				//while (numWritersWaiting_ > 0 || writterActive_)
+				while (numWritersWaiting_ > 0 || numWritersActive_ > 0)
 					cv_.wait(lock);
 
+				--numReadersWaiting_;
 				++numReadersActive_;
 
 				lock.unlock();
@@ -53,21 +57,24 @@ namespace mm {
 				std::unique_lock<std::mutex> lock{ mu_ };
 				++numWritersWaiting_;
 
-				while (numReadersActive_ > 0 || writterActive_)
+				//while (numReadersActive_ > 0 || writterActive_)
+				while (numReadersActive_ > 0 || numWritersActive_ >= numConcurrentWritersAllowed)
 					cv_.wait(lock);
 
 				--numWritersWaiting_;
-				writterActive_ = true;
+				//writterActive_ = true;
+				++numWritersActive_;
 				lock.unlock();
 			}
 
 			void unlock()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-				writterActive_ = false;
+				--numWritersActive_;
+				//writterActive_ = false;
 				//lock.unlock();
 
-				if (numWritersWaiting_ == 0)
+				if (numReadersWaiting_ > 0)
 				{
 					lock.unlock();
 					cv_.notify_all(); //notify all readers
@@ -82,10 +89,13 @@ namespace mm {
 		private:
 			std::mutex mu_;
 			std::condition_variable cv_;
-
+			
+			int numReadersWaiting_{ 0 };
 			int numReadersActive_{ 0 };
 			int numWritersWaiting_{ 0 };
-			bool writterActive_{ false };
+			int numWritersActive_{ 0 };
+			//bool writterActive_{ false };
+			static constexpr const int numConcurrentWritersAllowed{ 1 };
 		};
 
 		/*

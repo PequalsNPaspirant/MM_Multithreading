@@ -718,7 +718,7 @@ namespace mm {
 			//Read Preferrence
 			///testReadWriteLock<readWriteLock_ReadPref_v1::ReadWriteLock>("readWriteLock_ReadPref_v1", ops);
 			///testReadWriteLock<readWriteLock_ReadPref_v2::ReadWriteLock>("readWriteLock_ReadPref_v2", ops);
-			///testReadWriteLock<readWriteLock_ReadPref_v3::ReadWriteLock>("readWriteLock_ReadPref_v3", ops);
+			testReadWriteLock<readWriteLock_ReadPref_v3::ReadWriteLock>("readWriteLock_ReadPref_v3", ops);
 
 			///testReadWriteLock<readWriteLock_ReadPref_LockFree_v1::ReadWriteLock>("ReadWriteLock_ReadPref_LockFree_v1", ops);
 			///testReadWriteLock<readWriteLock_ReadPref_LockFree_v2::ReadWriteLock>("ReadWriteLock_ReadPref_LockFree_v2", ops);
@@ -753,7 +753,7 @@ namespace mm {
 			//Read Preferrence
 			///testAllPermutationsOfOperations<readWriteLock_ReadPref_v1::ReadWriteLock>("readWriteLock_ReadPref_v1");
 			///testAllPermutationsOfOperations<readWriteLock_ReadPref_v2::ReadWriteLock>("readWriteLock_ReadPref_v2");
-			///testAllPermutationsOfOperations<readWriteLock_ReadPref_v3::ReadWriteLock>("readWriteLock_ReadPref_v3");
+			testAllPermutationsOfOperations<readWriteLock_ReadPref_v3::ReadWriteLock>("readWriteLock_ReadPref_v3");
 
 			///testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v1::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v1");
 			///testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v2::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v2");
