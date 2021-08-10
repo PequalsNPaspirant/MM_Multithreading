@@ -242,9 +242,6 @@
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_v3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -255,6 +252,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v4.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

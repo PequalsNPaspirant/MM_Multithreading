@@ -16,7 +16,7 @@
 
 namespace mm {
 
-	namespace readWriteLock_NoPref_v3 {
+	namespace readWriteLock_NoPref_v4 {
 
 		class SharedMutex
 		{
@@ -29,7 +29,7 @@ namespace mm {
 
 				//Assuming cv honours the sequence in which the threads are waiting on queue, if writer was woken up, do not allow readers because some writer was waiting in sequence on cv
 				//while (writterActive_ || writterWokenUp_)
-				while (numWritersActive_ > 0)
+				while (numWritersActive_ > 0 || writterWokenUp_)
 					cv_.wait(lock);
 
 				--numReadersWaiting_;
@@ -61,10 +61,10 @@ namespace mm {
 				while (numReadersActive_ > 0 || numWritersActive_ >= numConcurrentWritersAllowed)
 				{
 					cv_.wait(lock);
-					//writterWokenUp_ = true;
+					writterWokenUp_ = true;
 				}
 
-				//writterWokenUp_ = false;
+				writterWokenUp_ = false;
 
 				--numWritersWaiting_;
 				++numWritersActive_;
@@ -103,7 +103,7 @@ namespace mm {
 			//bool writterActive_{ false };
 			static constexpr const int numConcurrentWritersAllowed{ 1 };
 
-			//bool writterWokenUp_{ false };
+			bool writterWokenUp_{ false };
 		};
 
 		/*
