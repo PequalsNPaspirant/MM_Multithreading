@@ -12,85 +12,79 @@
 #include <shared_mutex>
 #include <condition_variable>
 
-//#include "SemaphoreUsingConditionVariable.h"
-
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
-
-//Reference: https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock
 
 namespace mm {
 
-	namespace readWriteLock_ReadPref_v2 {
+	namespace readWriteLock_ReadPref_v3 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				std::unique_lock<std::mutex> lock{ muReader_ };
+				std::unique_lock<std::mutex> lock{ mu_ };
 
 				++numReadersActive_;
 
-				if (numReadersActive_ == 1)
-				{
-					//semWriter_.P();
-					std::unique_lock<std::mutex> lock2(writerMu_);
-					while (writerCount_ == 0) // Handle spurious wake-ups.
-						writerCv_.wait(lock2);
-					--writerCount_;
-					lock2.unlock();
-				}
+				while (writterActive_)
+					cv_.wait(lock);
 
 				lock.unlock();
 			}
 
 			void unlock_shared()
 			{
-				std::unique_lock<std::mutex> lock{ muReader_ };
+				std::unique_lock<std::mutex> lock{ mu_ };
 				--numReadersActive_;
+				//lock.unlock();
 
 				if (numReadersActive_ == 0)
 				{
-					//semWriter_.V();
-					std::unique_lock<std::mutex> lock2(writerMu_);
-					++writerCount_;
-					lock2.unlock();
-
-					writerCv_.notify_one();
+					lock.unlock();
+					cv_.notify_all();
 				}
-
-				lock.unlock();
 			}
 
 			void lock()
 			{
-				//semWriter_.P();
-				std::unique_lock<std::mutex> lock(writerMu_);
-				while (writerCount_ == 0) // Handle spurious wake-ups.
-					writerCv_.wait(lock);
-				--writerCount_;
+				std::unique_lock<std::mutex> lock{ mu_ };
+
+				while (numReadersActive_ > 0 || writterActive_)
+					cv_.wait(lock);
+
+				writterActive_ = true;
+				//++numWritersActive_;
 				lock.unlock();
 			}
 
 			void unlock()
 			{
-				//semWriter_.V();
-				std::unique_lock<std::mutex> lock(writerMu_);
-				++writerCount_;
-				lock.unlock();
+				std::unique_lock<std::mutex> lock{ mu_ };
+				//--numWritersActive_;
+				writterActive_ = false;
+				//lock.unlock();
 
-				writerCv_.notify_one();
+				//cv_.notify_all();
+				if (numReadersActive_ > 0)
+				{
+					lock.unlock();
+					cv_.notify_all(); //notify all readers
+				}
+				else
+				{
+					lock.unlock();
+					cv_.notify_one(); //notify next one writer waiting on cv
+				}
 			}
 
 		private:
-			std::mutex muReader_;
-			constexpr static const int numParallelWriters_{ 1 };
-			//SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable semWriter_{ numParallelWriters_ };
-			std::mutex writerMu_;
-			std::condition_variable writerCv_;
-			unsigned long writerCount_ = { numParallelWriters_ };
+			std::mutex mu_;
+			std::condition_variable cv_;
 
 			int numReadersActive_{ 0 };
+			//int numWritersActive_{ 0 };
+			bool writterActive_{ false };
 		};
 
 		/*

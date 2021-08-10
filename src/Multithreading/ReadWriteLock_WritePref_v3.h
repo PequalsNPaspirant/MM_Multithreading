@@ -14,6 +14,8 @@
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 
+//Reference: https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock
+
 namespace mm {
 
 	namespace readWriteLock_WritePref_v3 {
@@ -25,8 +27,7 @@ namespace mm {
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
 
-				//while (numWritersWaiting_ > 0 || writterActive_)
-				while (numWritersActive_ > 0)
+				while (numWritersWaiting_ > 0 || writterActive_)
 					cv_.wait(lock);
 
 				++numReadersActive_;
@@ -38,34 +39,44 @@ namespace mm {
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
 				--numReadersActive_;
-				lock.unlock();
+				//lock.unlock();
 
-				if (numReadersActive_ == 0)
+				if(numReadersActive_ == 0)
+				{
+					lock.unlock();
 					cv_.notify_all();
+				}
 			}
 
 			void lock()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-				++numWritersActive_;
+				++numWritersWaiting_;
 
-				constexpr const int numParallelWritersAllowed = 1;
-				//while (numReadersActive_ > 0 || writterActive_)
-				while (numReadersActive_ > 0 || numWritersActive_ > numParallelWritersAllowed)
+				while (numReadersActive_ > 0 || writterActive_)
 					cv_.wait(lock);
 
-				//writterActive_ = true;
+				--numWritersWaiting_;
+				writterActive_ = true;
 				lock.unlock();
 			}
 
 			void unlock()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-				--numWritersActive_;
-				//writterActive_ = false;
-				lock.unlock();
+				writterActive_ = false;
+				//lock.unlock();
 
-				cv_.notify_all();
+				if (numWritersWaiting_ == 0)
+				{
+					lock.unlock();
+					cv_.notify_all(); //notify all readers
+				}
+				else
+				{
+					lock.unlock();
+					cv_.notify_one(); //notify next one writer waiting on cv
+				}
 			}
 
 		private:
@@ -73,8 +84,8 @@ namespace mm {
 			std::condition_variable cv_;
 
 			int numReadersActive_{ 0 };
-			int numWritersActive_{ 0 };
-			//bool writterActive_{ false };
+			int numWritersWaiting_{ 0 };
+			bool writterActive_{ false };
 		};
 
 		/*

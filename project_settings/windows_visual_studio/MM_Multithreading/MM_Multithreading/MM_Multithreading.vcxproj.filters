@@ -209,19 +209,7 @@
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_v2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v1.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_LockFree_v4.h">
@@ -249,6 +237,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_LockFree_v3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_v3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_WritePref_v3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_ReadPref_v2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\Multithreading\ReadWriteLock_NoPref_v2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

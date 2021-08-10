@@ -12,7 +12,11 @@
 #include <shared_mutex>
 #include <condition_variable>
 
+//#include "SemaphoreUsingConditionVariable.h"
+
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
+
+//Reference: https://en.wikipedia.org/wiki/Readers%E2%80%93writers_problem
 
 namespace mm {
 
@@ -23,66 +27,103 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				std::unique_lock<std::mutex> lock{ mu_ };
+				//serviceQueue_.P();
+				std::unique_lock<std::mutex> lock(serviceQueueMu_);
+				while (serviceQueueCount_ == 0) // Handle spurious wake-ups.
+					serviceQueueCv_.wait(lock);
+				--serviceQueueCount_;
+				lock.unlock();
 
-				++numReadersWaiting_;
+				std::unique_lock<std::mutex> lock2{ mu_ };
 
-				//Assuming cv honours the sequence in which the threads are waiting on queue, if writer was woken up, do not allow readers because some writer was waiting in sequence on cv
-				while (writterActive_ || writterWokenUp_)
-					cv_.wait(lock);
-
-				--numReadersWaiting_;
 				++numReadersActive_;
 
-				lock.unlock();
+				if (numReadersActive_ == 1)
+				{
+					//resource_.P();
+					std::unique_lock<std::mutex> lock3(resourceMu_);
+					while (resourceCount_ == 0) // Handle spurious wake-ups.
+						resourceCv_.wait(lock3);
+					--resourceCount_;
+					lock3.unlock();
+				}
+
+				//serviceQueue_.V();
+				std::unique_lock<std::mutex> lock4(serviceQueueMu_);
+				++serviceQueueCount_;
+				lock4.unlock();
+
+				serviceQueueCv_.notify_one();
+
+				lock2.unlock();
 			}
 
 			void unlock_shared()
 			{
 				std::unique_lock<std::mutex> lock{ mu_ };
-				--numReadersActive_;
-				lock.unlock();
 
-				if(numReadersActive_ == 0)
-					cv_.notify_all();
+				--numReadersActive_;
+
+				if (numReadersActive_ == 0)
+				{
+					//resource_.V();
+					std::unique_lock<std::mutex> lock2(resourceMu_);
+					++resourceCount_;
+					lock2.unlock();
+
+					resourceCv_.notify_one();
+				}
+
+				lock.unlock();
 			}
 
 			void lock()
 			{
-				std::unique_lock<std::mutex> lock{ mu_ };
-
-				++numWritersWaiting_;
-
-				while (numReadersActive_ > 0 || writterActive_)
-				{
-					cv_.wait(lock);
-					writterWokenUp_ = true;
-				}
-
-				writterWokenUp_ = false;
-				--numWritersWaiting_;
-				writterActive_ = true;
+				//serviceQueue_.P();
+				std::unique_lock<std::mutex> lock(serviceQueueMu_);
+				while (serviceQueueCount_ == 0) // Handle spurious wake-ups.
+					serviceQueueCv_.wait(lock);
+				--serviceQueueCount_;
 				lock.unlock();
+
+				//resource_.P();
+				std::unique_lock<std::mutex> lock2(resourceMu_);
+				while (resourceCount_ == 0) // Handle spurious wake-ups.
+					resourceCv_.wait(lock2);
+				--resourceCount_;
+				lock2.unlock();
+				
+				//serviceQueue_.V();
+				std::unique_lock<std::mutex> lock3(serviceQueueMu_);
+				++serviceQueueCount_;
+				lock3.unlock();
+
+				serviceQueueCv_.notify_one();
 			}
 
 			void unlock()
 			{
-				std::unique_lock<std::mutex> lock{ mu_ };
-				writterActive_ = false;
+				//resource_.V();
+				std::unique_lock<std::mutex> lock(resourceMu_);
+				++resourceCount_;
 				lock.unlock();
 
-				cv_.notify_all();
+				resourceCv_.notify_one();
 			}
 
 		private:
 			std::mutex mu_;
-			std::condition_variable cv_;
+			//SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable resource_{ 1 };
+			std::mutex resourceMu_;
+			std::condition_variable resourceCv_;
+			unsigned long resourceCount_ = { 1 };
 
-			int numReadersWaiting_{ 0 };
+			//SemaphoreUsingConditionVariable::SemaphoreUsingConditionVariable serviceQueue_{ 1 };
+			std::mutex serviceQueueMu_;
+			std::condition_variable serviceQueueCv_;
+			unsigned long serviceQueueCount_ = { 1 };
+
 			int numReadersActive_{ 0 };
-			int numWritersWaiting_{ 0 };
-			bool writterActive_{ false };
-			bool writterWokenUp_{ false };
 		};
 
 		/*
