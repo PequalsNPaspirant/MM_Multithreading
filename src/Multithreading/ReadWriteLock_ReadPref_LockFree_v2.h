@@ -25,13 +25,9 @@ namespace mm {
 			void lock_shared()
 			{
 				++numReadersWaiting_;
-				//int expected = numReadersWriters_.load(std::memory_order_acquire);
 				while (numActiveReadersWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
-				//while (expected > maxConcurrentReadersAllowed ||
-				//	!numReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_relaxed))
 				{
 					--numActiveReadersWriters_;
-					//expected = (expected > maxConcurrentReadersAllowed ? numReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
 				--numReadersWaiting_;
@@ -44,14 +40,12 @@ namespace mm {
 
 			void lock()
 			{
-				//int expected = numReadersWriters_.load(std::memory_order_acquire);
-				while (//numReadersWaiting_.load(std::memory_order_acquire) > 0 ||
+				int numReadersWaiting = numReadersWaiting_.load(std::memory_order_acquire);
+				while ((numReadersWaiting = numReadersWaiting_.load(std::memory_order_acquire)) > 0 ||
 					numActiveReadersWriters_.fetch_add(writerMask, std::memory_order_seq_cst) > 0)
-				//while (expected > 0 ||
-				//	!numReadersWriters_.compare_exchange_weak(expected, expected + writerMask, std::memory_order_relaxed))
 				{
-					numActiveReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
-					//expected = (expected > 0 ? numReadersWriters_.load(std::memory_order_acquire) : expected);
+					if(numReadersWaiting <= 0)
+						numActiveReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
 					std::this_thread::yield();
 				}
 			}

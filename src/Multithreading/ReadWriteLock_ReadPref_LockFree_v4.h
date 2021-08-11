@@ -24,34 +24,37 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				FlagType expected = numReadersWriters_.load(std::memory_order_acquire);
+				++numReadersWaiting_;
+				FlagType expected = numActiveReadersWriters_.load(std::memory_order_acquire);
 				while (expected > maxConcurrentReadersAllowed ||
-					!numReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_seq_cst))
+					!numActiveReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_seq_cst))
 				{
-					expected = (expected > maxConcurrentReadersAllowed ? numReadersWriters_.load(std::memory_order_acquire) : expected);
+					expected = (expected > maxConcurrentReadersAllowed ? numActiveReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
+				--numReadersWaiting_;
 			}
 
 			void unlock_shared()
 			{
-				--numReadersWriters_; //equivalent to numReaderWriters_.fetch_sub(1, std::memory_order_seq_cst)
+				--numActiveReadersWriters_; //equivalent to numReaderWriters_.fetch_sub(1, std::memory_order_seq_cst)
 			}
 
 			void lock()
 			{
-				FlagType expected = numReadersWriters_.load(std::memory_order_acquire);
+				FlagType expected = numActiveReadersWriters_.load(std::memory_order_acquire);
 				while (expected > 0 ||
-					!numReadersWriters_.compare_exchange_weak(expected, expected | writerMask, std::memory_order_seq_cst))
+					numReadersWaiting_.load(std::memory_order_acquire) > 0 ||
+					!numActiveReadersWriters_.compare_exchange_weak(expected, expected | writerMask, std::memory_order_seq_cst))
 				{
-					expected = (expected > 0 ? numReadersWriters_.load(std::memory_order_acquire) : expected);
+					expected = (expected > 0 ? numActiveReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
 			}
 
 			void unlock()
 			{
-				numReadersWriters_.fetch_and(writerMaskUnset, std::memory_order_seq_cst);
+				numActiveReadersWriters_.fetch_and(writerMaskUnset, std::memory_order_seq_cst);
 				//equivalent to numReaderWriters_ &= writerMaskUnset;
 				//equivalent to numReaderWriters_ &= (~writerMask);
 				//equivalent to numReaderWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
@@ -59,7 +62,8 @@ namespace mm {
 
 		private:
 			using FlagType = unsigned int;
-			std::atomic<FlagType> numReadersWriters_{ 0 };
+			std::atomic<int> numReadersWaiting_{ 0 };
+			std::atomic<FlagType> numActiveReadersWriters_{ 0 };
 			
 			/*
 
