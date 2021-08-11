@@ -24,15 +24,16 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				++numReadersWaiting_;
+				//++numReadersWaiting_;
 				int expected = numActiveReadersWriters_.load(std::memory_order_acquire);
 				while (expected > maxConcurrentReadersAllowed ||
+					numWritersWaiting_.load(std::memory_order_acquire) > 0 ||
 					!numActiveReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_seq_cst))
 				{
 					expected = (expected > maxConcurrentReadersAllowed ? numActiveReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
-				--numReadersWaiting_;
+				//--numReadersWaiting_;
 			}
 
 			void unlock_shared()
@@ -42,14 +43,16 @@ namespace mm {
 
 			void lock()
 			{
+				++numWritersWaiting_;
 				int expected = numActiveReadersWriters_.load(std::memory_order_acquire);
 				while (expected > 0 ||
-					numReadersWaiting_.load(std::memory_order_acquire) > 0 ||
+					//numReadersWaiting_.load(std::memory_order_acquire) > 0 ||
 					!numActiveReadersWriters_.compare_exchange_weak(expected, expected + writerMask, std::memory_order_seq_cst))
 				{
 					expected = (expected > 0 ? numActiveReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
+				--numWritersWaiting_;
 			}
 
 			void unlock()
@@ -66,7 +69,7 @@ namespace mm {
 			*/
 
 			//Info: This allows maximum concurrent readers equal to 'maxConcurrentReadersAllowed' to read the data
-			std::atomic<int> numReadersWaiting_{ 0 };
+			std::atomic<int> numWritersWaiting_{ 0 };
 			std::atomic<int> numActiveReadersWriters_{ 0 };
 			static constexpr const int writerMask{ 1 << 16 };
 			static constexpr const int maxConcurrentReadersAllowed{ writerMask - 1 };

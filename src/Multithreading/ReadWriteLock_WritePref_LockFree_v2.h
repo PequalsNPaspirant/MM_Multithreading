@@ -29,7 +29,8 @@ namespace mm {
 				while ((numWritersWaiting = numWritersWaiting_.load(std::memory_order_acquire)) > 0 ||
 					numActiveReadersWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
 				{
-					--numActiveReadersWriters_;
+					if(numWritersWaiting <= 0)
+						--numActiveReadersWriters_;
 					std::this_thread::yield();
 				}
 				//--numReadersWaiting_;

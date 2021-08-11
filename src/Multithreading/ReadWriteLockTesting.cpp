@@ -777,9 +777,9 @@ namespace mm {
 				///readWriteLock_WritePref_v3::ReadWriteLock,
 
 				//   FIX ME readWriteLock_WritePref_LockFree_v1::ReadWriteLock,
-				//   FIX ME readWriteLock_WritePref_LockFree_v2::ReadWriteLock,
-				//   FIX ME readWriteLock_WritePref_LockFree_v3::ReadWriteLock,
-				//   FIX ME readWriteLock_WritePref_LockFree_v4::ReadWriteLock
+				readWriteLock_WritePref_LockFree_v2::ReadWriteLock,
+				readWriteLock_WritePref_LockFree_v3::ReadWriteLock,
+				readWriteLock_WritePref_LockFree_v4::ReadWriteLock
 			>;
 
 			std::cout << "\n\n----testAllReadWriteLocks (faster the readers, sum will be minimum) ----\n";
