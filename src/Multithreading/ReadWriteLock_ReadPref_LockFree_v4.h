@@ -66,6 +66,8 @@ namespace mm {
 			 |<--    readers update this part     -->|
 			1111 1111  1111 1111  1111 1111  1111 1111
 
+			^
+			|
 			Writers update just MSB
 
 			*/

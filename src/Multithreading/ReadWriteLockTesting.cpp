@@ -13,6 +13,7 @@
 #include <queue>
 #include <atomic>
 #include <utility>
+#include <typeinfo>
 
 #include "MM_UnitTestFramework/MM_UnitTestFramework.h"
 #include "ReadWriteLock_std_v1.h"
@@ -150,7 +151,7 @@ namespace mm {
 		};
 
 		template<typename LockType>
-		size_t testReadWriteLock(const std::string& msg, const std::vector<Operations>& ops)
+		size_t testReadWriteLockPerformance(const std::string& msg, const std::vector<Operations>& ops)
 		{
 			std::random_device rd;
 			std::mt19937 mt(rd());
@@ -253,7 +254,7 @@ namespace mm {
 			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 			
 			long long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-			std::cout << "\n" << std::setw(35) << msg
+			std::cout << "\n" << std::setw(40) << msg
 				<< " duration: " << std::setw(18) << duration << " ns"
 				<< "   totalSum: " << std::setw(18) << totalSum
 				//<< " emptyCount: " << std::setw(6) << emptyCount
@@ -658,120 +659,126 @@ namespace mm {
 			for (int i = 0; i < ops.size(); ++i)
 			{
 				if (i % 2 == 0)
-					std::cout << "\r" << std::setw(36) << msg << ": " << i << " operations done";
+					std::cout << "\r" << std::setw(40) << msg << ": " << i << " operations done";
 
 				testSingleOperationsSet<ReadWriteLockType>(2, 2, ops[i]);
 			}
 
 			std::cout << std::endl;
 		}
+		
+		template <typename T>
+		struct testReadWriteLockPerformanceHelper
+		{
+			static void call() {}
+		};
 
+		template <typename T, typename... Ts>
+		struct testReadWriteLockPerformanceHelper< std::tuple<T, Ts...> >
+		{
+			static void call()
+			{
+				std::random_device rd;
+				std::mt19937 mt(rd());
+				std::uniform_int_distribution<int> dist(1, 100);
 
+				std::vector<Operations> ops;
+				//int iterations = 10000;
+				//int queueSize = 0;
+				//for (int i = 0; i < iterations; ++i)
+				//{
+				//	int randomNum = dist(mt);
+				//	if (queueSize != 0)
+				//	{
+				//		if (randomNum % 10 == 0)
+				//		{
+				//			ops.push_back(Operations::pop);
+				//			--queueSize;
+				//		}
+				//		else
+				//			ops.push_back(Operations::top);
+				//	}
+				//	else
+				//	{
+				//		ops.push_back(Operations::push);
+				//		++queueSize;
+				//	}
+				//}
+				
+				std::string typeName{ typeid(T).name() };
+				typeName = typeName.substr(typeName.find_first_of("::") + 2);
+				typeName = typeName.substr(0, typeName.find_last_of("::"));
 
+				testReadWriteLockPerformance<T>(typeName, ops);
+				testReadWriteLockPerformanceHelper<std::tuple<Ts...>>::call();
+			}
+			
+		};
 
+		template <typename T>
+		struct testAllPermutationsOfOperationsHelper
+		{
+			static void call() {}
+		};
 
+		template <typename T, typename... Ts>
+		struct testAllPermutationsOfOperationsHelper< std::tuple<T, Ts...> >
+		{
+			static void call()
+			{
+				std::string typeName{ typeid(T).name() };
+				typeName = typeName.substr(typeName.find_first_of("::") + 2);
+				typeName = typeName.substr(0, typeName.find_last_of("::"));
 
+				testAllPermutationsOfOperations<T>(typeName);
+				testAllPermutationsOfOperationsHelper<std::tuple<Ts...>>::call();
+			}
+		};
+		
 
 		void testAllReadWriteLocks()
 		{
-			std::random_device rd;
-			std::mt19937 mt(rd());
-			std::uniform_int_distribution<int> dist(1, 100);
+			using LockTypes = std::tuple<
+				///readWriteLock_stdMutex_v1::ReadWriteLock, 
+				///readWriteLock_stdSharedMutex_v1::ReadWriteLock,
 
-			std::vector<Operations> ops;
-			//int iterations = 10000;
-			//int queueSize = 0;
-			//for (int i = 0; i < iterations; ++i)
-			//{
-			//	int randomNum = dist(mt);
-			//	if (queueSize != 0)
-			//	{
-			//		if (randomNum % 10 == 0)
-			//		{
-			//			ops.push_back(Operations::pop);
-			//			--queueSize;
-			//		}
-			//		else
-			//			ops.push_back(Operations::top);
-			//	}
-			//	else
-			//	{
-			//		ops.push_back(Operations::push);
-			//		++queueSize;
-			//	}
-			//}
+				//THESE ARE NOT REALLY READ-WRITE LOCKs. It's added just to demonstrate the lock free synchronization.
+				///readWriteLock_LockFree_v1::ReadWriteLock,
+				///readWriteLock_LockFree_v2::ReadWriteLock,
+				///readWriteLock_LockFree_v3::ReadWriteLock,
+
+				//No peferrence
+				///readWriteLock_NoPref_v1::ReadWriteLock,
+				///readWriteLock_NoPref_v2::ReadWriteLock,
+				///readWriteLock_NoPref_v3::ReadWriteLock,
+				///readWriteLock_NoPref_v4::ReadWriteLock,
+
+				readWriteLock_NoPref_LockFree_v1::ReadWriteLock,
+				readWriteLock_NoPref_LockFree_v2::ReadWriteLock,
+				readWriteLock_NoPref_LockFree_v3::ReadWriteLock,
+
+				//Read Preferrence
+				///readWriteLock_ReadPref_v1::ReadWriteLock,
+				///readWriteLock_ReadPref_v2::ReadWriteLock,
+				///readWriteLock_ReadPref_v3::ReadWriteLock,
+
+				readWriteLock_ReadPref_LockFree_v1::ReadWriteLock,
+				readWriteLock_ReadPref_LockFree_v2::ReadWriteLock,
+				readWriteLock_ReadPref_LockFree_v3::ReadWriteLock,
+				readWriteLock_ReadPref_LockFree_v4::ReadWriteLock
+
+				//Write Preferrence
+				///readWriteLock_WritePref_v1::ReadWriteLock,
+				///readWriteLock_WritePref_v2::ReadWriteLock,
+				///readWriteLock_WritePref_v3::ReadWriteLock
+			>;
+
 			std::cout << "\n\n----testAllReadWriteLocks (faster the readers, sum will be minimum) ----\n";
+			testReadWriteLockPerformanceHelper<LockTypes>::call();
 
-			///testReadWriteLock<readWriteLock_stdMutex_v1::ReadWriteLock>("readWriteLock_stdMutex_v1", ops);
-			///testReadWriteLock<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("readWriteLock_stdSharedMutex_v1", ops);
-
-			//No peferrence
-			///testReadWriteLock<readWriteLock_NoPref_v1::ReadWriteLock>("readWriteLock_NoPref_v1", ops);
-			///testReadWriteLock<readWriteLock_NoPref_v2::ReadWriteLock>("readWriteLock_NoPref_v2", ops);
-			testReadWriteLock<readWriteLock_NoPref_v3::ReadWriteLock>("readWriteLock_NoPref_v3", ops);
-			testReadWriteLock<readWriteLock_NoPref_v4::ReadWriteLock>("readWriteLock_NoPref_v4", ops);
-
-			///testReadWriteLock<readWriteLock_NoPref_LockFree_v1::ReadWriteLock>("readWriteLock_NoPref_LockFree_v1", ops);
-			///testReadWriteLock<readWriteLock_NoPref_LockFree_v2::ReadWriteLock>("readWriteLock_NoPref_LockFree_v2", ops);
-			///testReadWriteLock<readWriteLock_NoPref_LockFree_v3::ReadWriteLock>("readWriteLock_NoPref_LockFree_v3", ops);
-			// /*FIXME to make NoPref instead of readPref*/ testReadWriteLock<readWriteLock_NoPref_LockFree_v4::ReadWriteLock>("readWriteLock_NoPref_LockFree_v4", ops);
-			// /*FIXME to make NoPref instead of readPref*/ testReadWriteLock<readWriteLock_NoPref_LockFree_v5::ReadWriteLock>("readWriteLock_NoPref_LockFree_v5", ops);
-			// /*FIXME to make NoPref instead of readPref*/ testReadWriteLock<readWriteLock_NoPref_LockFree_v6::ReadWriteLock>("readWriteLock_NoPref_LockFree_v6", ops);
-
-			//Read Preferrence
-			///testReadWriteLock<readWriteLock_ReadPref_v1::ReadWriteLock>("readWriteLock_ReadPref_v1", ops);
-			///testReadWriteLock<readWriteLock_ReadPref_v2::ReadWriteLock>("readWriteLock_ReadPref_v2", ops);
-			testReadWriteLock<readWriteLock_ReadPref_v3::ReadWriteLock>("readWriteLock_ReadPref_v3", ops);
-
-			///testReadWriteLock<readWriteLock_ReadPref_LockFree_v1::ReadWriteLock>("ReadWriteLock_ReadPref_LockFree_v1", ops);
-			///testReadWriteLock<readWriteLock_ReadPref_LockFree_v2::ReadWriteLock>("ReadWriteLock_ReadPref_LockFree_v2", ops);
-			///testReadWriteLock<readWriteLock_ReadPref_LockFree_v3::ReadWriteLock>("ReadWriteLock_ReadPref_LockFree_v3", ops);
-			///testReadWriteLock<readWriteLock_ReadPref_LockFree_v4::ReadWriteLock>("ReadWriteLock_ReadPref_LockFree_v4", ops);
-
-			//Write Preferrence
-			///testReadWriteLock<readWriteLock_WritePref_v1::ReadWriteLock>("readWriteLock_WritePref_v1", ops);
-			///testReadWriteLock<readWriteLock_WritePref_v2::ReadWriteLock>("readWriteLock_WritePref_v2", ops);
-			testReadWriteLock<readWriteLock_WritePref_v3::ReadWriteLock>("readWriteLock_WritePref_v3", ops);
-		}
-
-		void testAllReadWriteLocksInSteps()
-		{
 			std::cout << "\n\n----testAllReadWriteLocksInSteps----\n";
-
-			///testAllPermutationsOfOperations<readWriteLock_stdMutex_v1::ReadWriteLock>("readWriteLock_stdMutex_v1");
-			///testAllPermutationsOfOperations<readWriteLock_stdSharedMutex_v1::ReadWriteLock>("readWriteLock_stdSharedMutex_v1");
-			
-			//THESE ARE NOT REALLY READ-WRITE LOCKs. It's added just to demonstrate the lock free synchronization.
-			///testAllPermutationsOfOperations<readWriteLock_LockFree_v1::ReadWriteLock>("ReadWriteLock_LockFree_v1");
-			///testAllPermutationsOfOperations<readWriteLock_LockFree_v2::ReadWriteLock>("ReadWriteLock_LockFree_v2");
-			///testAllPermutationsOfOperations<readWriteLock_LockFree_v3::ReadWriteLock>("ReadWriteLock_LockFree_v3");
-
-			//No peferrence
-			///testAllPermutationsOfOperations<readWriteLock_NoPref_v1::ReadWriteLock>("readWriteLock_NoPref_v1");
-			///testAllPermutationsOfOperations<readWriteLock_NoPref_v2::ReadWriteLock>("readWriteLock_NoPref_v2");
-			///testAllPermutationsOfOperations<readWriteLock_NoPref_v3::ReadWriteLock>("readWriteLock_NoPref_v3");
-			///testAllPermutationsOfOperations<readWriteLock_NoPref_v4::ReadWriteLock>("readWriteLock_NoPref_v4");
-
-			 /*FIXME to make NoPref instead of readPref*/ testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v1::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v1");
-			 /*FIXME to make NoPref instead of readPref*/ testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v2::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v2");
-			 /*FIXME to make NoPref instead of readPref*/ testAllPermutationsOfOperations<readWriteLock_NoPref_LockFree_v3::ReadWriteLock>("ReadWriteLock_NoPref_LockFree_v3");
-			
-			//Read Preferrence
-			///testAllPermutationsOfOperations<readWriteLock_ReadPref_v1::ReadWriteLock>("readWriteLock_ReadPref_v1");
-			///testAllPermutationsOfOperations<readWriteLock_ReadPref_v2::ReadWriteLock>("readWriteLock_ReadPref_v2");
-			///testAllPermutationsOfOperations<readWriteLock_ReadPref_v3::ReadWriteLock>("readWriteLock_ReadPref_v3");
-
-			testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v1::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v1");
-			testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v2::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v2");
-			testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v3::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v3");
-			testAllPermutationsOfOperations<readWriteLock_ReadPref_LockFree_v4::ReadWriteLock>("readWriteLock_ReadPref_LockFree_v4");
-
-			//Write Preferrence
-			///testAllPermutationsOfOperations<readWriteLock_WritePref_v1::ReadWriteLock>("readWriteLock_WritePref_v1");
-			///testAllPermutationsOfOperations<readWriteLock_WritePref_v2::ReadWriteLock>("readWriteLock_WritePref_v2");
-			///testAllPermutationsOfOperations<readWriteLock_WritePref_v3::ReadWriteLock>("readWriteLock_WritePref_v3");
+			testAllPermutationsOfOperationsHelper<LockTypes>::call();
 		}
-
 	}
 
 	MM_DECLARE_FLAG(ReadWriteLock);
@@ -781,11 +788,10 @@ namespace mm {
 		std::cout.imbue(std::locale{ "" });
 
 		int runIndex = 0;
-		while (true)
+		//while (true)
 		{
-			std::cout << "\n\n======================== Run Index " << ++runIndex << "========================\n";
+			std::cout << "\n\n======================== Run Index " << ++runIndex << " ========================\n";
 			readWriteLockTesting::testAllReadWriteLocks();
-			readWriteLockTesting::testAllReadWriteLocksInSteps();
 		}
 	}
 }

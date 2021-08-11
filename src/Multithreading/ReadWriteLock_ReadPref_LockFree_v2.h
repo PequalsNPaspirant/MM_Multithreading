@@ -24,30 +24,33 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
+				++numReadersWaiting_;
 				//int expected = numReadersWriters_.load(std::memory_order_acquire);
-				while (numReadersWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
+				while (numActiveReadersWriters_.fetch_add(1, std::memory_order_seq_cst) > maxConcurrentReadersAllowed)
 				//while (expected > maxConcurrentReadersAllowed ||
 				//	!numReadersWriters_.compare_exchange_weak(expected, expected + 1, std::memory_order_relaxed))
 				{
-					--numReadersWriters_;
+					--numActiveReadersWriters_;
 					//expected = (expected > maxConcurrentReadersAllowed ? numReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
+				--numReadersWaiting_;
 			}
 
 			void unlock_shared()
 			{
-				--numReadersWriters_; //equivalent to numReaders_.fetch_sub(1, std::memory_order_seq_cst)
+				--numActiveReadersWriters_; //equivalent to numReaders_.fetch_sub(1, std::memory_order_seq_cst)
 			}
 
 			void lock()
 			{
 				//int expected = numReadersWriters_.load(std::memory_order_acquire);
-				while (numReadersWriters_.fetch_add(writerMask, std::memory_order_seq_cst) > 0)
+				while (//numReadersWaiting_.load(std::memory_order_acquire) > 0 ||
+					numActiveReadersWriters_.fetch_add(writerMask, std::memory_order_seq_cst) > 0)
 				//while (expected > 0 ||
 				//	!numReadersWriters_.compare_exchange_weak(expected, expected + writerMask, std::memory_order_relaxed))
 				{
-					numReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
+					numActiveReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
 					//expected = (expected > 0 ? numReadersWriters_.load(std::memory_order_acquire) : expected);
 					std::this_thread::yield();
 				}
@@ -55,7 +58,7 @@ namespace mm {
 
 			void unlock()
 			{
-				numReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
+				numActiveReadersWriters_.fetch_sub(writerMask, std::memory_order_seq_cst);
 			}
 
 		private:
@@ -67,7 +70,8 @@ namespace mm {
 			*/
 
 			//Info: This allows maximum concurrent readers equal to 'maxConcurrentReadersAllowed' to read the data
-			std::atomic<int> numReadersWriters_{ 0 };
+			std::atomic<int> numReadersWaiting_{ 0 };
+			std::atomic<int> numActiveReadersWriters_{ 0 };
 			static constexpr const int writerMask{ 1 << 16 };
 			static constexpr const int maxConcurrentReadersAllowed{ writerMask - 1 };
 		};
