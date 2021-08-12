@@ -747,8 +747,9 @@ namespace mm {
 				///readWriteLock_stdMutex_v1::ReadWriteLock, 
 				///readWriteLock_stdSharedMutex_v1::ReadWriteLock,
 
-				//THESE ARE NOT REALLY READ-WRITE LOCKs. It's added just to demonstrate the lock free synchronization.
-				///readWriteLock_LockFree_v1::ReadWriteLock,
+				//THESE ARE NOT REALLY READ-WRITE LOCKs, but based on their behavior, we can say these are no preferrence read/write locks.
+				//These are added just to demonstrate the lock free synchronization.
+				///readWriteLock_LockFree_v1::ReadWriteLock,  //This is without thread::yield() and so takes lot of time
 				///readWriteLock_LockFree_v2::ReadWriteLock,
 				///readWriteLock_LockFree_v3::ReadWriteLock,
 
@@ -758,19 +759,19 @@ namespace mm {
 				///readWriteLock_NoPref_v3::ReadWriteLock,
 				///readWriteLock_NoPref_v4::ReadWriteLock,
 
-				readWriteLock_NoPref_LockFree_v1::ReadWriteLock,
-				readWriteLock_NoPref_LockFree_v2::ReadWriteLock,
-				readWriteLock_NoPref_LockFree_v3::ReadWriteLock,
-				////////////readWriteLock_NoPref_LockFree_v4::ReadWriteLock,  /*FIX ME*/
+				///readWriteLock_NoPref_LockFree_v1::ReadWriteLock,
+				///readWriteLock_NoPref_LockFree_v2::ReadWriteLock,
+				///readWriteLock_NoPref_LockFree_v3::ReadWriteLock,
+				readWriteLock_NoPref_LockFree_v4::ReadWriteLock,  /*FIX ME*/
 
 				//Read Preferrence
 				///readWriteLock_ReadPref_v1::ReadWriteLock,
 				///readWriteLock_ReadPref_v2::ReadWriteLock,
 				///readWriteLock_ReadPref_v3::ReadWriteLock,
 
-				readWriteLock_ReadPref_LockFree_v1::ReadWriteLock,
-				readWriteLock_ReadPref_LockFree_v2::ReadWriteLock,
-				readWriteLock_ReadPref_LockFree_v3::ReadWriteLock,
+				///readWriteLock_ReadPref_LockFree_v1::ReadWriteLock,
+				///readWriteLock_ReadPref_LockFree_v2::ReadWriteLock,
+				///readWriteLock_ReadPref_LockFree_v3::ReadWriteLock,
 				readWriteLock_ReadPref_LockFree_v4::ReadWriteLock,  /*FIX ME*/
 
 				//Write Preferrence
@@ -778,9 +779,9 @@ namespace mm {
 				///readWriteLock_WritePref_v2::ReadWriteLock,
 				///readWriteLock_WritePref_v3::ReadWriteLock,
 
-				readWriteLock_WritePref_LockFree_v1::ReadWriteLock,
-				readWriteLock_WritePref_LockFree_v2::ReadWriteLock,
-				readWriteLock_WritePref_LockFree_v3::ReadWriteLock,
+				///readWriteLock_WritePref_LockFree_v1::ReadWriteLock,
+				///readWriteLock_WritePref_LockFree_v2::ReadWriteLock,
+				///readWriteLock_WritePref_LockFree_v3::ReadWriteLock,
 				readWriteLock_WritePref_LockFree_v4::ReadWriteLock   /*FIX ME*/
 			>;
 
