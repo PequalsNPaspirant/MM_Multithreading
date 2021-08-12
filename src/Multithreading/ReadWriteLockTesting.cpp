@@ -757,19 +757,20 @@ namespace mm {
 				///readWriteLock_NoPref_v3::ReadWriteLock,
 				///readWriteLock_NoPref_v4::ReadWriteLock,
 
-				///readWriteLock_NoPref_LockFree_v1::ReadWriteLock,  /*FIX ME*/
-				///readWriteLock_NoPref_LockFree_v2::ReadWriteLock,  /*FIX ME*/
-				///readWriteLock_NoPref_LockFree_v3::ReadWriteLock,  /*FIX ME*/
+				readWriteLock_NoPref_LockFree_v1::ReadWriteLock,  /*FIX ME*/
+				readWriteLock_NoPref_LockFree_v2::ReadWriteLock,
+				readWriteLock_NoPref_LockFree_v3::ReadWriteLock,
+				readWriteLock_NoPref_LockFree_v4::ReadWriteLock,
 
 				//Read Preferrence
 				///readWriteLock_ReadPref_v1::ReadWriteLock,
 				///readWriteLock_ReadPref_v2::ReadWriteLock,
 				///readWriteLock_ReadPref_v3::ReadWriteLock,
 
-				///readWriteLock_ReadPref_LockFree_v1::ReadWriteLock,  /*FIX ME*/
-				///readWriteLock_ReadPref_LockFree_v2::ReadWriteLock,
-				///readWriteLock_ReadPref_LockFree_v3::ReadWriteLock,
-				///readWriteLock_ReadPref_LockFree_v4::ReadWriteLock,
+				readWriteLock_ReadPref_LockFree_v1::ReadWriteLock,  /*FIX ME*/
+				readWriteLock_ReadPref_LockFree_v2::ReadWriteLock,
+				readWriteLock_ReadPref_LockFree_v3::ReadWriteLock,
+				readWriteLock_ReadPref_LockFree_v4::ReadWriteLock,
 
 				//Write Preferrence
 				///readWriteLock_WritePref_v1::ReadWriteLock,

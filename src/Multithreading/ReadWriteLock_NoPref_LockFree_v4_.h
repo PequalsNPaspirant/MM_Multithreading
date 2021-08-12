@@ -26,45 +26,81 @@ namespace mm {
 		public:
 			void lock_shared()
 			{
-				int oldNumReaders = numReadersWaiting_.fetch_add(1);
-				if (oldNumReaders == 0)
-				{
-					while (readersOrWritterActive_.exchange(true))
-						//&& !readersReadyToGo_.load(std::memory_order_acquire))
-						//|| numWritersWaiting_.load(std::memory_order_acquire) > 0
-					{
-						std::this_thread::yield();
-					}
-				
-					readersReadyToGo_.store(true, std::memory_order_release);
-				}
+				//while (!isReader.exchange(true))
+				//	std::this_thread::yield();
 
-				while (readersReadyToGo_.load(std::memory_order_acquire) == false)
+				int oldNumReaders = numReadersWaiting_.fetch_add(1);
+
+				size_t uniqueId = 0;
+				//if (oldNumReaders == 0)
+					uniqueId = uniqueId_.fetch_add(1);
+				//else
+				//	uniqueId = uniqueId_.load(std::memory_order_acquire);
+
+				//size_t 
+				while (uniqueId > uniqueIdCurrent_.load(std::memory_order_acquire))
 					std::this_thread::yield();
+
+				//++numReadersWaiting_;
+				//++uniqueIdCurrent_;
+
+				//int oldNumReaders = numReadersWaiting_.fetch_add(1);
+				//if (oldNumReaders == 0)
+				//{
+				//	while (readersOrWritterActive_.exchange(true))
+				//		//&& !readersReadyToGo_.load(std::memory_order_acquire))
+				//		//|| numWritersWaiting_.load(std::memory_order_acquire) > 0
+				//	{
+				//		std::this_thread::yield();
+				//	}
+				//
+				//	readersReadyToGo_.store(true, std::memory_order_release);
+				//}
+
+				//while (readersReadyToGo_.load(std::memory_order_acquire) == false)
+				//	std::this_thread::yield();
 			}
 
 			void unlock_shared()
 			{
-				int oldNumReaders = numReadersWaiting_.fetch_sub(1);
-				if (oldNumReaders == 1)
-				{
-					//reset the flags in reverse order they are set in lock_shared()
-					readersReadyToGo_.store(false, std::memory_order_release);
-					readersOrWritterActive_.store(false, std::memory_order_release);
-				}
+				//int oldNumReaders = numReadersWaiting_.fetch_sub(1);
+				//if (oldNumReaders == 1)
+				//{
+				//	//reset the flags in reverse order they are set in lock_shared()
+				//	readersReadyToGo_.store(false, std::memory_order_release);
+				//	readersOrWritterActive_.store(false, std::memory_order_release);
+				//}
+				//--numReadersWaiting_;
+				//int oldNumReaders = numReadersWaiting_.fetch_sub(1);
+				//if(oldNumReaders == 1)
+					++uniqueIdCurrent_;
 			}
 
 			void lock()
 			{
-				numWritersWaiting_.fetch_add(1);
+				//while (isReader.exchange(false))
+				//	std::this_thread::yield();
 
-				while (numReadersWaiting_.load(std::memory_order_acquire) > 0
-					|| readersOrWritterActive_.exchange(true))
-				{
+				size_t uniqueId = uniqueId_.fetch_add(1);
+				while (uniqueId > uniqueIdCurrent_.load(std::memory_order_acquire))
 					std::this_thread::yield();
-				}
 
-				numWritersWaiting_.fetch_sub(1);
+				//Reset reader count
+				//numReadersWaiting_ = 0;
+				//uniqueId_.fetch_add(1);
+
+				//++uniqueIdCurrent_;
+
+				//numWritersWaiting_.fetch_add(1);
+
+				//while (numReadersWaiting_.load(std::memory_order_acquire) > 0
+				//	//|| readersOrWritterActive_.exchange(true)
+				//	)
+				//{
+				//	std::this_thread::yield();
+				//}
+
+				//numWritersWaiting_.fetch_sub(1);
 
 				//int oldNumWriters = numWriters_.fetch_add(1);
 
@@ -79,14 +115,19 @@ namespace mm {
 			void unlock()
 			{
 				//--numWriters_; //equivalent to numWriters_.fetch_sub(1)
-				readersOrWritterActive_.store(false, std::memory_order_release);
+				//readersOrWritterActive_.store(false, std::memory_order_release);
+				++uniqueIdCurrent_;
 			}
 
 		private:
+			std::atomic<size_t> uniqueId_{ 0 };
+			std::atomic<size_t> uniqueIdLastReader_{ 0 };
+			std::atomic<size_t> uniqueIdCurrent_{ 0 };
 			std::atomic<int> numReadersWaiting_{ 0 };
 			std::atomic<int> numWritersWaiting_{ 0 };
 			std::atomic<bool> readersOrWritterActive_{ false };
 			std::atomic<bool> readersReadyToGo_{ false };
+			std::atomic<bool> isReader{ false };
 		};
 
 		/*
