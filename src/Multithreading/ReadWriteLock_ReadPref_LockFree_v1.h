@@ -17,7 +17,7 @@
 
 namespace mm {
 
-	namespace readWriteLock_ReadPref_LockFree_v2 {
+	namespace readWriteLock_ReadPref_LockFree_v1 {
 
 		class SharedMutex
 		{

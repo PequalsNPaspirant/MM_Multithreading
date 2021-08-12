@@ -19,7 +19,7 @@ namespace mm {
 
 	//TODO: This is Reader preferring lock. Fix to make it NoPref.
 
-	namespace readWriteLock_NoPref_LockFree_v3 {
+	namespace readWriteLock_NoPref_LockFree_v2 {
 
 		class SharedMutex
 		{
