@@ -120,14 +120,23 @@ namespace mm {
 					throw std::runtime_error{ "Queue underflow" };
 
 				lock_.acquireReadLock();
-				size_t* sz = size_.get();
-				if (sz == nullptr || buffer_.size() != *sz)
+				size_t* sz1 = size_.get();
+				if (sz1 == nullptr)
+					throw std::runtime_error{ "Size is not valid" };
+				if (buffer_.size() != *sz1)
 					throw std::runtime_error{ "Size is not equal to queue size" };
 
 				const ObjectType& retVal = buffer_.front();
 
-				if (sz == nullptr || buffer_.size() != *sz)
+				size_t* sz2 = size_.get();
+				if (sz2 == nullptr)
+					throw std::runtime_error{ "Size is not valid" };
+				if (buffer_.size() != *sz2)
 					throw std::runtime_error{ "Size is not equal to queue size" };
+
+				if (sz1 != sz2)
+					throw std::runtime_error{ "Size changed during reading" };
+
 				lock_.releaseReadLock();
 
 				return retVal;
@@ -744,45 +753,48 @@ namespace mm {
 		void testAllReadWriteLocks()
 		{
 			using LockTypes = std::tuple<
-				///readWriteLock_stdMutex_v1::ReadWriteLock, 
-				///readWriteLock_stdSharedMutex_v1::ReadWriteLock,
+				readWriteLock_stdMutex_v1::ReadWriteLock, 
+				readWriteLock_stdSharedMutex_v1::ReadWriteLock,
 
 				//THESE ARE NOT REALLY READ-WRITE LOCKs, but based on their behavior, we can say these are no preferrence read/write locks.
 				//These are added just to demonstrate the lock free synchronization.
 				///readWriteLock_LockFree_v1::ReadWriteLock,  //This is without thread::yield() and so takes lot of time
-				///readWriteLock_LockFree_v2::ReadWriteLock,
-				///readWriteLock_LockFree_v3::ReadWriteLock,
+				readWriteLock_LockFree_v2::ReadWriteLock,
+				readWriteLock_LockFree_v3::ReadWriteLock,
 
 				//No peferrence
-				///readWriteLock_NoPref_v1::ReadWriteLock,
-				///readWriteLock_NoPref_v2::ReadWriteLock,
-				///readWriteLock_NoPref_v3::ReadWriteLock,
-				///readWriteLock_NoPref_v4::ReadWriteLock,
+				readWriteLock_NoPref_v1::ReadWriteLock,
+				readWriteLock_NoPref_v2::ReadWriteLock,
+				readWriteLock_NoPref_v3::ReadWriteLock,
+				readWriteLock_NoPref_v4::ReadWriteLock,
 
-				///readWriteLock_NoPref_LockFree_v1::ReadWriteLock,
-				///readWriteLock_NoPref_LockFree_v2::ReadWriteLock,
-				///readWriteLock_NoPref_LockFree_v3::ReadWriteLock,
-				readWriteLock_NoPref_LockFree_v4::ReadWriteLock,  /*FIX ME*/
+				readWriteLock_NoPref_LockFree_v1::ReadWriteLock,
+				readWriteLock_NoPref_LockFree_v2::ReadWriteLock,
+				readWriteLock_NoPref_LockFree_v3::ReadWriteLock,
+				//readWriteLock_NoPref_LockFree_v4_1::ReadWriteLock,  /*FIX ME*/
+				//readWriteLock_NoPref_LockFree_v4_2::ReadWriteLock,  /*FIX ME*/
+				//readWriteLock_NoPref_LockFree_v4_3::ReadWriteLock,  /*FIX ME*/
+				//readWriteLock_NoPref_LockFree_v4_4::ReadWriteLock,  /*FIX ME*/
 
 				//Read Preferrence
-				///readWriteLock_ReadPref_v1::ReadWriteLock,
-				///readWriteLock_ReadPref_v2::ReadWriteLock,
-				///readWriteLock_ReadPref_v3::ReadWriteLock,
+				readWriteLock_ReadPref_v1::ReadWriteLock,
+				readWriteLock_ReadPref_v2::ReadWriteLock,
+				readWriteLock_ReadPref_v3::ReadWriteLock,
 
-				///readWriteLock_ReadPref_LockFree_v1::ReadWriteLock,
-				///readWriteLock_ReadPref_LockFree_v2::ReadWriteLock,
-				///readWriteLock_ReadPref_LockFree_v3::ReadWriteLock,
-				readWriteLock_ReadPref_LockFree_v4::ReadWriteLock,  /*FIX ME*/
+				readWriteLock_ReadPref_LockFree_v1::ReadWriteLock,
+				readWriteLock_ReadPref_LockFree_v2::ReadWriteLock,
+				readWriteLock_ReadPref_LockFree_v3::ReadWriteLock,
+				//readWriteLock_ReadPref_LockFree_v4::ReadWriteLock,  /*FIX ME*/
 
 				//Write Preferrence
-				///readWriteLock_WritePref_v1::ReadWriteLock,
-				///readWriteLock_WritePref_v2::ReadWriteLock,
-				///readWriteLock_WritePref_v3::ReadWriteLock,
+				readWriteLock_WritePref_v1::ReadWriteLock,
+				readWriteLock_WritePref_v2::ReadWriteLock,
+				readWriteLock_WritePref_v3::ReadWriteLock,
 
-				///readWriteLock_WritePref_LockFree_v1::ReadWriteLock,
-				///readWriteLock_WritePref_LockFree_v2::ReadWriteLock,
-				///readWriteLock_WritePref_LockFree_v3::ReadWriteLock,
-				readWriteLock_WritePref_LockFree_v4::ReadWriteLock   /*FIX ME*/
+				readWriteLock_WritePref_LockFree_v1::ReadWriteLock,
+				readWriteLock_WritePref_LockFree_v2::ReadWriteLock,
+				readWriteLock_WritePref_LockFree_v3::ReadWriteLock
+				//readWriteLock_WritePref_LockFree_v4::ReadWriteLock   /*FIX ME*/
 			>;
 
 			std::cout << "\n\n----testAllReadWriteLocks (faster the readers, sum will be minimum) ----\n";
@@ -800,7 +812,7 @@ namespace mm {
 		std::cout.imbue(std::locale{ "" });
 
 		int runIndex = 0;
-		//while (true)
+		while (true)
 		{
 			std::cout << "\n\n======================== Run Index " << ++runIndex << " ========================\n";
 			readWriteLockTesting::testAllReadWriteLocks();

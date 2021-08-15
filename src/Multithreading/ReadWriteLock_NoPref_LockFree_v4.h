@@ -17,132 +17,283 @@
 
 namespace mm {
 
-	//TODO: This is Reader preferring lock. Fix to make it NoPref.
+	//This implementation works but it is very slow. It takes ~10 min while std::shared_mutex takes ~2 sec
+	namespace readWriteLock_NoPref_LockFree_v4_1 {
+		class SharedMutex
+		{
+		public:
+			void lock_shared()
+			{
+				size_t uniqueId = uniqueId_.fetch_add(1);
+				while (uniqueId > uniqueIdCurrent_.load(std::memory_order_acquire))
+					std::this_thread::yield();
 
-	namespace readWriteLock_NoPref_LockFree_v4 {
+				++numReadersActive_;
+				++uniqueIdCurrent_;
+			}
+
+			void unlock_shared()
+			{
+				--numReadersActive_;
+			}
+
+			void lock()
+			{
+				size_t uniqueId = uniqueId_.fetch_add(1);
+				while (numReadersActive_.load(std::memory_order_acquire) > 0 || uniqueId > uniqueIdCurrent_.load(std::memory_order_acquire))
+					std::this_thread::yield();
+			}
+
+			void unlock()
+			{
+				++uniqueIdCurrent_;
+			}
+
+		private:
+			std::atomic<size_t> uniqueId_{ 0 };
+			std::atomic<size_t> uniqueIdCurrent_{ 0 };
+			std::atomic<int> numReadersActive_{ 0 };
+		};
+
+		class ReadWriteLock
+		{
+		public:
+			void acquireReadLock()
+			{
+				m_.lock_shared();
+			}
+
+			void releaseReadLock()
+			{
+				m_.unlock_shared();
+			}
+
+			void acquireWriteLock()
+			{
+				m_.lock();
+			}
+
+			void releaseWriteLock()
+			{
+				m_.unlock();
+			}
+
+		private:
+			SharedMutex m_;
+		};
+	}
+
+	//This implementation works but it is very slow. It takes ??????? min while std::shared_mutex takes ~2 sec
+	namespace readWriteLock_NoPref_LockFree_v4_2 {
+		class SharedMutex
+		{
+		public:
+			void lock_shared()
+			{
+				size_t uniqueId = uniqueId_.fetch_add(1);
+				while (uniqueId > uniqueIdCurrent_.load(std::memory_order_acquire))
+					std::this_thread::yield();
+
+				++uniqueIdCurrent_;
+			}
+
+			void unlock_shared()
+			{
+				++numReadersWritersDone_;
+			}
+
+			void lock()
+			{
+				size_t uniqueId = uniqueId_.fetch_add(1);
+				while ((uniqueId - 1) > numReadersWritersDone_.load(std::memory_order_acquire))
+					std::this_thread::yield();
+			}
+
+			void unlock()
+			{
+				++uniqueIdCurrent_;
+				++numReadersWritersDone_;
+			}
+
+		private:
+			std::atomic<size_t> uniqueId_{ 0 };
+			std::atomic<size_t> uniqueIdCurrent_{ 0 };
+			std::atomic<size_t> numReadersWritersDone_{ 0 };
+		};
+
+		class ReadWriteLock
+		{
+		public:
+			void acquireReadLock()
+			{
+				m_.lock_shared();
+			}
+
+			void releaseReadLock()
+			{
+				m_.unlock_shared();
+			}
+
+			void acquireWriteLock()
+			{
+				m_.lock();
+			}
+
+			void releaseWriteLock()
+			{
+				m_.unlock();
+			}
+
+		private:
+			SharedMutex m_;
+		};
+	}
+
+	//honours the reader's id, but not the writer's id
+	namespace readWriteLock_NoPref_LockFree_v4_3 {
 
 		class SharedMutex
 		{
 		public:
 			void lock_shared()
 			{
-				//while (!isReader.exchange(true))
-				//	std::this_thread::yield();
-
-				int oldNumReaders = numReadersWaiting_.fetch_add(1);
-
-				size_t uniqueId = 0;
-				//if (oldNumReaders == 0)
-					uniqueId = uniqueId_.fetch_add(1);
-				//else
-				//	uniqueId = uniqueId_.load(std::memory_order_acquire);
-
-				//size_t 
-				while (uniqueId > uniqueIdCurrent_.load(std::memory_order_acquire))
-					std::this_thread::yield();
-
-				//++numReadersWaiting_;
+				size_t uniqueId = uniqueId_.fetch_add(1);
 				//++uniqueIdCurrent_;
 
-				//int oldNumReaders = numReadersWaiting_.fetch_add(1);
-				//if (oldNumReaders == 0)
-				//{
-				//	while (readersOrWritterActive_.exchange(true))
-				//		//&& !readersReadyToGo_.load(std::memory_order_acquire))
-				//		//|| numWritersWaiting_.load(std::memory_order_acquire) > 0
-				//	{
-				//		std::this_thread::yield();
-				//	}
-				//
-				//	readersReadyToGo_.store(true, std::memory_order_release);
-				//}
+				//while (uniqueId > uniqueIdCurrent_.load(std::memory_order_acquire))
+				while (uniqueId > nextWriterId_.load(std::memory_order_acquire))
+					std::this_thread::yield();
 
-				//while (readersReadyToGo_.load(std::memory_order_acquire) == false)
-				//	std::this_thread::yield();
+				++numReadersActive_;
 			}
 
 			void unlock_shared()
 			{
-				//int oldNumReaders = numReadersWaiting_.fetch_sub(1);
-				//if (oldNumReaders == 1)
-				//{
-				//	//reset the flags in reverse order they are set in lock_shared()
-				//	readersReadyToGo_.store(false, std::memory_order_release);
-				//	readersOrWritterActive_.store(false, std::memory_order_release);
-				//}
-				//--numReadersWaiting_;
-				//int oldNumReaders = numReadersWaiting_.fetch_sub(1);
-				//if(oldNumReaders == 1)
-					++uniqueIdCurrent_;
+				--numReadersActive_;
+
+				++numReadersWritersDone_;
 			}
 
 			void lock()
 			{
-				//while (isReader.exchange(false))
-				//	std::this_thread::yield();
-
-				size_t uniqueId = uniqueId_.fetch_add(1);
-				while (uniqueId > uniqueIdCurrent_.load(std::memory_order_acquire))
+				while(writterActive_.exchange(true))
 					std::this_thread::yield();
 
-				//Reset reader count
-				//numReadersWaiting_ = 0;
-				//uniqueId_.fetch_add(1);
+				size_t uniqueId = uniqueId_.fetch_add(1);
+				nextWriterId_.store(uniqueId, std::memory_order_release);
 
-				//++uniqueIdCurrent_;
+				while ((uniqueId - 1) > numReadersWritersDone_.load(std::memory_order_acquire)) // || writterActive_.exchange(true))
+					std::this_thread::yield();
 
-				//numWritersWaiting_.fetch_add(1);
-
-				//while (numReadersWaiting_.load(std::memory_order_acquire) > 0
-				//	//|| readersOrWritterActive_.exchange(true)
-				//	)
-				//{
-				//	std::this_thread::yield();
-				//}
-
-				//numWritersWaiting_.fetch_sub(1);
-
-				//int oldNumWriters = numWriters_.fetch_add(1);
-
-				//while (numReadersWaiting_.load(std::memory_order_acquire) > 0
-				//	|| numWriters_.load(std::memory_order_acquire) > 1)
-				//	//|| writterActive_.load(std::memory_order_acquire) == true)
-				//	std::this_thread::yield();
-
-				//writterActive_.store(true, std::memory_order_release);
+				++numWritersActive_;
 			}
 
 			void unlock()
 			{
-				//--numWriters_; //equivalent to numWriters_.fetch_sub(1)
-				//readersOrWritterActive_.store(false, std::memory_order_release);
-				++uniqueIdCurrent_;
+				--numWritersActive_;
+
+				++numReadersWritersDone_;
+				//++uniqueIdCurrent_;
+				writterActive_.store(false, std::memory_order_release);
 			}
 
 		private:
-			std::atomic<size_t> uniqueId_{ 0 };
-			std::atomic<size_t> uniqueIdLastReader_{ 0 };
-			std::atomic<size_t> uniqueIdCurrent_{ 0 };
-			std::atomic<int> numReadersWaiting_{ 0 };
-			std::atomic<int> numWritersWaiting_{ 0 };
-			std::atomic<bool> readersOrWritterActive_{ false };
-			std::atomic<bool> readersReadyToGo_{ false };
-			std::atomic<bool> isReader{ false };
+			std::atomic<size_t> uniqueId_{ 1 };
+			//std::atomic<size_t> uniqueIdCurrent_{ 0 };
+			std::atomic<size_t> numReadersWritersDone_{ 0 };
+			std::atomic<size_t> nextWriterId_{ std::numeric_limits<size_t>::max() };
+
+
+			std::atomic<bool> writterActive_{ false };
+			std::atomic<int> numWritersActive_{ 0 };
+			std::atomic<int> numReadersActive_{ 0 };
 		};
 
-		/*
-		All Cases:
-		0 -                                                                        start
+		class ReadWriteLock
+		{
+		public:
+			void acquireReadLock()
+			{
+				m_.lock_shared();
+			}
 
+			void releaseReadLock()
+			{
+				m_.unlock_shared();
+			}
 
-		1 -                                   R1                                                                          W1 
+			void acquireWriteLock()
+			{
+				m_.lock();
+			}
 
+			void releaseWriteLock()
+			{
+				m_.unlock();
+			}
 
-		2 -               R2                                  W2                       	              R2                                  W2             
+		private:
+			SharedMutex m_;
+		};
 
-		3 -       R3               W3                 R3               W3                     R3               W3                 R3               W3     
-		4 -    R4    W4         R4    W4		   R4    W4         R4    W4			   R4    W4         R4    W4		   R4    W4         R4    W4
-		*/
+	}
+
+	//Does not honour the reader's and writer's id, but honours the number of readers and writers that come in subsequent groups
+	namespace readWriteLock_NoPref_LockFree_v4_4 {
+
+		class SharedMutex
+		{
+		public:
+			void lock_shared()
+			{
+				size_t uniqueId = uniqueId_.fetch_add(1);
+				size_t numReadersWritersDone = numReadersWritersDone_.load(std::memory_order_acquire);
+				while ((numReadersWritersDone - 1) >= nextWriterId_.load(std::memory_order_acquire)
+					|| !numReadersWritersDone_.compare_exchange_weak(numReadersWritersDone, numReadersWritersDone + 1))
+				{
+					std::this_thread::yield();
+				}
+
+				++numReadersActive_;
+			}
+
+			void unlock_shared()
+			{
+				--numReadersActive_;
+			}
+
+			void lock()
+			{
+				while (writterActive_.exchange(true))
+					std::this_thread::yield();
+
+				size_t uniqueId = uniqueId_.fetch_add(1);
+				nextWriterId_.store(uniqueId, std::memory_order_release);
+
+				while ((uniqueId - 1) > numReadersWritersDone_.load(std::memory_order_acquire)) // || writterActive_.exchange(true))
+					std::this_thread::yield();
+
+				++numWritersActive_;
+			}
+
+			void unlock()
+			{
+				--numWritersActive_;
+
+				++numReadersWritersDone_;
+				writterActive_.store(false, std::memory_order_release);
+			}
+
+		private:
+			std::atomic<size_t> uniqueId_{ 1 };
+			std::atomic<size_t> numReadersWritersDone_{ 0 };
+			std::atomic<bool> writterActive_{ false };
+			std::atomic<size_t> nextWriterId_{ std::numeric_limits<size_t>::max() };
+
+			//std::atomic<size_t> uniqueIdCurrent_{ 0 };
+			std::atomic<int> numWritersActive_{ 0 };
+			std::atomic<int> numReadersActive_{ 0 };
+		};
 
 		class ReadWriteLock
 		{
