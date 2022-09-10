@@ -1,0 +1,21 @@
+- To build using Visual Studio 17 2022
+
+open x64 Native Tools Command Prompt for VS 2017
+cd C:\@_Programming\Everything\MM_Algorithms\cmake
+cmake -H. -Bbuild_vs_2022 -G "Visual Studio 17 2022 Win64" .
+cmake --build build_vs_2022 --config RelWithDebInfo
+  OR 
+cmake -G "Visual Studio 17 2022 Win64" ../
+cmake --build . --config RelWithDebInfo
+
+
+
+- To build using Visual Studio 15 2017
+
+open x64 Native Tools Command Prompt for VS 2022
+cd C:\@_Programming\Everything\MM_Algorithms\cmake
+cmake -H. -Bbuild_vs_2017 -G "Visual Studio 15 2017 Win64" .
+cmake --build build_vs_2017 --config RelWithDebInfo
+  OR 
+cmake -G "Visual Studio 15 2017 Win64" ../
+cmake --build . --config RelWithDebInfo
